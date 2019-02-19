@@ -7,6 +7,15 @@ from eos.forms import TestForm
 # Create your views here.
 
 
+def home(request):
+    tests = get_all_tests()
+    return render(request, 'home.html', {'tests' : tests})
+
+def get_all_tests():
+    tests = Test.objects.all().values()
+    return tests
+
+
 def test_upload(request):
 
     if request.method == "POST":
