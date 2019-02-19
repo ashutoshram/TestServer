@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.conf import settings
 from django.http import HttpResponse
 from eos.models import Test
 from eos.forms import TestForm 
@@ -27,6 +28,7 @@ def test_upload(request):
                 test.save()
                 name = form.cleaned_data['name']
                 script = form.cleaned_data['script']
+                parse_and_store(name, script)
                 return render(request, 'test_response.html', {'name' : name, 'script' : script, 'error' : 'You success, you!'})
             else: 
                 print("This Test has already been created, please try a new script.")
@@ -45,3 +47,10 @@ def test_upload(request):
 
 def upload_success(request):
     return HttpResponse("You successfully uploaded a test!")
+
+def parse_and_store(name, script):
+   script_name = settings.MEDIA_ROOT.strip('/') + settings.MEDIA_URL + name + '.py'
+   script_out =  open(script_name, "x")   
+   script_out.write(script)
+
+   

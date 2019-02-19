@@ -121,5 +121,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = '/home/altia-ash/dev/Django/eos/'
-MEDIA_URL = '/scripts/'
+MEDIA_ROOT = BASE_DIR 
+MEDIA_URL = '/eos/scripts/'
