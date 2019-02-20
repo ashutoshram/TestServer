@@ -3,65 +3,33 @@
 {% load static %}
 
 {% block content %}
-<form method="post">
-{% csrf_token %}
-{{ form }}
-<button type="submit" class="btn btn-primary"> Submit </button>
-</form>
 
 <div class="my-3 my-md-5">
-  <div class="container">
-    <div class="row">
-	<div class="col-md-6 col-xl-4">
-		<div class="card">
-		  <div class="card-header">
-		    <h3 class="card-title">Sample Test</h3>
-		    <div class="card-options">
-                      <a href="#" class="btn btn-success">Run Test</a>
-                      <a href="#" class="btn btn-warning">Edit</a>
-                    </div>
-		  </div>
-		  <div class="card-body">
-		    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aperiam deleniti fugit incidunt, iste, itaque minima neque pariatur perferendis sed suscipit velit vitae voluptatem. A consequuntur, deserunt eaque error nulla temporibus!
-		  </div>
+   <div class="container">
+      <div class="row">
+         <div class="col-12">
+		<form class="card" method="post" enctype="multipart/form-data"> 
+
+			{% csrf_token %}
+
+		   <div class="card-header"> 
+			   <h3 class="card-title">Upload your script below:</h3>
+		   </div>
+			
+		<div class="card-body d-flex flex-column">
+			{{ form }}
 		</div>
-	</div>
 
-
-
-	<div class="col-md-6 col-xl-4">
-		<div class="card">
-		  <div class="card-header">
-		    <h3 class="card-title">Sample Test</h3>
-		    <div class="card-options">
-                      <a href="#" class="btn btn-success">Run Test</a>
-                      <a href="#" class="btn btn-warning">Edit</a>
-                    </div>
-		  </div>
-		  <div class="card-body">
-		    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aperiam deleniti fugit incidunt, iste, itaque minima neque pariatur perferendis sed suscipit velit vitae voluptatem. A consequuntur, deserunt eaque error nulla temporibus!
-		  </div>
+		<div class="card-footer">
+			<button type="submit" class="btn btn-dark"><i class="fe fe-upload mr-2"></i>Upload</button>
 		</div>
-	</div>
 
+		</form>
 
-	<div class="col-md-6 col-xl-4">
-		<div class="card">
-		  <div class="card-header">
-		    <h3 class="card-title">Sample Test</h3>
-		    <div class="card-options">
-                      <a href="#" class="btn btn-success">Run Test</a>
-                      <a href="#" class="btn btn-warning">Edit</a>
-                    </div>
-		  </div>
-		  <div class="card-body">
-		    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aperiam deleniti fugit incidunt, iste, itaque minima neque pariatur perferendis sed suscipit velit vitae voluptatem. A consequuntur, deserunt eaque error nulla temporibus!
-		  </div>
-		</div>
-	</div>
-
-      </div>
-   </div>
+	  </div>
+       </div>
+    </div>
 </div>
+
 
 {% endblock %}
