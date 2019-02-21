@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="form">
+	<label class="form-label">Test Parameters</label>
+		<div class="selectgroup selectgroup-pills">
+
+{% for argument in arguments %}
+  <label class="selectgroup-item">
+	  <input type="checkbox" name="value" value= {{argument}} class="selectgroup-input" checked="">
+	  <span class="selectgroup-button">{{argument}}</span>
+  </label>
+
+{% endfor %}
+
+<input type="hidden" name="uuid" value="{{ uuid_hidden }}">
+<button type="submit" class='btn btn-success'>Run it boi</button>
+		</div>
+	</div>
+</div>
+{% endblock %}

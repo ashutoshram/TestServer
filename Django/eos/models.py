@@ -8,7 +8,7 @@ fs = FileSystemStorage()
 
 class Test(models.Model):
     
-    script = models.FileField(upload_to='scripts/')
+    script = models.FileField(upload_to='eos/scripts/')
     name = models.CharField(max_length=200)
 
     # Comma separated list of Test Suites that reference this Test. 
