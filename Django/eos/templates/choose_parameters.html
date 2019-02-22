@@ -2,21 +2,22 @@
 
 {% block content %}
 
-<div class="form">
+<form class="form" method="post" enctype="multipart/form-data">
+	{% csrf_token %}
 	<label class="form-label">Test Parameters</label>
 		<div class="selectgroup selectgroup-pills">
 
 {% for argument in arguments %}
-  <label class="selectgroup-item">
-	  <input type="checkbox" name="value" value= {{argument}} class="selectgroup-input" checked="">
-	  <span class="selectgroup-button">{{argument}}</span>
-  </label>
+	  <label class="selectgroup-item">
+		  <input type="checkbox" name="value" value= {{argument}} class="selectgroup-input" checked="">
+		  <span class="selectgroup-button">{{argument}}</span>
+	  </label>
 
 {% endfor %}
 
-<input type="hidden" name="uuid" value="{{ uuid_hidden }}">
-<button type="submit" class='btn btn-success'>Run it boi</button>
-		</div>
+	<input type="hidden" name="uuid" value="{{ uuid_hidden }}">
+	<button type="submit" class='btn btn-success'>Run it boi</button>
+
 	</div>
-</div>
+</form>
 {% endblock %}

@@ -6,6 +6,7 @@ from eos.models import Test
 from eos.forms import TestForm 
 
 import importlib
+import inspect
 
 
 
@@ -56,22 +57,66 @@ def test_upload(request):
 def upload_success(request):
     return HttpResponse("You successfully uploaded a test!")
 
-def get_arguments(request, test_id):
+import eos.scripts.AbstractTestClass as ATC
 
+def load_test(test_id):
     #use AccessID to grab correct Test Object
     test_to_run = Test.objects.get(accessID=test_id)
 
     #prepare script name for module import
     test_module = ((str(test_to_run.script)).strip('.py').replace('/','.'))
 
-    #importing module to current python environment
-    d = importlib.import_module(test_module)
+    # return all ATC classes in the module
+    try:
+        #importing module to current python environment
+        module = importlib.import_module(test_module)
+        atc_classes = []
+        for member in dir(module):
+            handler_class = getattr(module, member)
+            if handler_class and inspect.isclass(handler_class):
+                if issubclass(handler_class, ATC.AbstractTestClass):
+                    atc_classes.append(handler_class)
+        return atc_classes
+    except:
+        return []
 
-    #request the Test Object for argument list to display to user
-    arguments = d.Test.get_args()
 
-    #attach arguments as template variables to html page
-    return render(request, 'choose_parameters.html', {'arguments': arguments, 'uuid_hidden': test_id})
+def run_test(request, test_id):
+
+    if request.method == "POST":
+        q = request.POST
+
+        args = q.getlist('value')
+        uuid = q.get('uuid')
+
+        test = load_test(test_id)
+        if test.empty():
+            return HttpResponse("Invalid script")
+        if len(test) > 1:
+            return HttpResponse("Too many ATCs in the script")
+
+        test = test[0] # create an instance of the first atc test
+
+        return_code = test.run(args)
+
+        return HttpResponse(return_code)
+
+
+    else:
+        test = load_test(test_id)
+        if test.empty():
+            return HttpResponse("Invalid script")
+
+        if len(test) > 1:
+            return HttpResponse("Too many ATCs in the script")
+
+        test = test[0] # create an instance of the first atc test
+
+        #request the Test Object for argument list to display to user
+        arguments = test.get_args()
+
+        #attach arguments as template variables to html page
+        return render(request, 'choose_parameters.html', {'arguments': arguments, 'uuid_hidden': test_id})
 
 
 def edit_test(request, test_id):
@@ -79,12 +124,6 @@ def edit_test(request, test_id):
     print(test_id)
     return HttpResponse(test_id)
 
-
-def run_test(request):
-    if request == "POST":
-        # Run test with parameters
-        # UUID and form will be sent here via request
-        # Hide UUID --> <-- 
 
 
 

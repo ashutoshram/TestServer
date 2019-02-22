@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 {% for test in tests %}
+
 <div class="my-3 my-md-5">
    <div class="container">
       <div class="row">
@@ -10,7 +12,7 @@
            <div class="card-header">
              <h3 class="card-title">{{test.name}}</h3>
              <div class="card-options">
-		     <a href="get_arguments/{{test.accessID}}" class="btn btn-success">Run Test</a>
+		     <a href="run_test/{{test.accessID}}" class="btn btn-success">Run Test</a>
 		     <a href="edit_test/{{test.accessID}}" class="btn btn-warning">Edit</a>
                        </div>
 	     </div>
@@ -21,6 +23,7 @@
 	</div>
    </div>
 </div>
+
 {% endfor %}
 
 <a class="btn btn-success" href="upload/">UPLOAD A TEST</a>
