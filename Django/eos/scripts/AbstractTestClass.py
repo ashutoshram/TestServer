@@ -21,3 +21,4 @@ class AbstractTestClass(ABC):
     @abstractmethod
     def get_return_codes(self):
         return None
+

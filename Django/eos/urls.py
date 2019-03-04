@@ -8,6 +8,7 @@ from . import views
 urlpatterns = [
     url(r'^$', views.home, name='home'),
     url(r'^upload/', views.test_upload, name='test_upload'),
+    url(r'^create_suite/', views.create_suite, name='create_suite'),
     url(r'^success/$', views.upload_success, name='upload_success'),
     path('run_test/<uuid:test_id>', views.run_test, name='run_test'),
     path('edit_test/<uuid:test_id>', views.edit_test, name='edit_test'),
