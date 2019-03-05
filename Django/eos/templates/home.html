@@ -1,6 +1,19 @@
 {% extends 'base.html' %}
 
+{% load static %}
 {% block content %}
+
+<div class="header py-4">
+	<div class="container">
+		<div class="d-flex">
+			<a class="header-brand" href="#">
+				<img class="header-brand-img" src="{% static 'images/crash_test_dummy.png' %}">
+
+			</a>
+
+		</div>
+	</div>
+</div>
 
 {% for test in tests %}
 
@@ -25,6 +38,32 @@
 </div>
 
 {% endfor %}
+
+
+{% for suite in suites %}
+
+<div class="my-3 my-md-5">
+   <div class="container">
+      <div class="row">
+      	<div class="col-md-6 col-xl-4">
+         <div class="card">
+           <div class="card-header">
+             <h3 class="card-title">{{suite.name}}</h3>
+             <div class="card-options">
+		     <a href="run_test/{{suite.accessID}}" class="btn btn-success">Run Suite</a>
+		     <a href="edit_test/{{suite.accessID}}" class="btn btn-warning">Run Suite</a>
+                       </div>
+	     </div>
+		   <div class="card-body">
+		    {{suite.TestList}}
+		   </div>
+		</div>
+	</div>
+   </div>
+</div>
+
+{% endfor %}
+
 
 <a class="btn btn-success" href="upload/">UPLOAD A TEST</a>
 <a class="btn btn-success" href="create_suite/">CREATE A TEST SUITE</a>

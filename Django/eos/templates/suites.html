@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if not tests %}
+<h3> There are no tests to make a Test Suite! </h3>
+
+
+{% else %}
+
+<form class="form" method="post" enctype="multipart/form-data">
+	{% csrf_token %}
+	<label class="form-label">Choose the Tests you want to include in the Suite</label>
+		<div class="selectgroup selectgroup-pills">
+
+{% for test in tests %}
+	  <label class="selectgroup-item">
+		  <input type="checkbox" name="value" value= {{test.name}} class="selectgroup-input" checked="">
+		  <span class="selectgroup-button">{{test.name}}</span>
+	  </label>
+
+{% endfor %}
+
+	<input type="text" name="TestSuiteName" value="Test Suite Name">
+	<button type="submit" class='btn btn-success'>Create it boi</button>
+
+	</div>
+</form>
+
+{% endif %}
+{% endblock %}

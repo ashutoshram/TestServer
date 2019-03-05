@@ -1,10 +1,7 @@
 from django.db import models
-from django.core.files.storage import FileSystemStorage
 import uuid
 
 # Create your models here.
-
-fs = FileSystemStorage()
 
 class Test(models.Model):
     
@@ -16,12 +13,8 @@ class Test(models.Model):
     accessID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
 
-class TestSuite(models.Model):
-    name = CharField(max_length=200)
-    tests = ListCharField(
-            base_field=CharField(max_length=10)
-            size=10
-            max_length=(10 * 11)
-        )
-   
 
+class TestSuite(models.Model):
+    name = models.CharField(max_length=200, default="SuiteName")
+    accessID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    TestList = models.TextField(null=True)

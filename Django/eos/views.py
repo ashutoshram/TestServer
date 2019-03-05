@@ -5,25 +5,41 @@ from django.http import HttpResponse
 import eos.scripts.AbstractTestClass as ATC
 
 from eos.models import Test
+from eos.models import TestSuite
 from eos.forms import TestForm 
 
 import importlib
 import inspect
 import json
+import uuid
 
 
 
 # Create your views here.
 
 
-def home(request):
-    tests = get_all_tests()
-    return render(request, 'home.html', {'tests' : tests})
+def progress(request):
+    token = Test.objects.all()
+    incoming_token = request.META['QUERY_STRING']
 
-def get_all_tests():
+    print('query coming from template is =', incoming_token)
+    
+
+
+
+
+def home(request):
+    tests = get_all_Tests()
+    suites = get_all_TestSuites()
+    return render(request, 'home.html', {'tests' : tests, 'suites': suites})
+
+def get_all_Tests():
     tests = Test.objects.all().values()
     return tests
 
+def get_all_TestSuites():
+    TestSuites = TestSuite.objects.all().values()
+    return TestSuites
 
 def test_upload(request):
 
@@ -44,6 +60,8 @@ def test_upload(request):
             test = form.save(commit=False)
             test.name = name 
             test.script = script 
+            test.status = False
+
 
             test.save()
 
@@ -66,6 +84,29 @@ def upload_success(request):
     return HttpResponse("You successfully uploaded a test!")
 
 def create_suite(request):
+
+    if request.method == "POST":
+
+        # this is after the user has chosen the tests he wants to include in the test suite
+        # q = request.POST q = getlist('value')
+
+        q = request.POST
+        tests = q.getlist('tests')
+        name = q.get('TestSuiteName')
+        suite = TestSuite()
+        suite.TestList = json.dumps(tests)
+        suite.name = name
+        suite.save()
+
+        return redirect('/eos')
+
+
+    else:
+
+        tests = get_all_Tests()
+
+        return render(request, 'suites.html', {'tests': tests}) 
+
     
 
 def load_test(test_id):
@@ -85,6 +126,7 @@ def load_test(test_id):
             if handler_class and inspect.isclass(handler_class):
                 if issubclass(handler_class, ATC.AbstractTestClass):
                     atc_classes.append(handler_class)
+                    print(atc_classes)
         return atc_classes
     except:
         return []
@@ -105,6 +147,10 @@ def run_test(request, test_id):
             return HttpResponse("Too many ATCs in the script")
 
         test = test[0] # create an instance of the first atc test
+
+
+        # Set the token for the current test
+
 
         print("Running Test Script now")
         return_code = test.run(test,args)
