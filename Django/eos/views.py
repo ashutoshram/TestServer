@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.template.response import TemplateResponse
 
 import eos.scripts.AbstractTestClass as ATC
 
@@ -11,21 +12,12 @@ from eos.forms import TestForm
 import importlib
 import inspect
 import json
+import threading
 import uuid
 
 
 
 # Create your views here.
-
-
-def progress(request):
-    token = Test.objects.all()
-    incoming_token = request.META['QUERY_STRING']
-
-    print('query coming from template is =', incoming_token)
-    
-
-
 
 
 def home(request):
@@ -132,13 +124,39 @@ def load_test(test_id):
         return []
 
 
+runningTests = {} # a dictionary of tid to test instance
+
+def threaded_test(test, args):
+    t = threading.Thread(target=test.run, args=(test, args))
+    t.start()
+
+
+def progress(request):
+    # lookup test instance from runningTests given tid
+    tid = request.META['QUERY_STRING']
+    try:
+        test = runningTests[tid]
+        percent = test.progress(test)
+        print("progress on test with tid %s: %d" % (tid, percent))
+    except:
+        print("no running test with tid %s" % tid)
+        percent = 0
+    if percent == 100:
+        print("removing test with tid %s from runningTests" % tid)
+        del runningTests[tid]
+    data = {'progress': percent}
+    return JsonResponse(data)
+
+    # call progress on the test instance
+    # return a JsonResponse
+
 def run_test(request, test_id):
 
     if request.method == "POST":
         q = request.POST
 
         args = q.getlist('value')
-        uuid = q.get('uuid')
+        testID = q.get('uuid')
 
         test = load_test(test_id)
         if not test:
@@ -149,15 +167,26 @@ def run_test(request, test_id):
         test = test[0] # create an instance of the first atc test
 
 
-        # Set the token for the current test
+        # start a thread running the test
+        threaded_test(test, args)
+        tid = uuid.uuid4()
+        tid = str(tid)
+        # cache the running instance of the test in the global runningTests dict
+        runningTests[tid] = test
+        # return the tid as a JsonResponse
 
+        print(tid)
 
+        return TemplateResponse(request, 'choose_parameters.html', {'arguments': args,'threadid': tid})
+
+        
+        """
         print("Running Test Script now")
         return_code = test.run(test,args)
 
         print(return_code)
         return HttpResponse(json.dumps(return_code))
-
+        """
 
     else:
         test = load_test(test_id)

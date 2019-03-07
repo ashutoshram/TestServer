@@ -1,23 +1,82 @@
 {% extends 'base.html' %}
 
+{% block extra_js %}
+
+<script>
+var intervalID
+function request_server() {
+	// run ajax request
+	console.log('requesting status from test.progress');
+
+	var token = document.getElementById("token").value;
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+	if (this.readyState == 4 && this.status == 200) {
+		console.log('xhttp response = '+this.responseText);
+		var b = JSON.parse(this.responseText);
+		document.getElementById("progress").innerHTML = "<div class='progress-bar bg-green' style='width:" + b.progress + "%'></div>";
+		if (b.progress == 100) {
+			document.getElementById("done").innerHTML = "<div class='alert alert-success' role='alert'> Your test is done running! </div>";
+			document.getElementById("progress").style.display = 'none';
+			clearInterval(intervalID);
+		}
+	}
+	};
+	xhttp.open("GET","/eos/progress/?"+token, true);
+	xhttp.send();
+}
+
+
+function onload() {
+	intervalID = setInterval(request_server, 1000);
+}
+
+window.onload = onload();
+
+</script>
+
+
+
+{% endblock %}
+
 {% block content %}
 
+{% if threadid %}
+
+	<h3> These are the options you have chosen for the test </h3>
+
+	<input type="hidden" id="token" name="token" value="{{threadid}}">
+
+	{% for argument in arguments %}
+		{{argument}}
+	{% endfor %}
+	<div class="progress progress-sm" id="progress">
+	</div>
+	<div id="done">
+	</div>
+
+
+
+{% else %}
 <form class="form" method="post" enctype="multipart/form-data">
 	{% csrf_token %}
 	<label class="form-label">Test Parameters</label>
 		<div class="selectgroup selectgroup-pills">
 
-{% for argument in arguments %}
-	  <label class="selectgroup-item">
-		  <input type="checkbox" name="value" value= {{argument}} class="selectgroup-input" checked="">
-		  <span class="selectgroup-button">{{argument}}</span>
-	  </label>
+	{% for argument in arguments %}
+		  <label class="selectgroup-item">
+			  <input type="checkbox" name="value" value= {{argument}} class="selectgroup-input" checked="">
+			  <span class="selectgroup-button">{{argument}}</span>
+		  </label>
 
-{% endfor %}
+	{% endfor %}
 
-	<input type="hidden" name="uuid" value="{{ uuid_hidden }}">
-	<button type="submit" class='btn btn-success'>Run it boi</button>
+		<input type="hidden" name="uuid" value="{{ uuid_hidden }}">
+		<button type="submit" class='btn btn-success'>Run it boi</button>
 
-	</div>
-</form>
+		</div>
+	</form>
+
+
+{% endif %}
 {% endblock %}
