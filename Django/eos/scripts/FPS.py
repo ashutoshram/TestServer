@@ -15,21 +15,33 @@ def dbg_print(*args):
 
 class FPS(ATC.AbstractTestClass):
 
+    def __init__(self):
+        self.FPSTest = FPSTester()
+
     def get_args(self):
         return ['all','22','27', '30']
 
     def run(self, args):
-        self.FPSTest = FPSTester()
         return self.FPSTest.test(args)
 
-    def progress(self):
+    def get_progress(self):
         return self.FPSTest.progress()
 
     def set_default_storage_path(self, path):
         self.storage_path = path
 
-    def get_return_codes(self):
-        return {0:'success', -1:'fail'}
+    def get_name(self):
+        return "FPS Test"
+    
+    def is_done(self):
+        if self.FPSTest.progress() == 100:
+            return True
+        else:
+            return False
+
+    def generate_report(self):
+        return self.FPSTest.results()
+
 
 
 class FPSTester():
@@ -105,7 +117,10 @@ class FPSTester():
             return -1 #failure
 
     def progress(self):
-        return self.progress
+        return self.progress_percent
+
+    def results(self):
+        return self.err_code
 
     def test(self, args):
         dbg_print('FPSTester::test: args = %s' % repr(args))
@@ -115,7 +130,7 @@ class FPSTester():
         else: 
             tests = list(map(int, args))
 
-        err_code = {}
+        self.err_code = {}
 
         dbg_print('FPSTester::test: tests = %s' % repr(tests))
 
@@ -123,20 +138,21 @@ class FPSTester():
         #frf = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
         frf = {'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
 
-        self.progress = 0
-        numtests = 3 
+        self.progress_percent = 0 
         for format_ in frf:
             resdict = frf[format_]
             for resolution in resdict:
                 framerate = resdict[resolution]
                 print(framerate, resolution, format_)
                 test_type = str(framerate) + ' x ' + str(resolution) + ' x ' + str(format_)
-                err_code[test_type] = self.test_fps(framerate, resolution, format_)
-                self.progress += 1
+                self.err_code[test_type] = self.test_fps(framerate, resolution, format_)
+                self.progress_percent += 33
+
+        self.progress_percent = 100
 
 
         dbg_print('FPSTester::test: err_code = %s' % repr(err_code))
-        return err_code
+        return self.err_code
 
 
 
