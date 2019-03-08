@@ -11,7 +11,7 @@ class AbstractTestClass(ABC):
         return None
 
     @abstractmethod
-    def progress(self):
+    def get_progress(self):
         return None
 
     @abstractmethod
@@ -19,6 +19,13 @@ class AbstractTestClass(ABC):
         self.storage_path = path
 
     @abstractmethod
-    def get_return_codes(self):
+    def generate_report(self):
         return None
 
+    @abstractmethod
+    def is_done(self):
+        return None
+
+    @abstractmethod
+    def get_name(self):
+        return None

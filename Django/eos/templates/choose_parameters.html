@@ -41,15 +41,13 @@ window.onload = onload();
 
 {% block content %}
 
+<h3>You are currently running: {{test_name}}</h3>
+
 {% if threadid %}
 
-	<h3> These are the options you have chosen for the test </h3>
 
 	<input type="hidden" id="token" name="token" value="{{threadid}}">
 
-	{% for argument in arguments %}
-		{{argument}}
-	{% endfor %}
 	<div class="progress progress-sm" id="progress">
 	</div>
 	<div id="done">

@@ -14,6 +14,7 @@ import inspect
 import json
 import threading
 import uuid
+import time
 
 
 
@@ -52,8 +53,6 @@ def test_upload(request):
             test = form.save(commit=False)
             test.name = name 
             test.script = script 
-            test.status = False
-
 
             test.save()
 
@@ -124,32 +123,51 @@ def load_test(test_id):
         return []
 
 
-runningTests = {} # a dictionary of tid to test instance
+running_tests = {} # a dictionary of tid to test instance
+monitoring_thread = None
+
+
+def monitor_test():
+    while True:
+        # FIXME
+        # run through all the tests in running_tests 
+        for tid in running_tests:
+            test = running_tests[tid]
+            # wait for it to complete and delete the entry once it is done
+            if test.is_done():
+                # update the report for the test once it is done
+                test.generate_report()
+                del running_tests[tid]
+        time.sleep(1)
+
+def start_monitoring_thread():
+    monitoring_thread = threading.Thread(target=monitor_test, args=())
+    monitoring_thread.start()
 
 def threaded_test(test, args):
-    t = threading.Thread(target=test.run, args=(test, args))
+    t = threading.Thread(target=test.run, args=(args,))
     t.start()
 
 
 def progress(request):
-    # lookup test instance from runningTests given tid
+    # lookup test instance from running_tests given tid
     tid = request.META['QUERY_STRING']
     try:
-        test = runningTests[tid]
-        percent = test.progress(test)
+        test = running_tests[tid]
+        percent = test.get_progress()
         print("progress on test with tid %s: %d" % (tid, percent))
     except:
         print("no running test with tid %s" % tid)
         percent = 0
     if percent == 100:
-        print("removing test with tid %s from runningTests" % tid)
-        del runningTests[tid]
+        print("test %s is done" % tid)
     data = {'progress': percent}
     return JsonResponse(data)
 
     # call progress on the test instance
     # return a JsonResponse
 
+#FIXME camelCase
 def run_test(request, test_id):
 
     if request.method == "POST":
@@ -164,29 +182,25 @@ def run_test(request, test_id):
         if len(test) > 1:
             return HttpResponse("Too many ATCs in the script")
 
-        test = test[0] # create an instance of the first atc test
+        test = test[0]() # create an instance of the first atc test
 
 
         # start a thread running the test
         threaded_test(test, args)
         tid = uuid.uuid4()
         tid = str(tid)
-        # cache the running instance of the test in the global runningTests dict
-        runningTests[tid] = test
+        # cache the running instance of the test in the global running_tests dict
+        running_tests[tid] = test
         # return the tid as a JsonResponse
+
+        #if monitoring_thread is None:
+        #    start_monitoring_thread()
 
         print(tid)
 
-        return TemplateResponse(request, 'choose_parameters.html', {'arguments': args,'threadid': tid})
+        name = test.get_name()
 
-        
-        """
-        print("Running Test Script now")
-        return_code = test.run(test,args)
-
-        print(return_code)
-        return HttpResponse(json.dumps(return_code))
-        """
+        return TemplateResponse(request, 'choose_parameters.html', {'arguments': args,'threadid': tid, 'test_name' : name})
 
     else:
         test = load_test(test_id)
@@ -196,13 +210,14 @@ def run_test(request, test_id):
         if len(test) > 1:
             return HttpResponse("Too many ATCs in the script")
 
-        test = test[0] # create an instance of the first atc test
+        test = test[0]() # create an instance of the first atc test
 
         #request the Test Object for argument list to display to user
-        arguments = test.get_args(test)
+        arguments = test.get_args()
+        name = test.get_name()
 
         #attach arguments as template variables to html page
-        return render(request, 'choose_parameters.html', {'arguments': arguments, 'uuid_hidden': test_id})
+        return render(request, 'choose_parameters.html', {'arguments': arguments, 'uuid_hidden': test_id, 'test_name': name})
 
 
 def edit_test(request, test_id):
