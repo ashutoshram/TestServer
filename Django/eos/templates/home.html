@@ -5,12 +5,29 @@
 <div class="header py-4">
 	<div class="container">
 		<div class="d-flex">
-			<a class="header-brand" href="#">
+			<a class="header-brand" href="/eos/">
 				<img class="header-brand-img" src="{% static 'img/crash_test_dummy.png' %}">
 			</a>
+			<h1 class="page-title"> Altia Test Server </h1>
+			<div class="d-flex order-lg-2 ml-auto">
+				<div class="nav-item d-none d-md-flex">
+					<a class="btn btn-teal" href="upload/">UPLOAD A TEST</a>
+					<a class="btn btn-cyan" href="create_suite/">CREATE A TEST SUITE</a>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
+
+{% if tests %}
+
+		<div class="page-header">
+			<div class="container">
+				<h2 class="page-title"> Tests </h2>
+			</div>
+		</div>
+
+{% endif %}
 
 {% for test in tests %}
 
@@ -22,8 +39,8 @@
            <div class="card-header">
              <h3 class="card-title">{{test.name}}</h3>
              <div class="card-options">
-		     <a href="run_test/{{test.accessID}}" class="btn btn-success">Run Test</a>
-		     <a href="edit_test/{{test.accessID}}" class="btn btn-warning">Edit</a>
+		     <a href="run_test/{{test.accessID}}" class="btn btn-lime">Run Test</a>
+		     <a href="edit_test/{{test.accessID}}" class="btn btn-orange">Edit</a>
                        </div>
 	     </div>
 		   <div class="card-body">
@@ -36,6 +53,15 @@
 
 {% endfor %}
 
+{% if suites %}
+
+		<div class="page-header">
+			<div class="container">
+				<h2 class="page-title"> Suites </h2>
+			</div>
+		</div>
+
+{% endif %}
 
 {% for suite in suites %}
 
@@ -47,8 +73,8 @@
            <div class="card-header">
              <h3 class="card-title">{{suite.name}}</h3>
              <div class="card-options">
-		     <a href="run_test/{{suite.accessID}}" class="btn btn-success">Run Suite</a>
-		     <a href="edit_test/{{suite.accessID}}" class="btn btn-warning">Run Suite</a>
+		     <a href="run_test/{{suite.accessID}}" class="btn btn-purple">Run Suite</a>
+		     <a href="edit_test/{{suite.accessID}}" class="btn btn-pink">Run Suite</a>
                        </div>
 	     </div>
 		   <div class="card-body">
@@ -61,8 +87,15 @@
 
 {% endfor %}
 
+{% if not suites and not tests %}
 
-<a class="btn btn-success" href="upload/">UPLOAD A TEST</a>
-<a class="btn btn-success" href="create_suite/">CREATE A TEST SUITE</a>
+	<div class="page-header">			
+		<div class="container">
+			<h3> There are no Tests or Suites to be shown. Upload a test using the button above! </h2>
+		</div>
+	</div>
+
+{% endif %}
+
 
 {% endblock %}

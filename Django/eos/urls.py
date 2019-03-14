@@ -13,4 +13,5 @@ urlpatterns = [
     url(r'^progress/$', views.progress, name="progress"),
     path('run_test/<uuid:test_id>', views.run_test, name='run_test'),
     path('edit_test/<uuid:test_id>', views.edit_test, name='edit_test'),
+    path('report/$', views.report, name='report'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

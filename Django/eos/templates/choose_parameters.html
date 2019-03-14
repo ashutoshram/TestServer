@@ -3,25 +3,26 @@
 {% block extra_js %}
 
 <script>
-var intervalID
+var intervalID;
 function request_server() {
 	// run ajax request
 	console.log('requesting status from test.progress');
 
 	var token = document.getElementById("token").value;
 	var xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = function() {
-	if (this.readyState == 4 && this.status == 200) {
-		console.log('xhttp response = '+this.responseText);
-		var b = JSON.parse(this.responseText);
-		document.getElementById("progress").innerHTML = "<div class='progress-bar bg-green' style='width:" + b.progress + "%'></div>";
-		if (b.progress == 100) {
-			document.getElementById("done").innerHTML = "<div class='alert alert-success' role='alert'> Your test is done running! </div>";
-			document.getElementById("progress").style.display = 'none';
-			clearInterval(intervalID);
-		}
-	}
-	};
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log('xhttp response = '+this.responseText);
+            var b = JSON.parse(this.responseText);
+            document.getElementById("progress").innerHTML = "<div class='progress-bar bg-green' style='width:" + b.progress + "%'></div>";
+            if (b.progress == 100 || b.progress == 200) { // 200 implies the test is no longer alive 
+                document.getElementById("done").innerHTML = "<div class='alert alert-success' role='alert'> Your test is done running! </div>";
+                document.getElementById("report").innerHTML = "<a href='/eos/report/?" + b.name + "' class='btn btn-pill btn-info'>Report</a>"
+                document.getElementById("progress").style.display = 'none';
+                clearInterval(intervalID);
+            }
+        }
+    };
 	xhttp.open("GET","/eos/progress/?"+token, true);
 	xhttp.send();
 }
@@ -50,12 +51,19 @@ window.onload = onload();
 
 	<div class="progress progress-sm" id="progress">
 	</div>
+
+<div class="container d-flex">
 	<div id="done">
 	</div>
+	<div id="report">
+	</div>
+
+</div>
 
 
 
 {% else %}
+<div class="container d-flex">
 <form class="form" method="post" enctype="multipart/form-data">
 	{% csrf_token %}
 	<label class="form-label">Test Parameters</label>
@@ -74,6 +82,7 @@ window.onload = onload();
 
 		</div>
 	</form>
+</div>
 
 
 {% endif %}

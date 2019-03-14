@@ -5,8 +5,7 @@ from django.template.response import TemplateResponse
 
 import eos.scripts.AbstractTestClass as ATC
 
-from eos.models import Test
-from eos.models import TestSuite
+from eos.models import Test, TestSuite, Report
 from eos.forms import TestForm 
 
 import importlib
@@ -26,6 +25,7 @@ def home(request):
     suites = get_all_TestSuites()
     return render(request, 'home.html', {'tests' : tests, 'suites': suites})
 
+
 def get_all_Tests():
     tests = Test.objects.all().values()
     return tests
@@ -37,50 +37,37 @@ def get_all_TestSuites():
 def test_upload(request):
 
     if request.method == "POST":
-
         form = TestForm(request.POST, request.FILES)
-
         if form.is_valid(): 
-
             script = form.cleaned_data['script']
             name = form.cleaned_data['name']
-
             #FIXME if test has the same name, replace test
-
             #test, created = Test.objects.get_or_create(name)
-
             #if not created:
             test = form.save(commit=False)
             test.name = name 
             test.script = script 
-
             test.save()
-
             #return render(request, 'test_response.html', {'tests': tests})
             return redirect('/eos')
 
         else:
-
             print("This Test has already been created, please try a new script.")
             return render(request, 'test_response.html', {'error' : 'Yo! Check your script and try again homie!' })
-        
     else:
-
         form = TestForm()
-
         print('test_upload: returning form for user completion')
         return render(request, 'test_upload.html', {'form': form})
 
 def upload_success(request):
     return HttpResponse("You successfully uploaded a test!")
 
+
 def create_suite(request):
 
     if request.method == "POST":
-
         # this is after the user has chosen the tests he wants to include in the test suite
         # q = request.POST q = getlist('value')
-
         q = request.POST
         tests = q.getlist('tests')
         name = q.get('TestSuiteName')
@@ -88,14 +75,10 @@ def create_suite(request):
         suite.TestList = json.dumps(tests)
         suite.name = name
         suite.save()
-
         return redirect('/eos')
 
-
     else:
-
         tests = get_all_Tests()
-
         return render(request, 'suites.html', {'tests': tests}) 
 
     
@@ -129,15 +112,19 @@ monitoring_thread = None
 
 def monitor_test():
     while True:
-        # FIXME
         # run through all the tests in running_tests 
-        for tid in running_tests:
+        for tid in list(running_tests):
             test = running_tests[tid]
             # wait for it to complete and delete the entry once it is done
             if test.is_done():
                 # update the report for the test once it is done
-                test.generate_report()
+                report = test.generate_report()
+                # save report to Database and grab from database when needed
                 del running_tests[tid]
+                print("monitor_test: test %s is done" % tid)
+                print(report)
+                break
+                
         time.sleep(1)
 
 def start_monitoring_thread():
@@ -152,22 +139,22 @@ def threaded_test(test, args):
 def progress(request):
     # lookup test instance from running_tests given tid
     tid = request.META['QUERY_STRING']
+    name = tid
     try:
         test = running_tests[tid]
         percent = test.get_progress()
         print("progress on test with tid %s: %d" % (tid, percent))
     except:
         print("no running test with tid %s" % tid)
-        percent = 0
+        percent = 200
     if percent == 100:
         print("test %s is done" % tid)
-    data = {'progress': percent}
+    data = {'progress': percent, 'name': name}
     return JsonResponse(data)
 
     # call progress on the test instance
     # return a JsonResponse
 
-#FIXME camelCase
 def run_test(request, test_id):
 
     if request.method == "POST":
@@ -192,9 +179,9 @@ def run_test(request, test_id):
         # cache the running instance of the test in the global running_tests dict
         running_tests[tid] = test
         # return the tid as a JsonResponse
-
-        #if monitoring_thread is None:
-        #    start_monitoring_thread()
+        
+        if monitoring_thread is None:
+            start_monitoring_thread()
 
         print(tid)
 
@@ -224,6 +211,7 @@ def edit_test(request, test_id):
     print(request)
     print(test_id)
     return HttpResponse(test_id)
+
 
 
 

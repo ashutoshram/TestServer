@@ -1,9 +1,26 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
+<div class="header py-4">
+	<div class="container">
+		<div class="d-flex">
+			<a class="header-brand" href="/eos/">
+				<img class="header-brand-img" src="{% static 'img/crash_test_dummy.png' %}">
+			</a>
+			<h1 class="page-title"> Altia Test Server </h1>
+		</div>
+	</div>
+</div>
+
 {% if not tests %}
-<h3> There are no tests to make a Test Suite! </h3>
+
+	<div class="page-header">			
+		<div class="container">
+				<h3> There are no tests to make a Test Suite! </h3>
+	</div>
+</div>
 
 
 {% else %}

@@ -47,7 +47,6 @@ class FPS(ATC.AbstractTestClass):
 class FPSTester():
 
     def test_fps(self, framerate, resolution, format_):
-
         # open opencv capture device and set the fps
         # capture frames over 5 seconds and calculate fps
 
@@ -151,8 +150,15 @@ class FPSTester():
         self.progress_percent = 100
 
 
-        dbg_print('FPSTester::test: err_code = %s' % repr(err_code))
+        dbg_print('FPSTester::test: err_code = %s' % repr(self.err_code))
         return self.err_code
 
-
-
+"""
+if __name__ == "__main__":
+	t = FPS()
+	args = t.get_args()
+	t.run(args)
+	print(t.get_progress())
+	print(t.is_done())
+	print(t.generate_report())
+"""
