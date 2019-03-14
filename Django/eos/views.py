@@ -19,12 +19,12 @@ import time
 
 # Create your views here.
 
+#BASIC VIEWS
 
 def home(request):
     tests = get_all_Tests()
     suites = get_all_TestSuites()
     return render(request, 'home.html', {'tests' : tests, 'suites': suites})
-
 
 def get_all_Tests():
     tests = Test.objects.all().values()
@@ -33,6 +33,12 @@ def get_all_Tests():
 def get_all_TestSuites():
     TestSuites = TestSuite.objects.all().values()
     return TestSuites
+
+def upload_success(request):
+    return HttpResponse("You successfully uploaded a test!")
+
+#UPLOAD AND CREATION VIEWS
+
 
 def test_upload(request):
 
@@ -59,8 +65,6 @@ def test_upload(request):
         print('test_upload: returning form for user completion')
         return render(request, 'test_upload.html', {'form': form})
 
-def upload_success(request):
-    return HttpResponse("You successfully uploaded a test!")
 
 
 def create_suite(request):
@@ -82,6 +86,8 @@ def create_suite(request):
         return render(request, 'suites.html', {'tests': tests}) 
 
     
+
+# TEST VIEWS
 
 def load_test(test_id):
     #use AccessID to grab correct Test Object
@@ -109,24 +115,6 @@ def load_test(test_id):
 running_tests = {} # a dictionary of tid to test instance
 monitoring_thread = None
 
-
-def monitor_test():
-    while True:
-        # run through all the tests in running_tests 
-        for tid in list(running_tests):
-            test = running_tests[tid]
-            # wait for it to complete and delete the entry once it is done
-            if test.is_done():
-                # update the report for the test once it is done
-                report = test.generate_report()
-                # save report to Database and grab from database when needed
-                del running_tests[tid]
-                print("monitor_test: test %s is done" % tid)
-                print(report)
-                break
-                
-        time.sleep(1)
-
 def start_monitoring_thread():
     monitoring_thread = threading.Thread(target=monitor_test, args=())
     monitoring_thread.start()
@@ -136,10 +124,29 @@ def threaded_test(test, args):
     t.start()
 
 
+def monitor_test():
+    while True:
+        # run through all the tests in running_tests 
+        for tid in list(running_tests):
+            test = running_tests[tid]
+            # wait for it to complete and delete the entry once it is done
+            if test.is_done():
+                # update the report for the test once it is done
+                name = test.get_name()
+                report = test.generate_report()
+                # save report to Database and grab from database when needed
+                # Report(create with tid)
+                R = Report.objects.create(name=name, report=report, accessID=tid)
+                R.save()
+                del running_tests[tid]
+                break
+        time.sleep(1)
+
+
+
 def progress(request):
     # lookup test instance from running_tests given tid
     tid = request.META['QUERY_STRING']
-    name = tid
     try:
         test = running_tests[tid]
         percent = test.get_progress()
@@ -149,7 +156,7 @@ def progress(request):
         percent = 200
     if percent == 100:
         print("test %s is done" % tid)
-    data = {'progress': percent, 'name': name}
+    data = {'progress': percent, 'report_id': tid}
     return JsonResponse(data)
 
     # call progress on the test instance
@@ -212,6 +219,10 @@ def edit_test(request, test_id):
     print(test_id)
     return HttpResponse(test_id)
 
+def report(request, report_id):
+    report = Report.objects.get(accessID=report_id)
+    # This is where a report.html will be implemented and show the report in a clean and concise manner. 
+    return HttpResponse(report.report)
 
 
 
