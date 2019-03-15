@@ -24,7 +24,8 @@ import time
 def home(request):
     tests = get_all_Tests()
     suites = get_all_TestSuites()
-    return render(request, 'home.html', {'tests' : tests, 'suites': suites})
+    reports = get_all_Reports()
+    return render(request, 'home.html', {'tests' : tests, 'suites': suites, 'reports': reports})
 
 def get_all_Tests():
     tests = Test.objects.all().values()
@@ -33,6 +34,10 @@ def get_all_Tests():
 def get_all_TestSuites():
     TestSuites = TestSuite.objects.all().values()
     return TestSuites
+
+def get_all_Reports():
+    reports = Report.objects.all().values()
+    return reports
 
 def upload_success(request):
     return HttpResponse("You successfully uploaded a test!")
@@ -136,13 +141,17 @@ def monitor_test():
                 report = test.generate_report()
                 # save report to Database and grab from database when needed
                 # Report(create with tid)
-                R = Report.objects.create(name=name, report=report, accessID=tid)
+                status = check_status(report)
+                R = Report.objects.create(name=name, report=report, accessID=tid, status=status)
                 R.save()
                 del running_tests[tid]
                 break
         time.sleep(1)
 
-
+def check_status(report):
+    #rpt = json.loads(report)
+    return all(v==0 for v in report.values())
+    
 
 def progress(request):
     # lookup test instance from running_tests given tid

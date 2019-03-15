@@ -17,7 +17,7 @@ function request_server() {
             document.getElementById("progress").innerHTML = "<div class='progress-bar bg-green' style='width:" + b.progress + "%'></div>";
             if (b.progress == 100 || b.progress == 200) { // 200 implies the test is no longer alive 
                 document.getElementById("done").innerHTML = "<div class='alert alert-success' role='alert'> Your test is done running! </div>";
-                document.getElementById("report").innerHTML = "<a href='/eos/report/?" + b.name + "' class='btn btn-pill btn-info'>Report</a>"
+                document.getElementById("report").innerHTML = "<a href='report/" + b.report_id + "' class='btn btn-pill btn-info'>Show Report</a>"
                 document.getElementById("progress").style.display = 'none';
                 clearInterval(intervalID);
             }
@@ -47,17 +47,19 @@ window.onload = onload();
 {% if threadid %}
 
 
-	<input type="hidden" id="token" name="token" value="{{threadid}}">
+<input type="hidden" id="token" name="token" value="{{threadid}}">
 
-	<div class="progress progress-sm" id="progress">
-	</div>
+<div class="progress progress-sm" id="progress">
+</div>
 
 <div class="container d-flex">
 	<div id="done">
 	</div>
+</div>
+
+<div class="container d-flex">
 	<div id="report">
 	</div>
-
 </div>
 
 
@@ -78,7 +80,7 @@ window.onload = onload();
 	{% endfor %}
 
 		<input type="hidden" name="uuid" value="{{ uuid_hidden }}">
-		<button type="submit" class='btn btn-success'>Run it boi</button>
+		<button type="submit" class='btn btn-success'>Run the {{test_name}}</button>
 
 		</div>
 	</form>

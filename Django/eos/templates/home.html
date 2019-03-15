@@ -89,13 +89,75 @@
 
 {% if not suites and not tests %}
 
-	<div class="page-header">			
-		<div class="container">
-			<h3> There are no Tests or Suites to be shown. Upload a test using the button above! </h2>
-		</div>
-	</div>
+<div class="page-header">			
+    <div class="container">
+        <h3> There are no Tests or Suites to be shown. Upload a test using the button above! </h2>
+    </div>
+</div>
 
 {% endif %}
 
+{% if reports %}
+
+<div class="page-header">
+    <div class="container">
+        <h2 class="page-title"> Tests </h2>
+    </div>
+</div>
+
+<div class="col-12">
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Status</th>
+                        <th>Report</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+{% for report in reports %}
+                    <tr>
+                        <td>
+                            <div> {{report.name}} </div>
+                        </td>        
+                        <td>
+{% if report.status %}
+                            <span class="badge badge-success">Success</span>
+{% else %}
+                            <span class="badge badge-danger">Fail</span>
+{% endif %}
+                        </td>        
+                        <td>
+                            <a href="run_test/report/{{report.accessID}}" class='btn btn-pill btn-info' >Show Report</a>
+                        </td>
+                    </tr>
+{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+{% else %}
+<h2> There are no Reports to be shown. Run a test to see a Report. </h2>
+{% endif %}
 
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
