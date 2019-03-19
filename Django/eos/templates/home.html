@@ -73,8 +73,8 @@
            <div class="card-header">
              <h3 class="card-title">{{suite.name}}</h3>
              <div class="card-options">
-		     <a href="run_test/{{suite.accessID}}" class="btn btn-purple">Run Suite</a>
-		     <a href="edit_test/{{suite.accessID}}" class="btn btn-pink">Run Suite</a>
+		     <a href="run_suite/{{suite.accessID}}" class="btn btn-purple">Run Suite</a>
+		     <a href="edit_test/{{suite.accessID}}" class="btn btn-pink">Edit Suite</a>
                        </div>
 	     </div>
 		   <div class="card-body">
@@ -101,7 +101,7 @@
 
 <div class="page-header">
     <div class="container">
-        <h2 class="page-title"> Tests </h2>
+        <h2 class="page-title"> Reports</h2>
     </div>
 </div>
 
@@ -114,6 +114,7 @@
                         <th>Test Name</th>
                         <th>Status</th>
                         <th>Report</th>
+                        <th>Full Report</th>
                     </tr>
                 </thead>
 
@@ -131,7 +132,17 @@
 {% endif %}
                         </td>        
                         <td>
-                            <a href="run_test/report/{{report.accessID}}" class='btn btn-pill btn-info' >Show Report</a>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown">
+                                    Quick Report 
+                                </button>
+                                <div class="dropdown-menu">
+                                {{report.report}}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="run_test/report/{{report.accessID}}" class='btn btn-pill btn-info' >Full Report</a>
                         </td>
                     </tr>
 {% endfor %}

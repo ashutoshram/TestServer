@@ -78,10 +78,17 @@ def create_suite(request):
         # this is after the user has chosen the tests he wants to include in the test suite
         # q = request.POST q = getlist('value')
         q = request.POST
+        testIDs = []
         tests = q.getlist('tests')
+        print("the tests you chose: %s" % tests)
+        for test in tests:
+            testID = str(Test.objects.get(name=test).accessID)
+            testIDs.append(testID)
         name = q.get('TestSuiteName')
+        print("this is the name you chose: %s" % name)
         suite = TestSuite()
-        suite.TestList = json.dumps(tests)
+        suite.TestList = str(testIDs)
+        print(testIDs)
         suite.name = name
         suite.save()
         return redirect('/eos')
@@ -149,7 +156,6 @@ def monitor_test():
         time.sleep(1)
 
 def check_status(report):
-    #rpt = json.loads(report)
     return all(v==0 for v in report.values())
     
 
@@ -170,6 +176,22 @@ def progress(request):
 
     # call progress on the test instance
     # return a JsonResponse
+
+def run_suite(request, test_id):
+    
+    if request.method == "POST":
+        pass
+        # after user has selected their parameters
+        # run each test using the respective list of parameters
+        # report each test and gather all reports into one suite report
+        # save as suite-report and display on home page --> get_all_suite_reports()
+    
+    else:
+        # show all tests within the Test Suite
+        # allow user to choose parameters for each of the tests
+        # user will apply their preferences and then run the suite
+        # send back data through request as a POST which will be handled above and run each test
+        pass
 
 def run_test(request, test_id):
 
