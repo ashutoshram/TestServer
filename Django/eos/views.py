@@ -14,6 +14,7 @@ import json
 import threading
 import uuid
 import time
+import traceback
 
 
 
@@ -86,9 +87,10 @@ def create_suite(request):
             testIDs.append(testID)
         name = q.get('TestSuiteName')
         print("this is the name you chose: %s" % name)
+
+        IDlist = ','.join([ID for ID in testIDs])
         suite = TestSuite()
-        suite.TestList = str(testIDs)
-        print(testIDs)
+        suite.TestList = (IDlist)
         suite.name = name
         suite.save()
         return redirect('/eos')
@@ -121,6 +123,7 @@ def load_test(test_id):
                     print(atc_classes)
         return atc_classes
     except:
+        traceback.print_exc()
         return []
 
 
@@ -190,6 +193,8 @@ def run_suite(request, suite_id):
         # show all tests within the Test Suite
         suite = TestSuite.objects.get(accessID=suite_id)
         print(suite.TestList)
+        t = suite.TestList
+        print(t.split(','))
         # allow user to choose parameters for each of the tests
         # user will apply their preferences and then run the suite
         # send back data through request as a POST which will be handled above and run each test
@@ -257,6 +262,12 @@ def report(request, report_id):
     # This is where a report.html will be implemented and show the report in a clean and concise manner. 
     return HttpResponse(report.report)
 
+def delete_suite(request, suite_id):
+    pass
+
+
+def delete_test(request, test_id):
+    pass
 
 
 
