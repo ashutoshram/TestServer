@@ -14,5 +14,5 @@ urlpatterns = [
     path('run_test/<uuid:test_id>', views.run_test, name='run_test'),
     path('edit_test/<uuid:test_id>', views.edit_test, name='edit_test'),
     path('run_test/report/<uuid:report_id>', views.report, name='report'),
-    path('run_suite/<uuid:test_id>', views.run_suite, name='run_suite'),
+    path('run_suite/<uuid:suite_id>', views.run_suite, name='run_suite'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

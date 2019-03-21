@@ -177,7 +177,7 @@ def progress(request):
     # call progress on the test instance
     # return a JsonResponse
 
-def run_suite(request, test_id):
+def run_suite(request, suite_id):
     
     if request.method == "POST":
         pass
@@ -188,10 +188,12 @@ def run_suite(request, test_id):
     
     else:
         # show all tests within the Test Suite
+        suite = TestSuite.objects.get(accessID=suite_id)
+        print(suite.TestList)
         # allow user to choose parameters for each of the tests
         # user will apply their preferences and then run the suite
         # send back data through request as a POST which will be handled above and run each test
-        pass
+        return HttpResponse(suite)
 
 def run_test(request, test_id):
 
