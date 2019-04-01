@@ -188,10 +188,13 @@ def run_suite(request, test_id):
     
     else:
         # show all tests within the Test Suite
+        suites = get_all_TestSuites()
+        for testID in suite.TestList:
+            print(int(testID))
         # allow user to choose parameters for each of the tests
         # user will apply their preferences and then run the suite
         # send back data through request as a POST which will be handled above and run each test
-        pass
+        return render(request, 'choose_suite_param.html', {'suites': suites})
 
 def run_test(request, test_id):
 

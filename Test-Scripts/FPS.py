@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 production = False 
-debug = False
+debug = True
 if not production:
     import AbstractTestClass as ATC
 else:
@@ -49,7 +49,7 @@ class FPSTester():
         # open opencv capture device and set the fps
         # capture frames over 5 seconds and calculate fps
 
-        cap = cv2.VideoCapture(1)
+        cap = cv2.VideoCapture(0)
 
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -133,8 +133,8 @@ class FPSTester():
         dbg_print('FPSTester::test: tests = %s' % repr(tests))
 
         #dictionary of format, resolution, framerate
-        frf = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
-        #frf = {'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
+        #frf = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
+        frf = {'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
 
         self.progress_percent = 0 
         for format_ in frf:
