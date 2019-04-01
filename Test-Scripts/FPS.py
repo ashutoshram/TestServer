@@ -87,7 +87,7 @@ class FPSTester():
             if (time.time() - start) > 5.0:
                 break
             ret, frame = cap.read()
-            dbg_print('got frame: count = %d' % count)
+            #dbg_print('got frame: count = %d' % count)
 
             if ret == -1:
                 count = 0
