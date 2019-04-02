@@ -57,8 +57,6 @@ class TimeWasteTester():
 
     def test(self, args):
 
-        dbg_print('TimeWaster::test: tests = %s' % repr(tests))
-
         self.progress_percent = 0
         
         for sec in args:
@@ -68,8 +66,6 @@ class TimeWasteTester():
 
         self.progress_percent = 100
             
-        
-
         return self.err_code
 
 if __name__ == "__main__":

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block extra_js %}
+
+<script>
+var intervalID;
+function request_server() {
+	// run ajax request
+	console.log('requesting status from test.progress');
+
+	var token = document.getElementById("token").value;
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log('xhttp response = '+this.responseText);
+            var b = JSON.parse(this.responseText);
+            document.getElementById("progress").innerHTML = "<div class='progress-bar bg-green' style='width:" + b.progress + "%'></div>";
+            if (b.progress == 100 || b.progress == 200) { // 200 implies the test is no longer alive 
+                document.getElementById("done").innerHTML = "<div class='alert alert-success' role='alert'> Your test is done running! </div>";
+                document.getElementById("report").innerHTML = "<a href='report/" + b.report_id + "' class='btn btn-pill btn-info'>Show Report</a>"
+                document.getElementById("progress").style.display = 'none';
+                clearInterval(intervalID);
+            }
+        }
+    };
+	xhttp.open("GET","/eos/progress/?"+token, true);
+	xhttp.send();
+}
+
+
+function onload() {
+	intervalID = setInterval(request_server, 1000);
+}
+
+window.onload = onload();
+
+</script>
+
+
+
+
+
+
+
+{% endblock %}
+{% block content %}
+
+{% if threadid %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% else %}
+	<div class="container d-flex">
+	<form class="form" method="post" enctype="multipart/form-data">
+		{% csrf_token %}
+
+		{% for testName, arguments in args_dict.items %}
+			<label class="form-label"> {{testName}} Parameters</label>
+				<div class="selectgroup selectgroup-pills">
+			  {% for argument in  arguments %} 
+				  <label class="selectgroup-item">
+					  <input type="checkbox" name="{{testName}}" value= {{argument}} class="selectgroup-input" checked="">
+					  <span class="selectgroup-button">{{argument}}</span>
+				  </label>
+			  {% endfor %} 
+				</div>
+
+		{% endfor %}
+		<div class="container">
+
+			<button type="submit" class='btn btn-success'>Run the {{suite.name}} Suite</button>
+		
+		</div>
+
+		</form>
+</div> 
+
+{% endif %}
+{% endblock %}

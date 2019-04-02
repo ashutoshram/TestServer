@@ -24,6 +24,7 @@ import traceback
 
 def home(request):
     tests = get_all_Tests()
+    #checkIfTestExists(tests)
     suites = get_all_TestSuites()
     reports = get_all_Reports()
     return render(request, 'home.html', {'tests' : tests, 'suites': suites, 'reports': reports})
@@ -128,6 +129,7 @@ def load_test(test_id):
 
 
 running_tests = {} # a dictionary of tid to test instance
+running_suites = {} # a dictionary of tid to suite instance
 monitoring_thread = None
 
 def start_monitoring_thread():
@@ -138,6 +140,7 @@ def threaded_test(test, args):
     t = threading.Thread(target=test.run, args=(args,))
     t.start()
 
+    
 
 def monitor_test():
     while True:
@@ -156,6 +159,11 @@ def monitor_test():
                 R.save()
                 del running_tests[tid]
                 break
+        for tid in list(running_suites):
+            suite = running_suites[tid]
+            if suite.is_done():
+                del running_suites[tid]
+                break
         time.sleep(1)
 
 def check_status(report):
@@ -171,9 +179,14 @@ def progress(request):
         print("progress on test with tid %s: %d" % (tid, percent))
     except:
         print("no running test with tid %s" % tid)
-        percent = 200
+        try:
+            suite = running_suites[tid]
+            percent = suite.get_progress()
+            print("progress on suite with tid %s: %d" % (tid, percent))
+        except:
+            percent = 200
     if percent == 100:
-        print("test %s is done" % tid)
+        print("test/suite %s is done" % tid)
     data = {'progress': percent, 'report_id': tid}
     return JsonResponse(data)
 
@@ -183,22 +196,36 @@ def progress(request):
 def run_suite(request, suite_id):
     
     if request.method == "POST":
-        pass
         # after user has selected their parameters
-        # run each test using the respective list of parameters
+        q = request.POST
+        s = Suite(suite_id, q)
+
         # report each test and gather all reports into one suite report
         # save as suite-report and display on home page --> get_all_suite_reports()
+        
+        tid = s.get_tid()
+        running_suites[tid] = s
+        return TemplateResponse(request, 'choose_suite_params.html', {'threadid': tid })
     
     else:
         # show all tests within the Test Suite
+        t_params = {}
+        names = []
         suite = TestSuite.objects.get(accessID=suite_id)
-        print(suite.TestList)
         t = suite.TestList
-        print(t.split(','))
+        t = t.split(',')
+        for testID in t:
+            test = load_test(testID)
+            for t in test:
+                t_arguments = t().get_args()
+                t_name = t().get_name()
+                t_params[t_name] = t_arguments
+
+
         # allow user to choose parameters for each of the tests
-        # user will apply their preferences and then run the suite
+        # user will +apply their preferences and then run the suite
         # send back data through request as a POST which will be handled above and run each test
-        return HttpResponse(suite)
+        return render(request, 'choose_suite_params.html', {'args_dict': t_params, 'suite': suite})
 
 def run_test(request, test_id):
 
@@ -265,7 +292,49 @@ def report(request, report_id):
 def delete_suite(request, suite_id):
     pass
 
-
 def delete_test(request, test_id):
     pass
+
+
+
+class Suite():
+    def __init__(suite_id, q):
+        self.suite_id = suite_id
+        self.q = q
+        self.run()
+
+    def run():
+        self.tid = uuid.uuid4()
+        self.tid = str(tid)
+        self.current_test = 0
+        self.num_tests = 1
+        self.t = threading.Thread(target=self._run, args=(,))
+        self.t.start()
+    
+    def get_tid():
+        return self.tid
+
+    def get_progress():
+        return int(self.current_test * 100/self.num_tests)
+
+    def is_done():
+        return self.get_progress() == 100
+
+
+    def _run():
+        suite = TestSuite.objects.get(accessID=self.suite_id)
+        t = suite.TestList
+        t = t.split(',')
+        # run each test using the respective list of parameters
+        tidlist = []
+        self.num_tests = len(t)
+        self.current_test = 0
+        for testID in t:
+            test = load_test(testID)
+            self.current_test = test = test[0]()
+            name = test.get_name()
+            args = self.q.getlist(name)
+            test.run(args)
+            #FIXME - add to records
+            self.current_test += 1
 

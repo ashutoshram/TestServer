@@ -3,8 +3,8 @@ import time
 import cv2
 import numpy as np
 
-production = False 
-debug = True
+production = True
+debug = False 
 if not production:
     import AbstractTestClass as ATC
 else:
