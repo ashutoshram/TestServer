@@ -245,9 +245,9 @@ def run_test(request, test_id):
 
 
         # start a thread running the test
-        threaded_test(test, args)
         tid = uuid.uuid4()
         tid = str(tid)
+        threaded_test(test, args)
         # cache the running instance of the test in the global running_tests dict
         running_tests[tid] = test
         # return the tid as a JsonResponse
@@ -296,45 +296,58 @@ def delete_test(request, test_id):
     pass
 
 
+#CLASSES
 
 class Suite():
-    def __init__(suite_id, q):
+    def __init__(self, suite_id, q):
         self.suite_id = suite_id
         self.q = q
         self.run()
 
-    def run():
+    def run(self):
         self.tid = uuid.uuid4()
-        self.tid = str(tid)
+        self.tid = str(self.tid)
         self.current_test = 0
         self.num_tests = 1
-        self.t = threading.Thread(target=self._run, args=(,))
+        self.done = False
+        self.t = threading.Thread(target=self._run, args=(self.tid,))
         self.t.start()
     
-    def get_tid():
+    def get_tid(self):
         return self.tid
 
-    def get_progress():
+    def get_progress(self):
         return int(self.current_test * 100/self.num_tests)
 
-    def is_done():
-        return self.get_progress() == 100
+    def is_done(self):
+        return self.done
 
 
-    def _run():
-        suite = TestSuite.objects.get(accessID=self.suite_id)
-        t = suite.TestList
-        t = t.split(',')
-        # run each test using the respective list of parameters
-        tidlist = []
-        self.num_tests = len(t)
-        self.current_test = 0
-        for testID in t:
-            test = load_test(testID)
-            self.current_test = test = test[0]()
-            name = test.get_name()
-            args = self.q.getlist(name)
-            test.run(args)
-            #FIXME - add to records
-            self.current_test += 1
+    def _run(self, tid):
+        try:
+            suite = TestSuite.objects.get(accessID=self.suite_id)
+            s_name = suite.name
+            t = suite.TestList
+            t = t.split(',')
+            # run each test using the respective list of parameters
+            tidlist = []
+            self.num_tests = len(t)
+            self.current_test = 0
+            self.suite_report = []
+            for testID in t:
+                test = load_test(testID)
+                test = test[0]()
+                name = test.get_name()
+                args = self.q.getlist(name)
+                test.run(args)
+                report = test.generate_report()
+                status = check_status(report)
+                self.suite_report.append(report)
+                self.current_test += 1
+            R = Report.objects.create(name=s_name, report=self.suite_report, accessID=tid, status=status, isSuiteReport=True)
+            R.save()
+        except:
+            print('Suite %s caught exception' % self.suite_id)
+            traceback.print_exc()
+        self.done = True
 

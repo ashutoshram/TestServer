@@ -45,7 +45,7 @@ class TimeWaste(ATC.AbstractTestClass):
 
 class TimeWasteTester():
 
-    def test_sleep(secs):
+    def test_sleep(self, secs):
         time.sleep(secs)
         return 0
 
@@ -58,6 +58,7 @@ class TimeWasteTester():
     def test(self, args):
 
         self.progress_percent = 0
+        self.err_code = {}
         
         for sec in args:
             secs = int(sec)
