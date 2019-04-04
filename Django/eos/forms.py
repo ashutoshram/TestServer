@@ -6,4 +6,4 @@ class TestForm(forms.ModelForm):
     
     class Meta:
         model = Test
-        fields = ['name', 'script']
+        fields = ['name', 'script', 'description']

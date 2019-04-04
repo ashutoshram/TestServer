@@ -35,25 +35,29 @@ window.onload = onload();
 
 </script>
 
-
-
-
-
-
-
 {% endblock %}
 {% block content %}
 
 {% if threadid %}
 
+<input type="hidden" id="token" name="token" value="{{threadid}}">
+
+<div class="progress progress-sm" id="progress">
+</div>
+
+<div class="container d-flex">
+        <div id="done">
+        </div>
+</div>
+
+<div class="container d-flex">
+        <div id="report">
+        </div>
+</div>
 
 
 
-
-
-
-
-
+{{threadid}}
 
 
 

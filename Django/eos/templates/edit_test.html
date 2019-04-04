@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+	<div class="card">
+                  <div class="card-header">
+			  <h3 class="card-title">{{test.name}}</h3>
+                  </div>
+		  <div class="card-body">
+			  {{test.description}}
+		  </div>
+                  <div class="card-footer">
+			  <button type="button" href="delete_test/{{test.accessID}}" class="btn btn-danger btn-block">Are you sure you want to delete {{test.name}}?</button>
+                  </div>
+	</div>
+</div>
+{% endblock %}

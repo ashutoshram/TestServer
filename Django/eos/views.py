@@ -96,6 +96,11 @@ def create_suite(request):
         suite.save()
         return redirect('/eos')
 
+
+
+
+    #FIXME IF TEST IS DELETED REMOVE ENTRY FROM TestList
+
     else:
         tests = get_all_Tests()
         return render(request, 'suites.html', {'tests': tests}) 
@@ -139,8 +144,6 @@ def start_monitoring_thread():
 def threaded_test(test, args):
     t = threading.Thread(target=test.run, args=(args,))
     t.start()
-
-    
 
 def monitor_test():
     while True:
@@ -280,21 +283,28 @@ def run_test(request, test_id):
 
 
 def edit_test(request, test_id):
-    print(request)
-    print(test_id)
-    return HttpResponse(test_id)
+    test = Test.objects.get(accessID=test_id)    
+    return render(request, 'edit_test.html', {'test': test})
+
+
+def edit_suite(request, suite_id):
+    suite = TestSuite.objects.get(accessID=suite_id)
+    return render(request, 'edit_suite.html', {'suite': suite})
 
 def report(request, report_id):
     report = Report.objects.get(accessID=report_id)
     # This is where a report.html will be implemented and show the report in a clean and concise manner. 
     return HttpResponse(report.report)
 
-def delete_suite(request, suite_id):
-    pass
-
 def delete_test(request, test_id):
-    pass
+    test = Test.objects.get(accessID=test_id)    
+    test.delete()
+    return redirect('home')
 
+def delete_suite(request, suite_id):
+    suite = TestSuite.objects.get(accessID=suite_id)
+    suite.delete()
+    return redirect('home')
 
 #CLASSES
 

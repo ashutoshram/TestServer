@@ -7,6 +7,7 @@ class Test(models.Model):
     
     script = models.FileField(upload_to='eos/scripts/')
     name = models.CharField(max_length=200, unique=True)
+    description = models.CharField(max_length=200, default="No description.")
 
     # Comma separated list of Test Suites that reference this Test. 
     usedByTestSuites = models.CharField(max_length=1000)
@@ -20,10 +21,11 @@ class TestSuite(models.Model):
 
 
 class Report(models.Model):
-	#the report that is saved to this model is a string of a dictionary. 
-	#example = " {'YUYV' : 'Success', 'MJPG': 'Fail (20 fps)'} "
+    #the report that is saved to this model is a string of a dictionary. 
+    #example = " {'YUYV' : 'Success', 'MJPG': 'Fail (20 fps)'} "
     status = models.BooleanField()
     name = models.CharField(max_length=200, default="TestName")
     accessID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    report = models.CharField(max_length=1000) 
+    report = models.TextField(null=True) 
+    isSuiteReport = models.BooleanField(default=False)
 
