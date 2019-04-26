@@ -1,6 +1,7 @@
 import os
 import time
 import cv2
+import platform
 import numpy as np
 
 production = True
@@ -19,7 +20,7 @@ class FPS(ATC.AbstractTestClass):
         self.FPSTest = FPSTester()
 
     def get_args(self):
-        return ['all','22','27', '30']
+        return ['all']
 
     def run(self, args):
         return self.FPSTest.test(args)
@@ -45,11 +46,21 @@ class FPS(ATC.AbstractTestClass):
 
 class FPSTester():
 
+
+    def __init__(self):
+        self.progress_percent = 0 
+
     def test_fps(self, framerate, resolution, format_):
         # open opencv capture device and set the fps
         # capture frames over 5 seconds and calculate fps
 
-        cap = cv2.VideoCapture(0)
+        os_type = platform.system()
+        if os_type == 'Windows':
+            cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
+        else if os_type == 'Darwin':
+            cap = cv2.VideoCapture(1)
+        else if os_type == 'Linux':
+            cap = cv2.VideoCapture(0)
 
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -120,23 +131,18 @@ class FPSTester():
     def results(self):
         return self.err_code
 
+
+
     def test(self, args):
         dbg_print('FPSTester::test: args = %s' % repr(args))
 
-        if 'all' in args: 
-            tests = [22, 27, 30]
-        else: 
-            tests = list(map(int, args))
-
         self.err_code = {}
 
-        dbg_print('FPSTester::test: tests = %s' % repr(tests))
 
         #dictionary of format, resolution, framerate
         #frf = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
         frf = {'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
 
-        self.progress_percent = 0 
         for format_ in frf:
             resdict = frf[format_]
             for resolution in resdict:
