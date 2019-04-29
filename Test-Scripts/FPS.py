@@ -57,9 +57,9 @@ class FPSTester():
         os_type = platform.system()
         if os_type == 'Windows':
             cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
-        else if os_type == 'Darwin':
+        elif os_type == 'Darwin':
             cap = cv2.VideoCapture(1)
-        else if os_type == 'Linux':
+        elif os_type == 'Linux':
             cap = cv2.VideoCapture(0)
 
         if resolution == '4k':
