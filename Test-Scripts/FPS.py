@@ -4,7 +4,7 @@ import cv2
 import platform
 import numpy as np
 
-production = True
+production = False
 debug = False 
 if not production:
     import AbstractTestClass as ATC
@@ -69,30 +69,30 @@ class FPSTester():
             cap = cv2.VideoCapture(0)"""
 
         if resolution == '4k':
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1088)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1088)
 
         if resolution == '1080p':
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
         if resolution == '720p':
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
             
         if format_ == 'MJPG':
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         if format_ == 'YUYV':
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-        cap.set(cv2.CAP_PROP_FPS, framerate)
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+        self.cap.set(cv2.CAP_PROP_FPS, framerate)
 
-        dbg_print('capturing at resolution = %d x %d' % (cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        dbg_print('capturing at resolution = %d x %d' % (self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
         def decode_fourcc(v):
             v = int(v)
             return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
 
-        fourcc = cap.get(cv2.CAP_PROP_FOURCC)
+        fourcc = self.cap.get(cv2.CAP_PROP_FOURCC)
         dbg_print('capturing format = %s' % decode_fourcc(fourcc))
 
         start = time.time()
@@ -103,7 +103,7 @@ class FPSTester():
 
             if (time.time() - start) > 5.0:
                 break
-            ret, frame = cap.read()
+            ret, frame = self.cap.read()
             #dbg_print('got frame: count = %d' % count)
 
             if ret == -1:
