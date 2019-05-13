@@ -1,11 +1,10 @@
 import os
 import time
 import cv2
-import uvc
 import platform
 import numpy as np
 
-production = True
+production = False
 debug = False 
 if not production:
     import AbstractTestClass as ATC
@@ -21,7 +20,7 @@ class UVC(ATC.AbstractTestClass):
         self.UVCTest = UVCTester()
 
     def get_args(self):
-        return ['all']
+        return [64, 128, 192]
 
     def run(self, args):
         return self.UVCTest.test(args)
@@ -48,11 +47,10 @@ class UVC(ATC.AbstractTestClass):
 class UVCTester():
 
     def __init__(self):
+        self.err_code = {}
         self.progress_percent = 0 
         self.os_type = platform.system()
-        self.device_list = uvc.device_list()
-        if self.os_type == 'Linux':
-            self.cap = self.uvc.Capture(device_list[0]['uid'])
+        self.cap = cv2.VideoCapture(0)
 
     def progress(self):
         return self.progress_percent
@@ -61,8 +59,27 @@ class UVCTester():
         return self.err_code
 
     def test(self, args):
-        print(cap.frame_mode)
-        cap.frame_mode = (3840, 1088, 30)
+        for brightness_level in args:
+            test_brightness(brightness_level)
+        cap.set(cv2.CAP_PROP_BRIGHTNESS, args)
+        now = time.time()
+        while True:
+
+            ret, frame = cap.read()
+            cv2.imshow("input", frame)
+
+            
+            if (time.time() - now) > 5.0:
+                break
+
+            key = cv2.waitKey(10)
+            if key == 27:
+                break
+
+        cv2.destroyAllWindows()
+        cap.release()
+
+        
 
 
 

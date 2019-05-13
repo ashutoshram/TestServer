@@ -61,13 +61,6 @@ class FPSTester():
         # open opencv capture device and set the fps
         # capture frames over 5 seconds and calculate fps
 
-        """if self.os_type == 'Windows':
-            cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
-        elif self.os_type == 'Darwin':
-            cap = cv2.VideoCapture(1)
-        elif self.os_type == 'Linux':
-            cap = cv2.VideoCapture(0)"""
-
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1088)
