@@ -1,10 +1,11 @@
 import os
 import time
 import cv2
+import platform
 import numpy as np
 
-production = False 
-debug = False
+production = False
+debug = True 
 if not production:
     import AbstractTestClass as ATC
 else:
@@ -19,7 +20,7 @@ class FPS(ATC.AbstractTestClass):
         self.FPSTest = FPSTester()
 
     def get_args(self):
-        return ['all','22','27', '30']
+        return ['all']
 
     def run(self, args):
         return self.FPSTest.test(args)
@@ -45,11 +46,21 @@ class FPS(ATC.AbstractTestClass):
 
 class FPSTester():
 
+
+    def __init__(self):
+        self.progress_percent = 0 
+
     def test_fps(self, framerate, resolution, format_):
         # open opencv capture device and set the fps
         # capture frames over 5 seconds and calculate fps
 
-        cap = cv2.VideoCapture(1)
+        os_type = platform.system()
+        if os_type == 'Windows':
+            cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
+        elif os_type == 'Darwin':
+            cap = cv2.VideoCapture(0)
+        elif os_type == 'Linux':
+            cap = cv2.VideoCapture(0)
 
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -87,7 +98,7 @@ class FPSTester():
             if (time.time() - start) > 5.0:
                 break
             ret, frame = cap.read()
-            dbg_print('got frame: count = %d' % count)
+            #dbg_print('got frame: count = %d' % count)
 
             if ret == -1:
                 count = 0
@@ -103,7 +114,7 @@ class FPSTester():
         dbg_print('elapsed = %f' % elapsed)
         calc_fps = float(count) / elapsed
         dbg_print('calc_fps = %f' % calc_fps)
-        eps = 1.0
+        eps = 3.0
 
         abs_diff = abs(calc_fps - framerate)
         if  abs_diff < eps:
@@ -120,25 +131,20 @@ class FPSTester():
     def results(self):
         return self.err_code
 
+
+
     def test(self, args):
         dbg_print('FPSTester::test: args = %s' % repr(args))
 
-        if 'all' in args: 
-            tests = [22, 27, 30]
-        else: 
-            tests = list(map(int, args))
-
         self.err_code = {}
 
-        dbg_print('FPSTester::test: tests = %s' % repr(tests))
 
         #dictionary of format, resolution, framerate
-        frf = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
+        mac_frf = {'MJPG' : {'4k' : 24, '1080p' : 27, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
         #frf = {'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
 
-        self.progress_percent = 0 
-        for format_ in frf:
-            resdict = frf[format_]
+        for format_ in mac_frf:
+            resdict = mac_frf[format_]
             for resolution in resdict:
                 framerate = resdict[resolution]
                 print(framerate, resolution, format_)
