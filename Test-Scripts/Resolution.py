@@ -1,10 +1,12 @@
 import os
+import sys
 import time
 import cv2
 import numpy as np
 
-production = True 
-debug = False
+production = False 
+debug = True
+
 if not production:
     import AbstractTestClass as ATC
 else:
@@ -46,11 +48,10 @@ class Resolution(ATC.AbstractTestClass):
 
 class ResTester():
 
-    def test_res(self, expectedres, resolution, format_):
+    def test_res(self, resolution, format_):
         # open opencv capture device and set the fps
+# OPEN THE CAMERA AND THE CODE WILL WORK LOLOLOLOLOLOL
         # capture frames over 5 seconds and calculate fps
-
-        cap = cv2.VideoCapture(0)
 
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -72,7 +73,6 @@ class ResTester():
             cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         if format_ == 'YUYV':
             cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-        cap.set(cv2.CAP_PROP_FPS, framerate)
 
         dbg_print('capturing at resolution = %d x %d' % (cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
@@ -84,23 +84,42 @@ class ResTester():
         dbg_print('capturing format = %s' % decode_fourcc(fourcc))
 
         start = time.time()
+        frame = 0
         count = 0
         skip = 10
 
         while True:
-
-            if (time.time() - start) > 5.0:
+            if (time.time() - start) > 2.0:
                 break
             ret, frame = cap.read()
             dbg_print('got frame: count = %d' % count)
 
-        if  abs_diff < eps:
-            dbg_print('success')
-            return 0 # success
+        h, w = frame.shape[:2]
+        print(h, w)
 
-        else:
-            dbg_print('failure : abs_diff = %f' % abs_diff)
-            return -1 #failure
+        if resolution == '4k':
+            if w == 3840 and h == 1088:
+                return 0
+            else: 
+                return -1
+
+        if resolution == '1080p':
+            if w == 1920 and h == 1080:
+                return 0
+            else: 
+                return -1
+
+        if resolution == '720p':
+            if w == 1280 and h == 720:
+                return 0
+            else: 
+                return -1
+
+        if resolution == '480p':
+            if w == 640 and h == 480:
+                return 0
+            else: 
+                return -1
 
     def progress(self):
         return self.progress_percent
@@ -121,18 +140,17 @@ class ResTester():
         dbg_print('FPSTester::test: tests = %s' % repr(tests))
 
         #dictionary of format, resolution, framerate
-        #frf = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
-        frf = {'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
+        frf = {'MJPG' : {'4k', '1080p', '720p'}, 'YUYV' : {'4k', '1080p', '720p'}}
+        #frf = {'YUYV' : {'4k', '1080p', '720p'}}
 
         self.progress_percent = 0 
         for format_ in frf:
             resdict = frf[format_]
             for resolution in resdict:
-                framerate = resdict[resolution]
-                print(framerate, resolution, format_)
-                test_type = str(framerate) + ' x ' + str(resolution) + ' x ' + str(format_)
-                self.err_code[test_type] = self.test_fps(framerate, resolution, format_)
-                self.progress_percent += 33
+                print(resolution, format_)
+                test_type = str(resolution) + ' x ' + str(format_)
+                self.err_code[test_type] = self.test_res(resolution, format_)
+                self.progress_percent += 15
 
         self.progress_percent = 100
 
@@ -142,7 +160,7 @@ class ResTester():
 
 
 if __name__ == "__main__":
-	t = FPS()
+	t = Resolution()
 	args = t.get_args()
 	t.run(args)
 	print(t.get_progress())
