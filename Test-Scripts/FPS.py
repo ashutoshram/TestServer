@@ -5,7 +5,7 @@ import platform
 import numpy as np
 
 production = False
-debug = False 
+debug = True 
 if not production:
     import AbstractTestClass as ATC
 else:

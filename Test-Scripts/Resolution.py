@@ -52,6 +52,15 @@ class ResTester():
         # open opencv capture device and set the fps
 # OPEN THE CAMERA AND THE CODE WILL WORK LOLOLOLOLOLOL
         # capture frames over 5 seconds and calculate fps
+        cap = cv2.VideoCapture(1)
+        print(cap)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+        if cap.get(cv2.CAP_PROP_FRAME_WIDTH) != 3840:       
+            cap = cv2.VideoCapture(0)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+            if cap.get(cv2.CAP_PROP_FRAME_WIDTH) != 3840:       
+                print('ihurr')
+                sys.exit(1)
 
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
