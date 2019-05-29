@@ -8,6 +8,7 @@ import eos.scripts.AbstractTestClass as ATC
 from eos.models import Test, TestSuite, Report
 from eos.forms import TestForm 
 
+import os
 import importlib
 import inspect
 import json
