@@ -155,10 +155,11 @@ def monitor_test():
                 # update the report for the test once it is done
                 name = test.get_name()
                 report = test.generate_report()
+                storage_path = test.get_storage_path()
                 # save report to Database and grab from database when needed
                 # Report(create with tid)
                 status = check_status(report)
-                R = Report.objects.create(name=name, report=report, accessID=tid, status=status)
+                R = Report.objects.create(name=name, report=report, accessID=tid, status=status, storage=storage_path)
                 R.save()
                 del running_tests[tid]
                 break
@@ -250,6 +251,9 @@ def run_test(request, test_id):
         # start a thread running the test
         tid = uuid.uuid4()
         tid = str(tid)
+        name = test.get_name()
+        storage_path = name + '_' + str(tid)
+        test.set_default_storage_path(storage_path)
         threaded_test(test, args)
         # cache the running instance of the test in the global running_tests dict
         running_tests[tid] = test
@@ -260,7 +264,6 @@ def run_test(request, test_id):
 
         print(tid)
 
-        name = test.get_name()
 
         return TemplateResponse(request, 'choose_parameters.html', {'arguments': args,'threadid': tid, 'test_name' : name})
 
