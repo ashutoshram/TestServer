@@ -17,7 +17,11 @@ def dbg_print(*args):
 class FPS(ATC.AbstractTestClass):
 
     def __init__(self):
-        self.FPSTest = FPSTester()
+        if platform.system() == 'Darwin':
+            cap_id = 1
+        else:
+            cap_id = 0
+        self.FPSTest = FPSTester(cap_id)
 
     def get_args(self):
         return ['all']
@@ -46,31 +50,47 @@ class FPS(ATC.AbstractTestClass):
 
 class FPSTester():
 
-    def __init__(self):
+    def __init__(self, cap_id=0):
         self.progress_percent = 0 
+        self.cap_id = cap_id
         self.os_type = platform.system()
         if self.os_type == 'Windows':
-            self.cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+            self.cap = cv2.VideoCapture(self.cap_id,cv2.CAP_DSHOW)
         elif self.os_type == 'Darwin':
-            self.cap = cv2.VideoCapture(1)
+            self.cap = cv2.VideoCapture(self.cap_id)
         elif self.os_type == 'Linux':
-            self.cap = cv2.VideoCapture(0)
+            self.cap = cv2.VideoCapture(self.cap_id)
+        if not self.cap.isOpened():
+            print('Failed to open capture device %d' % self.cap_id)
+            #FIXME throw an exception
+
+        #self.dump_props()
+
+    def dump_props(self):
+        fourcc_names = ['CAP_PROP_POS_MSEC', 'CAP_PROP_POS_FRAMES', 'CAP_PROP_POS_AVI_RATIO', 'CAP_PROP_FRAME_WIDTH', 'CAP_PROP_FRAME_HEIGHT', 'CAP_PROP_FPS', 'CAP_PROP_FOURCC', 'CAP_PROP_FRAME_COUNT', 'CAP_PROP_FORMAT', 'CAP_PROP_MODE', 'CAP_PROP_BRIGHTNESS', 'CAP_PROP_CONTRAST', 'CAP_PROP_SATURATION', 'CAP_PROP_HUE', 'CAP_PROP_GAIN', 'CAP_PROP_EXPOSURE', 'CAP_PROP_CONVERT_RGB', 'CAP_PROP_WHITE_BALANCE_BLUE_U', 'CAP_PROP_RECTIFICATION', 'CAP_PROP_MONOCHROME', 'CAP_PROP_SHARPNESS', 'CAP_PROP_AUTO_EXPOSURE', 'CAP_PROP_GAMMA', 'CAP_PROP_TEMPERATURE', 'CAP_PROP_TRIGGER', 'CAP_PROP_TRIGGER_DELAY', 'CAP_PROP_WHITE_BALANCE_RED_V', 'CAP_PROP_ZOOM', 'CAP_PROP_FOCUS', 'CAP_PROP_GUID', 'CAP_PROP_ISO_SPEED', 'CAP_PROP_BACKLIGHT', 'CAP_PROP_PAN', 'CAP_PROP_TILT', 'CAP_PROP_ROLL', 'CAP_PROP_IRIS', 'CAP_PROP_SETTINGS', 'CAP_PROP_BUFFERSIZE', 'CAP_PROP_AUTOFOCUS']
+        print('dump_props')
+        for i in range(len(fourcc_names)):
+                print (i, fourcc_names[i], self.cap.get(i))
+
+
+
+    def decode_fourcc(self,v):
+        v = int(v)
+        return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
 
 
     def test_fps(self, framerate, resolution, format_):
         # open opencv capture device and set the fps
         # capture frames over 5 seconds and calculate fps
 
-        """if self.os_type == 'Windows':
-            cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
-        elif self.os_type == 'Darwin':
-            cap = cv2.VideoCapture(1)
-        elif self.os_type == 'Linux':
-            cap = cv2.VideoCapture(0)"""
 
         if resolution == '4k':
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1088)
+            if self.os_type == 'Windows':
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1088)
+            else:
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1088)
 
         if resolution == '1080p':
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
@@ -80,20 +100,23 @@ class FPSTester():
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
             
+        self.cap.set(cv2.CAP_PROP_FPS, framerate)
+
         if format_ == 'MJPG':
-            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            while True:
+                self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+                fourcc = self.decode_fourcc(self.cap.get(cv2.CAP_PROP_FOURCC))
+                if fourcc != 'MJPG':
+                    dbg_print('capturing format = %s' % fourcc)
+                    dbg_print('Not MJPG - trying again')
+                    time.sleep(0.5)
+
         if format_ == 'YUYV':
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-        self.cap.set(cv2.CAP_PROP_FPS, framerate)
+
 
         dbg_print('capturing at resolution = %d x %d' % (self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-        def decode_fourcc(v):
-            v = int(v)
-            return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
-
-        fourcc = self.cap.get(cv2.CAP_PROP_FOURCC)
-        dbg_print('capturing format = %s' % decode_fourcc(fourcc))
 
         start = time.time()
         count = 0
