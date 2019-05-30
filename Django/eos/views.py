@@ -253,10 +253,15 @@ def run_test(request, test_id):
         tid = uuid.uuid4()
         tid = str(tid)
         name = test.get_name()
-        storage_path = name + '_' + str(tid)
-        full_path = 'data/' + storage_path
+        test_path = name + '_' + tid
+
+        full_path = 'eos/scripts/data/' + test_path
+        storage_path = '/data/' + test_path
         os.makedirs(full_path)
+        print("Made Directory!")
         test.set_default_storage_path(storage_path)
+        print("Setting Storage Path")
+        print(storage_path)
         threaded_test(test, args)
         # cache the running instance of the test in the global running_tests dict
         running_tests[tid] = test

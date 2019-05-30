@@ -3,7 +3,7 @@ import time
 import cv2
 import numpy as np
 
-production = True 
+production = False 
 debug = False
 if not production:
     import AbstractTestClass as ATC
@@ -22,7 +22,7 @@ class TimeWaste(ATC.AbstractTestClass):
         return ['10','15','20', '30']
 
     def run(self, args):
-        return self.TimeWaste.test(args)
+        return self.TimeWaste.test(args, self.storage_path)
 
     def get_progress(self):
         return self.TimeWaste.progress()
@@ -30,8 +30,11 @@ class TimeWaste(ATC.AbstractTestClass):
     def set_default_storage_path(self, path):
         self.storage_path = path
 
+    def get_storage_path(self):
+        return self.storage_path
+
     def get_name(self):
-        return "TimeWaste Test"
+        return "TimeWaste"
     
     def is_done(self):
         if self.TimeWaste.progress() == 100:
@@ -45,8 +48,18 @@ class TimeWaste(ATC.AbstractTestClass):
 
 class TimeWasteTester():
 
-    def test_sleep(self, secs):
+    def __init__(self):
+        self.count = 0 
+
+    def test_sleep(self, secs, storage_path):
+        print(storage_path)
+        picture_ = ('time_waster_%d.jpg' % (self.count))
+        filename = storage_path + picture_ 
         time.sleep(secs)
+        cap = cv2.VideoCapture(0)
+        ret, frame = cap.read()
+        cv2.imwrite(filename, frame)
+        self.count += 1
         return 0
 
     def progress(self):
@@ -55,14 +68,14 @@ class TimeWasteTester():
     def results(self):
         return self.err_code
 
-    def test(self, args):
+    def test(self, args, storage_path):
 
         self.progress_percent = 0
         self.err_code = {}
         
         for sec in args:
             secs = int(sec)
-            self.err_code[sec] = self.test_sleep(secs)
+            self.err_code[sec] = self.test_sleep(secs, storage_path)
             self.progress_percent += 25
 
         self.progress_percent = 100
