@@ -254,6 +254,8 @@ def run_test(request, test_id):
         tid = str(tid)
         name = test.get_name()
         storage_path = name + '_' + str(tid)
+        full_path = 'data/' + storage_path
+        os.makedirs(full_path)
         test.set_default_storage_path(storage_path)
         threaded_test(test, args)
         # cache the running instance of the test in the global running_tests dict
