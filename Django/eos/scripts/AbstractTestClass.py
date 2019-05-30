@@ -19,6 +19,11 @@ class AbstractTestClass(ABC):
         self.storage_path = path
 
     @abstractmethod
+    def get_storage_path(self):
+        return self.storage_path
+
+    @abstractmethod
+    # This method should return a dictionary with 0 for success, -1 for failure in the value of the key,value pair. 
     def generate_report(self):
         return None
 

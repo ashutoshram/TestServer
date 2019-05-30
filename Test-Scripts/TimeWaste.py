@@ -1,9 +1,10 @@
 import os
+import uuid
 import time
 import cv2
 import numpy as np
 
-production = False 
+production = True 
 debug = False
 if not production:
     import AbstractTestClass as ATC
@@ -19,7 +20,7 @@ class TimeWaste(ATC.AbstractTestClass):
         self.TimeWaste = TimeWasteTester()
 
     def get_args(self):
-        return ['10','15','20', '30']
+        return ['5']
 
     def run(self, args):
         return self.TimeWaste.test(args, self.storage_path)
@@ -50,16 +51,30 @@ class TimeWasteTester():
 
     def __init__(self):
         self.count = 0 
+        self.cap = cv2.VideoCapture(0)
+        if not self.cap.isOpened():
+            self.cap = cv2.VideoCapture(1)
+
+
 
     def test_sleep(self, secs, storage_path):
         print(storage_path)
-        picture_ = ('time_waster_%d.jpg' % (self.count))
-        filename = storage_path + picture_ 
-        time.sleep(secs)
-        cap = cv2.VideoCapture(0)
-        ret, frame = cap.read()
-        cv2.imwrite(filename, frame)
+        jamaal = 'time_waster_%d.txt' % (self.count)
+        #freddy = 'time_waster_%d.jpg' % (self.count)
+        #charles = storage_path + "/" + freddy
+        charles = storage_path + "/" + jamaal
+        print(charles)
+        picture_ = open(charles, "w+")
+        picture_.write("This was a success")
+        now = time.time()
+        #while True:
+        #    ret, frame = self.cap.read()
+        #    if (time.time() - now) > 10.0:
+        #        break
+        #cv2.imwrite(charles, frame)
+
         self.count += 1
+        picture_.close()
         return 0
 
     def progress(self):
@@ -83,9 +98,17 @@ class TimeWasteTester():
         return self.err_code
 
 if __name__ == "__main__":
-	t = TimeWaste()
-	args = t.get_args()
-	t.run(args)
-	print(t.get_progress())
-	print(t.is_done())
-	print(t.generate_report())
+    t = TimeWaste()
+    tid = uuid.uuid4()
+    tid = str(tid)
+    name = "TimeWaste" 
+    test_path = name + '_' + tid
+    real_path = 'data/' + test_path
+    os.makedirs(real_path)
+
+    t.set_default_storage_path(real_path)
+    args = t.get_args()
+    t.run(args)
+    print(t.get_progress())
+    print(t.is_done())
+    print(t.generate_report())

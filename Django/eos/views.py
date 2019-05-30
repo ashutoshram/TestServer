@@ -253,12 +253,12 @@ def run_test(request, test_id):
         tid = uuid.uuid4()
         tid = str(tid)
         name = test.get_name()
-        test_path = name + '_' + tid
+        test_path = tid
 
         full_path = 'eos/scripts/data/' + test_path
-        storage_path = '/data/' + test_path
+        storage_path = 'eos/scripts/data/' + test_path
         os.makedirs(full_path)
-        print("Made Directory!")
+        print(full_path)
         test.set_default_storage_path(storage_path)
         print("Setting Storage Path")
         print(storage_path)
