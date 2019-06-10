@@ -3,6 +3,7 @@ import time
 import platform
 import numpy as np
 import webcamPy as wpy
+import sys
 
 production = False
 debug = False 
@@ -53,7 +54,7 @@ class BrightnessTester():
         self.cam = wpy.Webcam()
         if not self.cam.open(3840, 1080, 30.0, "YUY2"):
             print("PanaCast cannot be opened!!")
-            sys.exit(1)            
+            sys.exit(1)
 
     def progress(self):
         return self.progress_percent
@@ -75,6 +76,8 @@ class BrightnessTester():
         now = time.time()
         self.cam.setCameraControlProperty('brightness', brightness_level)
         current_brightness = self.cam.getCameraControlProperty('brightness')[0]
+        default_brightness = self.cam.getCameraControlProperty('brightness')[3]
+        self.cam.setCameraControlProperty('contrast', default_brightness)
         return current_brightness
 
 
