@@ -28,4 +28,5 @@ class Report(models.Model):
     accessID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     report = models.TextField(null=True) 
     isSuiteReport = models.BooleanField(default=False)
+    storage = models.CharField(max_length=200, default="StoragePath")
 
