@@ -46,10 +46,11 @@ class Brightness(ATC.AbstractTestClass):
     def is_done(self):
         if self.BrightnessTest is None:
             return False
-        elif self.BrightnessTest.progress() == 100:
-            return True
         else:
-            return False
+            if self.BrightnessTest.progress() == 100:
+                return True
+            else:
+                return False
 
     def generate_report(self):
         return self.BrightnessTest.results()
@@ -76,11 +77,16 @@ class BrightnessTester():
     def test(self, args):
         for brightness_level in args:
             return_val = self.test_brightness(int(brightness_level))
-            if return_val == brightness_level:
+            print(type(return_val))
+            print(type(brightness_level))
+            if return_val == int(brightness_level):
+                print("Hello")
                 self.err_code[brightness_level] = 0
             else:
+                print("goodbye")
                 self.err_code[brightness_level] = -1
-            time.sleep(0.1)
+            self.progress_percent += 33
+        self.progress_percent = 100
         return self.err_code
 
 
@@ -88,11 +94,10 @@ class BrightnessTester():
         print('entering test_brightness')
         if not self.cam.setCameraControlProperty('brightness', brightness_level):
             print('test_brightness: cannot set brightness')
-        #current_brightness = self.cam.getCameraControlProperty('brightness')[0]
-        #default_brightness = self.cam.getCameraControlProperty('brightness')[3]
-        #self.cam.setCameraControlProperty('contrast', default_brightness)
-        current_brightness = 1
-        print(current_brightness)
+        current_brightness = self.cam.getCameraControlProperty('brightness')[0]
+        default_brightness = self.cam.getCameraControlProperty('brightness')[3]
+        self.cam.setCameraControlProperty('contrast', default_brightness)
+        #print(current_brightness)
         return current_brightness
 
 

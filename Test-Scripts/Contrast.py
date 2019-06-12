@@ -1,16 +1,18 @@
 import os
+import sys
 import time
 import cv2
 import platform
 import numpy as np
-import webcamPy as wpy
 
-production = False
+production = True
 debug = False 
 if not production:
     import AbstractTestClass as ATC
+    import webcamPy as wpy
 else:
     import eos.scripts.AbstractTestClass as ATC
+    import eos.scripts.webcamPy as wpy
 
 def dbg_print(*args):
     if debug: print("".join(map(str, args)))
@@ -31,6 +33,9 @@ class Contrast(ATC.AbstractTestClass):
 
     def set_default_storage_path(self, path):
         self.storage_path = path
+
+    def get_storage_path(self):
+        return self.storage_path
 
     def get_name(self):
         return "Contrast Test"
@@ -53,7 +58,7 @@ class ContrastTester():
         self.cam = wpy.Webcam()
         if not self.cam.open(3840, 1080, 30.0, "YUY2"):
             print("PanaCast cannot be opened!!")
-            sys.exit(1)
+            #sys.exit(1)
 
     def progress(self):
         return self.progress_percent

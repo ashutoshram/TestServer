@@ -8,8 +8,10 @@ production = True
 debug = False
 if not production:
     import AbstractTestClass as ATC
+    import webcamPy as wpy
 else:
     import eos.scripts.AbstractTestClass as ATC
+    import eos.scripts.webcamPy as wpy
 
 def dbg_print(*args):
     if debug: print("".join(map(str, args)))
@@ -17,15 +19,18 @@ def dbg_print(*args):
 class TimeWaste(ATC.AbstractTestClass):
 
     def __init__(self):
-        self.TimeWaste = TimeWasteTester()
+        self.TimeWaste = None
 
     def get_args(self):
         return ['5']
 
     def run(self, args):
+        self.TimeWaste = TimeWasteTester()
         return self.TimeWaste.test(args, self.storage_path)
 
     def get_progress(self):
+        if self.TimeWaste is None:
+            return 0
         return self.TimeWaste.progress()
 
     def set_default_storage_path(self, path):
@@ -51,22 +56,25 @@ class TimeWasteTester():
 
     def __init__(self):
         self.count = 0 
-        self.cap = cv2.VideoCapture(0)
-        if not self.cap.isOpened():
-            self.cap = cv2.VideoCapture(1)
+        self.cam = wpy.Webcam()
+        if not self.cam.open(3840, 1080, 30.0, "YUY2"):
+            print("Cannot start PanaCast!")
 
 
 
     def test_sleep(self, secs, storage_path):
         print(storage_path)
         jamaal = 'time_waster_%d.txt' % (self.count)
-        #freddy = 'time_waster_%d.jpg' % (self.count)
-        #charles = storage_path + "/" + freddy
         charles = storage_path + "/" + jamaal
-        print(charles)
         picture_ = open(charles, "w+")
         picture_.write("This was a success")
         now = time.time()
+
+        frame = self.cam.getFrame()
+        frame = cv2.cvtColor(frame, cv2.COLOR_YUV2BGR_YUY2)
+        pic_ = 'time_waster_%d.png' % (self.count)
+        save_area = storage_path + "/" + pic_
+        cv2.imwrite(save_area, frame)
         #while True:
         #    ret, frame = self.cap.read()
         #    if (time.time() - now) > 10.0:

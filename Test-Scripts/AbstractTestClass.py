@@ -19,6 +19,10 @@ class AbstractTestClass(ABC):
         self.storage_path = path
 
     @abstractmethod
+    def get_storage_path(self):
+        return self.storage_path
+
+    @abstractmethod
     def generate_report(self):
         return None
 

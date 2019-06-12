@@ -250,9 +250,9 @@ def run_test(request, test_id):
 
 
         # start a thread running the test
+        name = test.get_name()
         tid = uuid.uuid4()
         tid = str(tid)
-        name = test.get_name()
         test_path = tid
 
         full_path = 'eos/scripts/data/' + test_path
@@ -308,6 +308,7 @@ def report(request, report_id):
     return HttpResponse(report.report)
 
 def delete_test(request, test_id):
+    print("DELETE is being called")
     test = Test.objects.get(accessID=test_id)    
     test.delete()
     return redirect('home')
