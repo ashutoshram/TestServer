@@ -5,7 +5,7 @@ import cv2
 import platform
 import numpy as np
 
-production = True
+production = False
 debug = False 
 if not production:
     import AbstractTestClass as ATC
@@ -23,6 +23,7 @@ class Contrast(ATC.AbstractTestClass):
         self.ContrastTest = ContrastTester()
 
     def get_args(self):
+        #return [0, 95, 191]
         return [0, 95, 191]
 
     def run(self, args):
@@ -68,24 +69,43 @@ class ContrastTester():
 
     def test(self, args):
         print(args)
+        otsu_list = []
         for contrast_level in args:
-            return_val = self.test_contrast(int(contrast_level))
-            if return_val == contrast_level:
-                self.err_code[contrast_level] = 0
-            else:
-                self.err_code[contrast_level] = -1
+            return_val, otsu = self.test_contrast(int(contrast_level))
+            otsu_list.append(otsu)
             self.progress_percent += 33
+        if self.check(otsu_list[0], otsu_list[1]) and self.check(otsu_list[1], otsu_list[2]):
+            for contrast_level in args:
+                self.err_code[contrast_level] = 0
+        else:
+            for contrast_level in args:
+                self.err_code[contrast_level] = -1
         self.progress_percent = 100 
         return self.err_code
 
+    def check(self, otsu1, otsu2):
+        diff = otsu1 - otsu2
+        if abs(diff) > 1.0:
+            return True
+        else:
+            return False
+        
 
     def test_contrast(self,contrast_level):
-        self.cam.setCameraControlProperty('contrast', contrast_level)
+        if not self.cam.setCameraControlProperty('contrast', contrast_level):
+            print("Contrast cannot be set!")
+        time.sleep(3)
+        f = self.cam.getFrame()
+        #f = cv2.cvtColor(f, cv2.COLOR_YUV2BGR_YUY2)
+        f = cv2.cvtColor(f, cv2.COLOR_YUV2GRAY_YUY2)
+        ret, thresh = cv2.threshold(f, 0, 255, cv2.THRESH_OTSU)
+        otsu = np.average(thresh)
+        print(otsu)
         current_contrast = self.cam.getCameraControlProperty('contrast')[0]
         default_contrast = self.cam.getCameraControlProperty('contrast')[3]
         self.cam.setCameraControlProperty('contrast', default_contrast)
         print(current_contrast)
-        return current_contrast
+        return current_contrast, otsu
 
 
 
@@ -95,4 +115,4 @@ if __name__ == "__main__":
 	t.run(args)
 	#print(t.get_progress())
 	#print(t.is_done())
-	#print(t.generate_report())
+	print(t.generate_report())

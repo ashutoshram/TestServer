@@ -3,8 +3,9 @@ import time
 import platform
 import numpy as np
 import sys
+import cv2
 
-production = True
+production = False
 debug = False 
 if not production:
     import AbstractTestClass as ATC
@@ -41,7 +42,7 @@ class Brightness(ATC.AbstractTestClass):
         return self.storage_path
 
     def get_name(self):
-        return "UVC Test"
+        return "Brightness Test"
     
     def is_done(self):
         if self.BrightnessTest is None:
@@ -65,7 +66,6 @@ class BrightnessTester():
         print("hello")
         if not self.cam.open(3840, 1080, 30.0, "YUY2"):
             print("PanaCast cannot be opened!!")
-            #sys.exit(1)
         print("opened panacast device")
 
     def progress(self):
@@ -75,17 +75,18 @@ class BrightnessTester():
         return self.err_code
 
     def test(self, args):
+        luma_list = []
         for brightness_level in args:
-            return_val = self.test_brightness(int(brightness_level))
-            print(type(return_val))
-            print(type(brightness_level))
-            if return_val == int(brightness_level):
-                print("Hello")
-                self.err_code[brightness_level] = 0
-            else:
-                print("goodbye")
-                self.err_code[brightness_level] = -1
+            return_val, luma = self.test_brightness(int(brightness_level))
+            luma_list.append(luma)
             self.progress_percent += 33
+            print(luma_list)
+        if luma_list[1] > luma_list[0] and luma_list[2] > luma_list[1]:
+            for bright in args:
+                self.err_code[bright] = 0
+        else:
+            for bright in args:
+                self.err_code[bright] = -1
         self.progress_percent = 100
         return self.err_code
 
@@ -94,11 +95,16 @@ class BrightnessTester():
         print('entering test_brightness')
         if not self.cam.setCameraControlProperty('brightness', brightness_level):
             print('test_brightness: cannot set brightness')
+        time.sleep(3)
+        f = self.cam.getFrame()
+        f = cv2.cvtColor(f, cv2.COLOR_YUV2GRAY_YUY2)
+        luma = np.average(f)
+        print(brightness_level, luma)
         current_brightness = self.cam.getCameraControlProperty('brightness')[0]
         default_brightness = self.cam.getCameraControlProperty('brightness')[3]
-        self.cam.setCameraControlProperty('contrast', default_brightness)
+        self.cam.setCameraControlProperty('brightness', default_brightness)
         #print(current_brightness)
-        return current_brightness
+        return current_brightness, luma
 
 
 if __name__ == "__main__":
