@@ -3,6 +3,7 @@ import time
 import platform
 import numpy as np
 import sys
+import cv2
 
 production = False
 debug = False 
@@ -94,6 +95,13 @@ class SaturationTester():
         print('entering test_saturation')
         if not self.cam.setCameraControlProperty('saturation', saturation_level):
             print('test_saturation: cannot set saturation')
+        time.sleep(3)
+        f = self.cam.getFrame()
+        bgr = cv2.cvtColor(f, cv2.COLOR_YUV2BGR_YUY2)
+        hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(hsv)
+        saturation_average = np.average(s)
+        print(saturation_average)
         current_saturation = self.cam.getCameraControlProperty('saturation')[0]
         default_saturation = self.cam.getCameraControlProperty('saturation')[3]
         self.cam.setCameraControlProperty('hdr', default_saturation)
