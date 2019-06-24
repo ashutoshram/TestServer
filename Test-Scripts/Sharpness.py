@@ -4,7 +4,7 @@ import platform
 import numpy as np
 import sys
 
-production = False
+production = True
 debug = False 
 if not production:
     import AbstractTestClass as ATC

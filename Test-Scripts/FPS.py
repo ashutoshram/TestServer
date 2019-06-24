@@ -6,7 +6,7 @@ import platform
 import numpy as np
 import webcamPy as wpy
 
-production = False
+production = True
 debug = True 
 if not production:
     import AbstractTestClass as ATC

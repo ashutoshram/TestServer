@@ -4,7 +4,7 @@ import time
 import cv2
 import numpy as np
 
-production = False 
+production = True 
 debug = True
 
 if not production:

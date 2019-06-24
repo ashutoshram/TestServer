@@ -5,7 +5,7 @@ import cv2
 import platform
 import numpy as np
 
-production = False
+production = True
 debug = False 
 if not production:
     import AbstractTestClass as ATC
