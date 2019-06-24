@@ -96,7 +96,7 @@ class WhiteBalTester():
             print('test_whiteBal: cannot set whiteBal')
         current_whiteBal = self.cam.getCameraControlProperty('whitebalance')[0]
         default_whiteBal = self.cam.getCameraControlProperty('whitebalance')[3]
-        self.cam.setCameraControlProperty('whiteBal', default_whiteBal)
+        self.cam.setCameraControlProperty('whitebalance', default_whiteBal)
         #print(current_whiteBal)
         return current_whiteBal
 
