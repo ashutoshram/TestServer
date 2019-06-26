@@ -17,6 +17,8 @@ import uuid
 import time
 import traceback
 
+from multiprocessing import Process, JoinableQueue
+
 
 
 # Create your views here.
@@ -97,11 +99,7 @@ def create_suite(request):
         suite.save()
         return redirect('/eos')
 
-
-
-
     #FIXME IF TEST IS DELETED REMOVE ENTRY FROM TestList
-
     else:
         tests = get_all_Tests()
         return render(request, 'suites.html', {'tests': tests}) 
@@ -146,24 +144,38 @@ def threaded_test(test, args):
     t = threading.Thread(target=test.run, args=(args,))
     t.start()
 
+def processed_test(test, args, q, r):
+    p = Process(target=test.run, args=(args, q, r, ))
+    p.start()
+    
+
 def monitor_test():
     while True:
         # run through all the tests in running_tests 
         for tid in list(running_tests):
-            test = running_tests[tid]
+            test, queue, results = running_tests[tid]
             # wait for it to complete and delete the entry once it is done
-            if test.is_done():
+            print('Monitor::getting item from queue')
+            item = results.get()
+            print(item)
+            if item == "DONE":
+                print("TEST DONE!")
+            #if test.is_done():
                 # update the report for the test once it is done
+                result = results.get()
+                print(result)
                 name = test.get_name()
-                report = test.generate_report()
                 storage_path = test.get_storage_path()
                 # save report to Database and grab from database when needed
                 # Report(create with tid)
-                status = check_status(report)
-                R = Report.objects.create(name=name, report=report, accessID=tid, status=status, storage=storage_path)
+                status = check_status(result)
+                print(status)
+                R = Report.objects.create(name=name, report=result, accessID=tid, status=status, storage=storage_path)
                 R.save()
                 del running_tests[tid]
                 break
+            else:
+                queue.put(item)
         for tid in list(running_suites):
             suite = running_suites[tid]
             if suite.is_done():
@@ -173,9 +185,22 @@ def monitor_test():
 
 def check_status(report):
     return all(v==0 for v in report.values())
-    
 
 def progress(request):
+    tid = request.META['QUERY_STRING']
+    percent = 0
+    try:
+        test, queue, results = running_tests[tid]
+        #for the number of arguments perform the same number of queue.get()
+        percent = queue.get()
+        print("Progress::progress on test with tid %s: %d " % (tid, percent))
+
+    except:
+        print("no running test with tid: %s" % (tid))
+    data = {'progress': percent, 'report_id': tid}
+    return JsonResponse(data)   
+
+def Iprogress(request):
     # lookup test instance from running_tests given tid
     tid = request.META['QUERY_STRING']
     try:
@@ -197,6 +222,7 @@ def progress(request):
 
     # call progress on the test instance
     # return a JsonResponse
+
 
 def run_suite(request, suite_id):
     
@@ -262,9 +288,13 @@ def run_test(request, test_id):
         test.set_default_storage_path(storage_path)
         print("Setting Storage Path")
         print(storage_path)
-        threaded_test(test, args)
+        #threaded_test(test, args)
+        queue = JoinableQueue()
+        results = JoinableQueue()
+        processed_test(test, args, queue, results)
         # cache the running instance of the test in the global running_tests dict
-        running_tests[tid] = test
+        #running_tests[tid] = test
+        running_tests[tid] = test, queue, results
         # return the tid as a JsonResponse
         
         if monitoring_thread is None:
@@ -343,7 +373,6 @@ class Suite():
 
     def is_done(self):
         return self.done
-
 
     def _run(self, tid):
         try:

@@ -26,9 +26,9 @@ class Brightness(ATC.AbstractTestClass):
     def get_args(self):
         return [0, 128, 255]
 
-    def run(self, args):
+    def run(self, args, q, results):
         self.BrightnessTest = BrightnessTester()
-        return self.BrightnessTest.test(args)
+        return self.BrightnessTest.test(args, q, results)
 
     def get_progress(self):
         if self.BrightnessTest is None:
@@ -63,7 +63,7 @@ class BrightnessTester():
         self.err_code = {}
         self.progress_percent = 0 
         self.cam = wpy.Webcam()
-        print("hello")
+        #print("hello")
         if not self.cam.open(3840, 1080, 30.0, "YUY2"):
             print("PanaCast cannot be opened!!")
         print("opened panacast device")
@@ -74,13 +74,16 @@ class BrightnessTester():
     def results(self):
         return self.err_code
 
-    def test(self, args):
+    def test(self, args, q, results):
         luma_list = []
         for brightness_level in args:
             return_val, luma = self.test_brightness(int(brightness_level))
             luma_list.append(luma)
             self.progress_percent += 33
-            print(luma_list)
+            q.put(self.progress_percent)
+            q.task_done()
+            #print(luma_list)
+        print("Test is Done, Putting 'DONE' in the results")
         if luma_list[1] > luma_list[0] and luma_list[2] > luma_list[1]:
             for bright in args:
                 self.err_code[bright] = 0
@@ -88,6 +91,10 @@ class BrightnessTester():
             for bright in args:
                 self.err_code[bright] = -1
         self.progress_percent = 100
+        time.sleep(3)
+        q.put(self.progress_percent)
+        results.put("DONE")
+        results.put(self.err_code)
         return self.err_code
 
 
@@ -105,6 +112,7 @@ class BrightnessTester():
         self.cam.setCameraControlProperty('brightness', default_brightness)
         #print(current_brightness)
         return current_brightness, luma
+    
 
 
 if __name__ == "__main__":
