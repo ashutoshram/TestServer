@@ -147,7 +147,7 @@ def threaded_test(test, args):
 def processed_test(test, args, q, r):
     p = Process(target=test.run, args=(args, q, r, ))
     p.start()
-    
+
 
 def monitor_test():
     while True:
@@ -155,21 +155,17 @@ def monitor_test():
         for tid in list(running_tests):
             test, queue, results = running_tests[tid]
             # wait for it to complete and delete the entry once it is done
-            print('Monitor::getting item from queue')
             item = results.get()
-            print(item)
             if item == "DONE":
                 print("TEST DONE!")
             #if test.is_done():
                 # update the report for the test once it is done
                 result = results.get()
-                print(result)
                 name = test.get_name()
                 storage_path = test.get_storage_path()
                 # save report to Database and grab from database when needed
                 # Report(create with tid)
                 status = check_status(result)
-                print(status)
                 R = Report.objects.create(name=name, report=result, accessID=tid, status=status, storage=storage_path)
                 R.save()
                 del running_tests[tid]
@@ -183,6 +179,7 @@ def monitor_test():
                 break
         time.sleep(1)
 
+
 def check_status(report):
     return all(v==0 for v in report.values())
 
@@ -190,38 +187,20 @@ def progress(request):
     tid = request.META['QUERY_STRING']
     percent = 0
     try:
-        test, queue, results = running_tests[tid]
-        #for the number of arguments perform the same number of queue.get()
-        percent = queue.get()
-        print("Progress::progress on test with tid %s: %d " % (tid, percent))
-
+        s = running_suites[tid]
+        percent = s.get_progress()
     except:
-        print("no running test with tid: %s" % (tid))
+        print("no running suite with tid: %s" % (tid))
+        try: 
+            test, queue, results = running_tests[tid]
+            #for the number of arguments perform the same number of queue.get()
+            percent = queue.get()
+            print("Progress::progress on test with tid %s: %d " % (tid, percent))
+        except:
+            print("no running test with tid: %s" % (tid))
     data = {'progress': percent, 'report_id': tid}
     return JsonResponse(data)   
 
-def Iprogress(request):
-    # lookup test instance from running_tests given tid
-    tid = request.META['QUERY_STRING']
-    try:
-        test = running_tests[tid]
-        percent = test.get_progress()
-        print("progress on test with tid %s: %d" % (tid, percent))
-    except:
-        print("no running test with tid %s" % tid)
-        try:
-            suite = running_suites[tid]
-            percent = suite.get_progress()
-            print("progress on suite with tid %s: %d" % (tid, percent))
-        except:
-            percent = 200
-    if percent == 100:
-        print("test/suite %s is done" % tid)
-    data = {'progress': percent, 'report_id': tid}
-    return JsonResponse(data)
-
-    # call progress on the test instance
-    # return a JsonResponse
 
 
 def run_suite(request, suite_id):
@@ -284,10 +263,7 @@ def run_test(request, test_id):
         full_path = 'eos/scripts/data/' + test_path
         storage_path = 'eos/scripts/data/' + test_path
         os.makedirs(full_path)
-        print(full_path)
         test.set_default_storage_path(storage_path)
-        print("Setting Storage Path")
-        print(storage_path)
         #threaded_test(test, args)
         queue = JoinableQueue()
         results = JoinableQueue()
@@ -335,7 +311,7 @@ def edit_suite(request, suite_id):
 def report(request, report_id):
     report = Report.objects.get(accessID=report_id)
     # This is where a report.html will be implemented and show the report in a clean and concise manner. 
-    return HttpResponse(report.report)
+    return render(request, 'report.html', {'report': report})
 
 def delete_test(request, test_id):
     print("DELETE is being called")
@@ -354,13 +330,16 @@ class Suite():
     def __init__(self, suite_id, q):
         self.suite_id = suite_id
         self.q = q
+        self.results = JoinableQueue()
+        self.suite = TestSuite.objects.get(accessID=self.suite_id)
+        t = self.suite.TestList
+        self.num_tests = len(t) 
         self.run()
 
     def run(self):
         self.tid = uuid.uuid4()
         self.tid = str(self.tid)
         self.current_test = 0
-        self.num_tests = 1
         self.done = False
         self.t = threading.Thread(target=self._run, args=(self.tid,))
         self.t.start()
@@ -376,25 +355,46 @@ class Suite():
 
     def _run(self, tid):
         try:
-            suite = TestSuite.objects.get(accessID=self.suite_id)
-            s_name = suite.name
-            t = suite.TestList
+            #suite = TestSuite.objects.get(accessID=self.suite_id)
+            s_name = self.suite.name
+            t = self.suite.TestList
             t = t.split(',')
             # run each test using the respective list of parameters
             tidlist = []
             self.num_tests = len(t)
             self.current_test = 0
             self.suite_report = []
+            self.count = 0
             for testID in t:
                 test = load_test(testID)
                 test = test[0]()
                 name = test.get_name()
                 args = self.q.getlist(name)
-                test.run(args)
-                report = test.generate_report()
-                status = check_status(report)
-                self.suite_report.append(report)
+                #test.run(args)
+                queue = JoinableQueue()
+                processed_test(test, args, queue, self.results)
+                #Right here, we want to run a process and use monitor_suite to get the values back.
+                #status = check_status(report)
+                #self.suite_report.append(report)
+                done = self.results.get()
+                if done == "DONE":
+                    print("test is done!")
+                    results = self.results.get()
+                    self.suite_report.append(results)
+                    print(self.suite_report)
                 self.current_test += 1
+                time.sleep(10)
+            for report in self.suite_report:
+                if check_status(report):
+                    self.count += 0
+                else:
+                    self.count += 1
+            if self.count == 0:
+                status = True
+            else:
+                status = False
+
+
             R = Report.objects.create(name=s_name, report=self.suite_report, accessID=tid, status=status, isSuiteReport=True)
             R.save()
         except:

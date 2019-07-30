@@ -4,14 +4,15 @@ import time
 import cv2
 import platform
 import numpy as np
-import webcamPy as wpy
 
 production = True
 debug = True 
 if not production:
     import AbstractTestClass as ATC
+    import webcamPy as wpy
 else:
     import eos.scripts.AbstractTestClass as ATC
+    import eos.scripts.webcamPy as wpy
 
 def dbg_print(*args):
     if debug: print("".join(map(str, args)))
@@ -41,6 +42,9 @@ class FPS(ATC.AbstractTestClass):
             return True
         else:
             return False
+    
+    def get_storage_path(self):
+        return self.storage_path
 
     def generate_report(self):
         return self.FPSTest.results()

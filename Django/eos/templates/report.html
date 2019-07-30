@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="header py-4">
+	<div class="container">
+		<div class="d-flex">
+			<a class="header-brand" href="/eos/">
+				<img class="header-brand-img" src="{% static 'img/crash_test_dummy.png' %}">
+			</a>
+			<h1 class="page-title"> Jabra PanaCast Test Server </h1>
+			<div class="d-flex order-lg-2 ml-auto">
+				<div class="nav-item d-none d-md-flex">
+					<a class="btn btn-warning" href="upload/">UPLOAD A TEST</a>
+					<a class="btn btn-gray-dark" href="create_suite/">CREATE A TEST SUITE</a>
+				</div>
+			</div>
+		</div>
+    </div>
+</div>
+
+{{report.report}}
+{% endblock %}

@@ -6,7 +6,7 @@ import platform
 import numpy as np
 
 production = True
-debug = False 
+debug = True 
 if not production:
     import AbstractTestClass as ATC
     import webcamPy as wpy
@@ -20,14 +20,15 @@ def dbg_print(*args):
 class Contrast(ATC.AbstractTestClass):
 
     def __init__(self):
-        self.ContrastTest = ContrastTester()
+        self.ContrastTest = None
 
     def get_args(self):
         #return [0, 95, 191]
         return [0, 95, 191]
 
-    def run(self, args):
-        return self.ContrastTest.test(args)
+    def run(self, args, q, results):
+        self.ContrastTest = ContrastTester()
+        return self.ContrastTest.test(args, q, results)
 
     def get_progress(self):
         return self.ContrastTest.progress()
@@ -67,13 +68,15 @@ class ContrastTester():
     def results(self):
         return self.err_code
 
-    def test(self, args):
+    def test(self, args, queue, results):
         print(args)
         otsu_list = []
         for contrast_level in args:
             return_val, otsu = self.test_contrast(int(contrast_level))
             otsu_list.append(otsu)
             self.progress_percent += 33
+            queue.put(self.progress_percent)
+            queue.task_done()
         if self.check(otsu_list[0], otsu_list[1]) and self.check(otsu_list[1], otsu_list[2]):
             for contrast_level in args:
                 self.err_code[contrast_level] = 0
@@ -81,6 +84,10 @@ class ContrastTester():
             for contrast_level in args:
                 self.err_code[contrast_level] = -1
         self.progress_percent = 100 
+        queue.put(self.progress_percent)
+        results.put("DONE")
+        results.put(self.err_code)
+
         return self.err_code
 
     def check(self, otsu1, otsu2):

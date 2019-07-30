@@ -8,11 +8,11 @@
 			<a class="header-brand" href="/eos/">
 				<img class="header-brand-img" src="{% static 'img/crash_test_dummy.png' %}">
 			</a>
-			<h1 class="page-title"> Altia Test Server </h1>
+			<h1 class="page-title"> Jabra PanaCast Test Server </h1>
 			<div class="d-flex order-lg-2 ml-auto">
 				<div class="nav-item d-none d-md-flex">
-					<a class="btn btn-teal" href="upload/">UPLOAD A TEST</a>
-					<a class="btn btn-cyan" href="create_suite/">CREATE A TEST SUITE</a>
+					<a class="btn btn-warning" href="upload/">UPLOAD A TEST</a>
+					<a class="btn btn-gray-dark" href="create_suite/">CREATE A TEST SUITE</a>
 				</div>
 			</div>
 		</div>
@@ -39,8 +39,8 @@
            <div class="card-header">
              <h3 class="card-title">{{test.name}}</h3>
              <div class="card-options">
-		     <a href="run_test/{{test.accessID}}" class="btn btn-lime">Run Test</a>
-		     <a href="edit_test/{{test.accessID}}" class="btn btn-orange">Edit</a>
+		     <a href="run_test/{{test.accessID}}" class="btn btn-warning">Run Test</a>
+		     <a href="edit_test/{{test.accessID}}" class="btn btn-gray-dark">Edit</a>
                        </div>
 	     </div>
 		   <div class="card-body">
@@ -73,8 +73,8 @@
            <div class="card-header">
              <h3 class="card-title">{{suite.name}}</h3>
              <div class="card-options">
-		     <a href="run_suite/{{suite.accessID}}" class="btn btn-purple">Run Suite</a>
-		     <a href="edit_test/{{suite.accessID}}" class="btn btn-pink">Edit Suite</a>
+		     <a href="run_suite/{{suite.accessID}}" class="btn btn-warning">Run Suite</a>
+		     <a href="edit_test/{{suite.accessID}}" class="btn btn-gray-dark">Edit Suite</a>
                        </div>
 	     </div>
 		   <div class="card-body">
@@ -142,7 +142,7 @@
                             </div>
                         </td>
                         <td>
-                            <a href="run_test/report/{{report.accessID}}" class='btn btn-pill btn-info' >Full Report</a>
+                            <a href="run_test/report/{{report.accessID}}" class='btn btn-pill btn-warning' >Full Report</a>
                         </td>
                     </tr>
 {% endfor %}
