@@ -128,12 +128,39 @@ class TiltZoomTester():
         print(y1)
         '''
         self.test_drive(args)
-       # self.progress_percent+=50
-        q.put(self.progress_percent)
-        #self.test_zoom(args)
+
+        self.cam.setCameraControlProperty('zoom', 0)
+        self.cam.setCameraControlProperty('tilt', 0)
+        self.cam.setCameraControlProperty('pan', 0)
+        zoomVal = 0
+        tiltVal = -20
+        panVal = -84
+        for x in range(0,2):
+            zoomVal = zoomVal + 15
+            self.cam.setCameraControlProperty('zoom', zoomVal)
+            self.progress_percent += 10
+            q.put(self.progress_percent)
+            q.task_done()
+        for y in range(0,3):
+            self.cam.setCameraControlProperty('tilt', tiltVal)
+            self.progress_percent += 5
+            q.put(self.progress_percent)
+            q.task_done()
+            tiltVal += 10
+        self.cam.setCameraControlProperty('tilt', 0)
+        for z in range(0,7):
+            self.cam.setCameraControlProperty('pan', panVal)
+            self.progress_percent += 5
+            self.put(self.progress_percent)
+            q.task_done()
+            panVal += 21
+        self.cam.setCameraControlProperty('zoom', 0)
+        self.cam.setCameraControlProperty('tilt', 0)
+        self.cam.setCameraControlProperty('pan', 0)
+        self.progress_percent += 10
+        self.put(self.progress_percent)
+        q.task_done()
         print(self.err_code)
-        self.progress_percent+=100
-        q.put(self.progress_percent)
         results.put("DONE")
         results.put(self.err_code)
         print(self.err_code)
