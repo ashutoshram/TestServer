@@ -26,9 +26,9 @@ class Saturation(ATC.AbstractTestClass):
     def get_args(self):
         return [128, 136, 160, 176, 155]
 
-    def run(self, args):
+    def run(self, args, q, results):
         self.SaturationTest = SaturationTester()
-        return self.SaturationTest.test(args)
+        return self.SaturationTest.test(args, q, results)
 
     def get_progress(self):
         if self.SaturationTest is None:
@@ -75,7 +75,7 @@ class SaturationTester():
     def results(self):
         return self.err_code
 
-    def test(self, args):
+    def test(self, args, q, results):
         for saturation_level in args:
             return_val = self.test_saturation(int(saturation_level))
             print(type(return_val))
@@ -87,7 +87,12 @@ class SaturationTester():
                 print("goodbye")
                 self.err_code[saturation_level] = -1
             self.progress_percent += 33
+            q.put(self.progress_percent)
+            q.task_done()
         self.progress_percent = 100
+        q.put(self.progress_percent)
+        results.put("DONE")
+        results.put(self.err_code)
         return self.err_code
 
 
