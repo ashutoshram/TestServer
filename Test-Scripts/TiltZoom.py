@@ -128,7 +128,6 @@ class TiltZoomTester():
         print(y1)
         '''
         self.test_drive(args)
-
         self.cam.setCameraControlProperty('zoom', 0)
         self.cam.setCameraControlProperty('tilt', 0)
         self.cam.setCameraControlProperty('pan', 0)
