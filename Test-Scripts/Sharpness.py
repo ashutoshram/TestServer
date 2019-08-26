@@ -25,9 +25,9 @@ class Sharpness(ATC.AbstractTestClass):
     def get_args(self):
         return [0, 110, 128, 255, 193]
 
-    def run(self, args):
+    def run(self, args, q, results):
         self.SharpnessTest = SharpnessTester()
-        return self.SharpnessTest.test(args)
+        return self.SharpnessTest.test(args, q, results)
 
     def get_progress(self):
         if self.SharpnessTest is None:
@@ -74,7 +74,7 @@ class SharpnessTester():
     def results(self):
         return self.err_code
 
-    def test(self, args):
+    def test(self, args, q, results):
         for sharpness_level in args:
             return_val = self.test_sharpness(int(sharpness_level))
             print(type(return_val))
@@ -86,7 +86,12 @@ class SharpnessTester():
                 print("goodbye")
                 self.err_code[sharpness_level] = -1
             self.progress_percent += 33
+            q.put(self.progress_percent)
+            q.task_done()
         self.progress_percent = 100
+        q.put(self.progress_percent)
+        results.put("DONE")
+        results.put(self.err_code)
         return self.err_code
 
 

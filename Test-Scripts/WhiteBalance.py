@@ -25,9 +25,9 @@ class WhiteBal(ATC.AbstractTestClass):
     def get_args(self):
         return [0, 2122, 5000 , 6036 , 6500]
 
-    def run(self, args):
+    def run(self, args, q, results):
         self.WhiteBalTest = WhiteBalTester()
-        return self.WhiteBalTest.test(args)
+        return self.WhiteBalTest.test(args, q, results)
 
     def get_progress(self):
         if self.WhiteBalTest is None:
@@ -74,7 +74,7 @@ class WhiteBalTester():
     def results(self):
         return self.err_code
 
-    def test(self, args):
+    def test(self, args, q, results):
         for whiteBal_level in args:
             return_val = self.test_whiteBal(int(whiteBal_level))
             print(type(return_val))
@@ -86,7 +86,12 @@ class WhiteBalTester():
                 print("goodbye")
                 self.err_code[whiteBal_level] = -1
             self.progress_percent += 33
+            q.put(self.progress_percent)
+            q.task_done()
         self.progress_percent = 100
+        q.put(self.progress_percent)
+        results.put("DONE")
+        results.put(self.err_code)
         return self.err_code
 
 

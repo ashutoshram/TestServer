@@ -31,6 +31,9 @@ class Resolution(ATC.AbstractTestClass):
 
     def set_default_storage_path(self, path):
         self.storage_path = path
+    
+    def get_storage_path(self):
+        return self.storage_path
 
     def get_name(self):
         return "Res Test"

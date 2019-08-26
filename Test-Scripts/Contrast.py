@@ -68,15 +68,15 @@ class ContrastTester():
     def results(self):
         return self.err_code
 
-    def test(self, args, queue, results):
+    def test(self, args, q, results):
         print(args)
         otsu_list = []
         for contrast_level in args:
             return_val, otsu = self.test_contrast(int(contrast_level))
             otsu_list.append(otsu)
             self.progress_percent += 33
-            queue.put(self.progress_percent)
-            queue.task_done()
+            q.put(self.progress_percent)
+            q.task_done()
         if self.check(otsu_list[0], otsu_list[1]) and self.check(otsu_list[1], otsu_list[2]):
             for contrast_level in args:
                 self.err_code[contrast_level] = 0
@@ -84,7 +84,7 @@ class ContrastTester():
             for contrast_level in args:
                 self.err_code[contrast_level] = -1
         self.progress_percent = 100 
-        queue.put(self.progress_percent)
+        q.put(self.progress_percent)
         results.put("DONE")
         results.put(self.err_code)
 

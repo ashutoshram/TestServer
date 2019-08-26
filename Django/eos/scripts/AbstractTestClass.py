@@ -7,7 +7,7 @@ class AbstractTestClass(ABC):
         return None
 
     @abstractmethod
-    def run(self, args):
+    def run(self, args, q, results):
         return None
 
     @abstractmethod
