@@ -17,7 +17,7 @@ import uuid
 import time
 import traceback
 
-from multiprocessing import Process, JoinableQueue
+from multiprocessing import Process, Queue
 
 
 
@@ -144,8 +144,8 @@ def threaded_test(test, args):
     t = threading.Thread(target=test.run, args=(args,))
     t.start()
 
-def processed_test(test, args, q, r):
-    p = Process(target=test.run, args=(args, q, r, ))
+def processed_test(test, args, q, r, wait_q):
+    p = Process(target=test.run, args=(args, q, r, wait_q,))
     p.start()
 
 
@@ -153,25 +153,27 @@ def monitor_test():
     while True:
         # run through all the tests in running_tests 
         for tid in list(running_tests):
-            test, queue, results = running_tests[tid]
+            test, queue, results, wait_q = running_tests[tid]
             # wait for it to complete and delete the entry once it is done
-            item = results.get()
-            if item == "DONE":
-                print("TEST DONE!")
-            #if test.is_done():
-                # update the report for the test once it is done
-                result = results.get()
+            result = results.get()
+            try:
+                print("getting name")
                 name = test.get_name()
+                print("storage_path")
                 storage_path = test.get_storage_path()
-                # save report to Database and grab from database when needed
-                # Report(create with tid)
+                print("gotem")
                 status = check_status(result)
+                print("hello Reportero")
                 R = Report.objects.create(name=name, report=result, accessID=tid, status=status, storage=storage_path)
+                print("TID: saving report", tid)
                 R.save()
-                del running_tests[tid]
-                break
-            else:
-                queue.put(item)
+                wait_q.put("idiot django")
+            except Exception as e:
+                print('monitor_test: caught exception %s' % e)
+
+            del running_tests[tid]
+            break
+
         for tid in list(running_suites):
             suite = running_suites[tid]
             if suite.is_done():
@@ -192,7 +194,7 @@ def progress(request):
     except:
         print("no running suite with tid: %s" % (tid))
         try: 
-            test, queue, results = running_tests[tid]
+            test, queue, results, wait_q = running_tests[tid]
             #for the number of arguments perform the same number of queue.get()
             percent = queue.get()
             print("Progress::progress on test with tid %s: %d " % (tid, percent))
@@ -265,12 +267,17 @@ def run_test(request, test_id):
         os.makedirs(full_path)
         test.set_default_storage_path(storage_path)
         #threaded_test(test, args)
-        queue = JoinableQueue()
-        results = JoinableQueue()
-        processed_test(test, args, queue, results)
+        queue = Queue()
+        results = Queue()
+        wait_q = Queue()
+        try:
+            print("launching processed_test")
+            processed_test(test, args, queue, results, wait_q)
+        except Exception as e:
+            print("Cannot launch processed_test")
         # cache the running instance of the test in the global running_tests dict
         #running_tests[tid] = test
-        running_tests[tid] = test, queue, results
+        running_tests[tid] = test, queue, results, wait_q
         # return the tid as a JsonResponse
         
         if monitoring_thread is None:
@@ -330,7 +337,7 @@ class Suite():
     def __init__(self, suite_id, q):
         self.suite_id = suite_id
         self.q = q
-        self.results = JoinableQueue()
+        self.results = Queue()
         self.suite = TestSuite.objects.get(accessID=self.suite_id)
         t = self.suite.TestList
         self.num_tests = len(t) 
@@ -371,7 +378,7 @@ class Suite():
                 name = test.get_name()
                 args = self.q.getlist(name)
                 #test.run(args)
-                queue = JoinableQueue()
+                queue = Queue()
                 processed_test(test, args, queue, self.results)
                 #Right here, we want to run a process and use monitor_suite to get the values back.
                 #status = check_status(report)

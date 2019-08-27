@@ -26,9 +26,12 @@ class Brightness(ATC.AbstractTestClass):
     def get_args(self):
         return [0, 128, 255]
 
-    def run(self, args, q, results):
+    def run(self, args, q, results, wait_q):
         self.BrightnessTest = BrightnessTester()
-        return self.BrightnessTest.test(args, q, results)
+        self.BrightnessTest.test(args, q, results)
+        print("Brightness.run: waiting for wait_q")
+        got = wait_q.get()
+        print("Brightness.run: got %s" % repr(got))
 
     def get_progress(self):
         if self.BrightnessTest is None:
@@ -81,9 +84,8 @@ class BrightnessTester():
             luma_list.append(luma)
             self.progress_percent += 33
             q.put(self.progress_percent)
-            q.task_done()
+            #q.task_done()
             #print(luma_list)
-        print("Test is Done, Putting 'DONE' in the results")
         if luma_list[1] > luma_list[0] and luma_list[2] > luma_list[1]:
             for bright in args:
                 self.err_code[bright] = 0
@@ -91,9 +93,9 @@ class BrightnessTester():
             for bright in args:
                 self.err_code[bright] = -1
         self.progress_percent = 100
-        time.sleep(3)
+        #time.sleep(3)
         q.put(self.progress_percent)
-        results.put("DONE")
+        print("Test is Done, Putting err_code in the results")
         results.put(self.err_code)
         return self.err_code
 
