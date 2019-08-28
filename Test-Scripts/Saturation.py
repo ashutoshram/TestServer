@@ -26,9 +26,12 @@ class Saturation(ATC.AbstractTestClass):
     def get_args(self):
         return [128, 136, 160, 176, 155]
 
-    def run(self, args, q, results):
+    def run(self, args, q, results, wait_q):
         self.SaturationTest = SaturationTester()
-        return self.SaturationTest.test(args, q, results)
+        self.SaturationTest.test(args, q, results)
+        print("Saturation.run: waiting for wait_q")
+        got = wait_q.get()
+        print("Saturation.run: got %s" % repr(got))
 
     def get_progress(self):
         if self.SaturationTest is None:
@@ -42,7 +45,7 @@ class Saturation(ATC.AbstractTestClass):
         return self.storage_path
 
     def get_name(self):
-        return "UVC Test"
+        return "Saturation Test"
     
     def is_done(self):
         if self.SaturationTest is None:
@@ -88,10 +91,8 @@ class SaturationTester():
                 self.err_code[saturation_level] = -1
             self.progress_percent += 33
             q.put(self.progress_percent)
-            q.task_done()
         self.progress_percent = 100
         q.put(self.progress_percent)
-        results.put("DONE")
         results.put(self.err_code)
         return self.err_code
 

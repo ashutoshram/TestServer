@@ -26,9 +26,14 @@ class resolutionFPS(ATC.AbstractTestClass):
         ResList =[ '4800x1200' ,'640x480','3840x1088','3840x1080','960x544','1280x720','1920x1080']
         return ResList
 
-    def run(self, args, q, results):
+    def run(self, args, q, results, wait_q):
         self.ResolutionFPSTest = ResolutionFPSTester()
-        return self.ResolutionFPSTest.test(args,q,results)
+        self.ResolutionFPSTest.test(args,q,results)
+        print("ResolutionFPS.run: waiting for wait_q")
+        time.sleep(5)
+        got = wait_q.get()
+        print("ResolutionFPS.run: got %s" % repr(got))
+
 
     def get_progress(self):
         if self.ResolutionFPSTest is None:
@@ -157,7 +162,6 @@ class ResolutionFPSTester():
                 print(self.err_code)
         self.progress_percent=100
         q.put(self.progress_percent)
-        results.put("DONE")
         results.put(self.err_code)
         return self.err_code
         

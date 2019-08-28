@@ -26,9 +26,12 @@ class Contrast(ATC.AbstractTestClass):
         #return [0, 95, 191]
         return [0, 95, 191]
 
-    def run(self, args, q, results):
+    def run(self, args, q, results, wait_q):
         self.ContrastTest = ContrastTester()
-        return self.ContrastTest.test(args, q, results)
+        self.ContrastTest.test(args, q, results)
+        print("Contrast.run: waiting for wait_q")
+        got = wait_q.get()
+        print("Contrast.run: got %s" % repr(got))
 
     def get_progress(self):
         return self.ContrastTest.progress()
@@ -76,7 +79,6 @@ class ContrastTester():
             otsu_list.append(otsu)
             self.progress_percent += 33
             q.put(self.progress_percent)
-            q.task_done()
         if self.check(otsu_list[0], otsu_list[1]) and self.check(otsu_list[1], otsu_list[2]):
             for contrast_level in args:
                 self.err_code[contrast_level] = 0
@@ -85,9 +87,7 @@ class ContrastTester():
                 self.err_code[contrast_level] = -1
         self.progress_percent = 100 
         q.put(self.progress_percent)
-        results.put("DONE")
         results.put(self.err_code)
-
         return self.err_code
 
     def check(self, otsu1, otsu2):

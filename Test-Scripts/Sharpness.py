@@ -25,9 +25,11 @@ class Sharpness(ATC.AbstractTestClass):
     def get_args(self):
         return [0, 110, 128, 255, 193]
 
-    def run(self, args, q, results):
+    def run(self, args, q, results, wait_q):
         self.SharpnessTest = SharpnessTester()
-        return self.SharpnessTest.test(args, q, results)
+        self.SharpnessTest.test(args, q, results)
+        print("Sharpness.run: waiting for wait_q")
+        #got = wait_q.get()
 
     def get_progress(self):
         if self.SharpnessTest is None:
@@ -41,7 +43,7 @@ class Sharpness(ATC.AbstractTestClass):
         return self.storage_path
 
     def get_name(self):
-        return "UVC Test"
+        return "Sharpness Test"
     
     def is_done(self):
         if self.SharpnessTest is None:
@@ -80,18 +82,18 @@ class SharpnessTester():
             print(type(return_val))
             print(type(sharpness_level))
             if return_val == int(sharpness_level):
-                print("Hello")
+                print("Success")
                 self.err_code[sharpness_level] = 0
             else:
-                print("goodbye")
+                print("Failure")
                 self.err_code[sharpness_level] = -1
-            self.progress_percent += 33
+            self.progress_percent += 20
             q.put(self.progress_percent)
-            q.task_done()
+            time.sleep(3)
         self.progress_percent = 100
-        q.put(self.progress_percent)
-        results.put("DONE")
         results.put(self.err_code)
+        time.sleep(3)
+        q.put(self.progress_percent)
         return self.err_code
 
 
@@ -101,7 +103,7 @@ class SharpnessTester():
             print('test_sharpness: cannot set sharpness')
         current_sharpness = self.cam.getCameraControlProperty('sharpness')[0]
         default_sharpness = self.cam.getCameraControlProperty('sharpness')[3]
-        self.cam.setCameraControlProperty('hdr', default_sharpness)
+        self.cam.setCameraControlProperty('sharpness', default_sharpness)
         #print(current_sharpness)
         return current_sharpness
 

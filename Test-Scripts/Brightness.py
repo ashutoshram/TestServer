@@ -84,8 +84,6 @@ class BrightnessTester():
             luma_list.append(luma)
             self.progress_percent += 33
             q.put(self.progress_percent)
-            #q.task_done()
-            #print(luma_list)
         if luma_list[1] > luma_list[0] and luma_list[2] > luma_list[1]:
             for bright in args:
                 self.err_code[bright] = 0
@@ -93,10 +91,10 @@ class BrightnessTester():
             for bright in args:
                 self.err_code[bright] = -1
         self.progress_percent = 100
-        #time.sleep(3)
         q.put(self.progress_percent)
         print("Test is Done, Putting err_code in the results")
         results.put(self.err_code)
+        #self.cam = None
         return self.err_code
 
 
