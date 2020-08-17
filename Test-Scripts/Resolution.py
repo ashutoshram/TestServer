@@ -4,7 +4,7 @@ import time
 import cv2
 import numpy as np
 
-production = True 
+production = False 
 debug = True
 
 if not production:
@@ -51,19 +51,22 @@ class Resolution(ATC.AbstractTestClass):
 
 class ResTester():
 
+    def get_first_webcam(self):
+        for k in range(4):
+            cap = cv2.VideoCapture(k)
+            if cap.isOpened(): return cap
+            cap.release()
+        return None
+
     def test_res(self, resolution, format_):
         # open opencv capture device and set the fps
-# OPEN THE CAMERA AND THE CODE WILL WORK LOLOLOLOLOLOL
+        # OPEN THE CAMERA AND THE CODE WILL WORK LOLOLOLOLOLOL
         # capture frames over 5 seconds and calculate fps
-        cap = cv2.VideoCapture(1)
+        cap = self.get_first_webcam()
+        if cap is None:
+            print('cv2.VideoCapture unsuccessful')
+            sys.exit(1)
         print(cap)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-        if cap.get(cv2.CAP_PROP_FRAME_WIDTH) != 3840:       
-            cap = cv2.VideoCapture(0)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-            if cap.get(cv2.CAP_PROP_FRAME_WIDTH) != 3840:       
-                print('ihurr')
-                sys.exit(1)
 
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -105,6 +108,7 @@ class ResTester():
                 break
             ret, frame = cap.read()
             dbg_print('got frame: count = %d' % count)
+            count += 1
 
         h, w = frame.shape[:2]
         print(h, w)
@@ -140,7 +144,7 @@ class ResTester():
         return self.err_code
 
     def test(self, args):
-        dbg_print('FPSTester::test: args = %s' % repr(args))
+        dbg_print('ResTester::test: args = %s' % repr(args))
 
         if 'all' in args: 
             tests = []
@@ -149,7 +153,7 @@ class ResTester():
 
         self.err_code = {}
 
-        dbg_print('FPSTester::test: tests = %s' % repr(tests))
+        dbg_print('ResTester::test: tests = %s' % repr(tests))
 
         #dictionary of format, resolution, framerate
         frf = {'MJPG' : {'4k', '1080p', '720p'}, 'YUYV' : {'4k', '1080p', '720p'}}
@@ -167,7 +171,7 @@ class ResTester():
         self.progress_percent = 100
 
 
-        dbg_print('FPSTester::test: err_code = %s' % repr(self.err_code))
+        dbg_print('ResTester::test: err_code = %s' % repr(self.err_code))
         return self.err_code
 
 
