@@ -59,8 +59,7 @@ class ResTester():
         # OPEN THE CAMERA AND THE CODE WILL WORK LOLOLOLOLOLOL
         # capture frames over 5 seconds and calculate fps
 
-        # cap = self.get_first_webcam()
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(2)
 
         if cap is None:
             print('cv2.VideoCapture unsuccessful')
@@ -69,7 +68,7 @@ class ResTester():
 
         if resolution == '4k':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1088)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         if resolution == '1080p':
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -112,7 +111,7 @@ class ResTester():
         print(h, w)
 
         if resolution == '4k':
-            if w == 3840 and h == 1088:
+            if w == 3840 and h == 1080:
                 return 0
             else: 
                 return -1
