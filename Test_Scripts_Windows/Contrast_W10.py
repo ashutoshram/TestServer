@@ -63,7 +63,7 @@ class ContrastTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("Panacast device found")
+                print("Panacast device found: ({})".format(k))
                 break
 
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)

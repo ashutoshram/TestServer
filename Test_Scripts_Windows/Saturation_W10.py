@@ -67,7 +67,13 @@ class SaturationTester():
         self.err_code = {}
         self.progress_percent = 0
         # set up camera stream
-        self.cam = cv2.VideoCapture(2)
+        for k in range(4):
+            self.cam = cv2.VideoCapture(k)
+            if self.cam.isOpened():
+                print("Panacast device found")
+                break
+
+        # self.cam = cv2.VideoCapture(0)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
@@ -105,7 +111,9 @@ class SaturationTester():
     def test_saturation(self, saturation_level):
         print('entering test_saturation')
         # set saturation and capture frame after three second delay
+        print("saturation to be tested: {}".format(saturation_level))
         self.cam.set(cv2.CAP_PROP_SATURATION, saturation_level)
+        print("saturation set to: {}".format(self.cam.get(cv2.CAP_PROP_SATURATION)))
         t_end = time.time() + 3
         while True:
             ret, frame = self.cam.read()

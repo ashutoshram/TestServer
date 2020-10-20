@@ -67,7 +67,13 @@ class WhiteBalTester():
         self.err_code = {}
         self.progress_percent = 0
         # set up camera stream
-        self.cam = cv2.VideoCapture(0)
+        for k in range(4):
+            self.cam = cv2.VideoCapture(k)
+            if self.cam.isOpened():
+                print("Panacast device found: ({})".format(k))
+                break
+
+        # self.cam = cv2.VideoCapture(0)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
