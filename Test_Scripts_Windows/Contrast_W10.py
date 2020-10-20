@@ -60,7 +60,12 @@ class ContrastTester():
         self.err_code = {}
         self.progress_percent = 0
         # set up camera stream
-        self.cam = cv2.VideoCapture(2)
+        for k in range(4):
+            self.cam = cv2.VideoCapture(k)
+            if self.cam.isOpened():
+                print("Panacast device found")
+                break
+
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
@@ -109,7 +114,10 @@ class ContrastTester():
     def test_contrast(self, contrast_level):
         print('entering test_contrast')
         # set contrast and capture frame after three second delay
+        print("contrast to be tested: {}".format(contrast_level))
         self.cam.set(cv2.CAP_PROP_CONTRAST, contrast_level)
+        current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
+
         t_end = time.time() + 3
         while True:
             ret, frame = self.cam.read()
@@ -123,8 +131,9 @@ class ContrastTester():
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(f, 0, 255, cv2.THRESH_OTSU)
         otsu = np.average(thresh)
-        print(otsu)
+        print("{}\n".format(otsu))
         ContrastTester.count += 1
+        current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
 
         return contrast_level, otsu
 
