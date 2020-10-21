@@ -135,7 +135,7 @@ class ContrastTester():
         ContrastTester.count += 1
         current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
 
-        return contrast_level, otsu
+        return current_contrast, otsu
 
 if __name__ == "__main__":
     t = Contrast()
