@@ -72,6 +72,7 @@ class SharpnessTester():
                 print("Panacast device found: ({})".format(k))
                 break
 
+        # manually set camera
         # self.cam = cv2.VideoCapture(2)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -89,30 +90,44 @@ class SharpnessTester():
         return self.err_code
 
     def test(self, args, q, results):
+        var_list = []
         for sharpness_level in args:
             return_val = self.test_sharpness(int(sharpness_level))
-            print(type(return_val))
-            print(type(sharpness_level))
-            if return_val == int(sharpness_level):
-                print("Success")
-                self.err_code[sharpness_level] = 0
-            else:
-                print("Failure")
-                self.err_code[sharpness_level] = -1
+            var_list.append(return_val)
             self.progress_percent += 20
             q.put(self.progress_percent)
-            # time.sleep(3)
+        
+        # check if correct # of arguments is returned
+        if len(args) != len(var_list):
+            print("Something went wrong: # of sharpness values does not match # of inputs")
+            sys.exit(1)
+
+        for i, sharpness_level in zip(range(len(var_list)), args):
+            if i == len(var_list) - 2:
+                if var_list[i] > var_list[i + 1]:
+                    self.err_code[sharpness_level] = 0
+                else:
+                    self.err_code[sharpness_level] = 1
+                break
+            else:
+                if var_list[i] < var_list[i + 1]:
+                    self.err_code[sharpness_level] = 0
+                else:
+                    self.err_code[sharpness_level] = 1
+
         self.progress_percent = 100
         results.put(self.err_code)
-        # time.sleep(3)
         q.put(self.progress_percent)
+
         return self.err_code
 
     def test_sharpness(self, sharpness_level):
         print('entering test_sharpness')
         # set sharpness and capture frame after three second delay
         self.cam.set(cv2.CAP_PROP_SHARPNESS, sharpness_level)
+        current_sharpness = self.cam.get(cv2.CAP_PROP_SHARPNESS)
         t_end = time.time() + 3
+
         while True:
             ret, frame = self.cam.read()
             if time.time() > t_end:
@@ -121,11 +136,12 @@ class SharpnessTester():
                 print("{} captured".format(img))
                 # print(frame)
                 break
-
-        current_sharpness = self.cam.get(cv2.CAP_PROP_SHARPNESS)
-        print("Current sharpness: {}".format(current_sharpness))
+        
+        f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        variance = cv2.Laplacian(f, cv2.CV_64F).var()
+        print("Laplacian variance: {}".format(variance))
         SharpnessTester.count += 1
-        return current_sharpness
+        return variance
 
 if __name__ == "__main__":
     t = Sharpness()
