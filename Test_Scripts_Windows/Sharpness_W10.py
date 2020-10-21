@@ -108,7 +108,11 @@ class SharpnessTester():
                     self.err_code[sharpness_level] = 0
                 else:
                     self.err_code[sharpness_level] = 1
-                break
+            elif i == len(var_list) - 1:
+                if var_list[i] < var_list[i - 1]:
+                    self.err_code[sharpness_level] = 0
+                else:
+                    self.err_code[sharpness_level] = 1
             else:
                 if var_list[i] < var_list[i + 1]:
                     self.err_code[sharpness_level] = 0
