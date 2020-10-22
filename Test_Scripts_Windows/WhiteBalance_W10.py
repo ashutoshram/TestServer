@@ -90,27 +90,44 @@ class WhiteBalTester():
         return self.err_code
 
     def test(self, args, q, results):
+        red, green, blue = ([] for i in range(3))
         for whiteBal_level in args:
-            return_val = self.test_whiteBal(int(whiteBal_level))
-            print(type(return_val))
-            print(type(whiteBal_level))
-            if return_val == int(whiteBal_level):
-                print("Success")
-                self.err_code[whiteBal_level] = 0
-            else:
-                print("Failure")
-                self.err_code[whiteBal_level] = -1
+            r, g, b = self.test_whiteBal(int(whiteBal_level))
+            red.append(r)
+            green.append(g)
+            blue.append(b)
             self.progress_percent += 33
             q.put(self.progress_percent)
+
+        # check if correct # of arguments is returned
+        if len(args) != len(red) or len(args) != len(green) or len(args) != len(blue):
+            print("Something went wrong: # of color values in each channel does not match # of inputs")
+            sys.exit(1)
+
+        for i, j, k, whiteBal_level in zip(range(len(red)), range(len(green)), range(len(blue)), args):
+            if i == len(red) - 1:
+                if red[i] > red[i - 1] and green[j] < green[j - 1] and blue[k] < blue[k - 1]:
+                    self.err_code[whiteBal_level] = 0
+                else:
+                    self.err_code[whiteBal_level] = -1
+            else:
+                if red[i] < red[i + 1] and green[j] > green[j + 1] and blue[k] > blue[k + 1]:
+                    self.err_code[whiteBal_level] = 0
+                else:
+                    self.err_code[whiteBal_level] = -1
+
         self.progress_percent = 100
         q.put(self.progress_percent)
         results.put(self.err_code)
+
         return self.err_code
 
     def test_whiteBal(self, whiteBal_level):
         print('entering test_whiteBal')
         # set white balance and capture frame after three second delay
         self.cam.set(cv2.CAP_PROP_TEMPERATURE, whiteBal_level)
+        # current_whiteBal = self.cam.get(cv2.CAP_PROP_TEMPERATURE)
+
         t_end = time.time() + 3
         while True:
             ret, frame = self.cam.read()
@@ -121,10 +138,15 @@ class WhiteBalTester():
                 # print(frame)
                 break
 
-        current_whiteBal = self.cam.get(cv2.CAP_PROP_TEMPERATURE)
-        print("Current white balance temperature: {}".format(current_whiteBal))
+        # check individual channel values
+        b, g, r = cv2.split(frame)
+        print("Channel values:")
+        for channel, label in zip((r, g, b), ("r", "g", "b")):
+            print("{}: {}".format(label, np.average(channel)))
+
+        # print("Current white balance temperature: {}".format(current_whiteBal))
         WhiteBalTester.count += 1
-        return current_whiteBal
+        return r, g, b
 
 if __name__ == "__main__":
     t = WhiteBal()
