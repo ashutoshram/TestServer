@@ -140,9 +140,12 @@ class WhiteBalTester():
 
         # check individual channel values
         b, g, r = cv2.split(frame)
+        b = np.average(b)
+        g = np.average(g)
+        r = np.average(r)
         print("Channel values:")
         for channel, label in zip((r, g, b), ("r", "g", "b")):
-            print("{}: {}".format(label, np.average(channel)))
+            print("{}: {}".format(label, channel))
 
         # print("Current white balance temperature: {}".format(current_whiteBal))
         WhiteBalTester.count += 1
