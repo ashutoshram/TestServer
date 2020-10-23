@@ -47,52 +47,52 @@ class Resolution(ATC.AbstractTestClass):
         return self.ResTest.results()
 
 class ResTester():
-    def get_first_webcam(self):
+    count = 0
+
+    def __init__(self):
+        self.err_code = {}
+        self.progress_percent = 0
+        # set up camera stream
         for k in range(4):
-            cap = cv2.VideoCapture(k)
-            if cap.isOpened(): return cap
-            cap.release()
-        return None
+            self.cam = cv2.VideoCapture(k)
+            if self.cam.isOpened():
+                print("Panacast device found: ({})".format(k))
+                break
 
-    def test_res(self, resolution, format_):
-        # open opencv capture device and set the fps
-        # OPEN THE CAMERA AND THE CODE WILL WORK LOLOLOLOLOLOL
-        # capture frames over 5 seconds and calculate fps
-
-        cap = cv2.VideoCapture(2)
-
-        if cap is None:
+        # check if camera stream exists
+        if self.cam is None:
             print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
-        print(cap)
+        print(self.cam)
 
+    def test_res(self, resolution, format_):
         if resolution == '4k':
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         if resolution == '1080p':
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         if resolution == '720p':
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         if resolution == '480p':
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
             
         if format_ == 'MJPG':
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         if format_ == 'YUYV':
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
         # if format_ == 'YUY2':
-        #     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
+        #     self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
 
-        dbg_print('capturing at resolution = %d x %d' % (cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        dbg_print('capturing at resolution = %d x %d' % (self.cam.get(cv2.CAP_PROP_FRAME_WIDTH), self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
         def decode_fourcc(v):
             v = int(v)
             return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
 
-        fourcc = cap.get(cv2.CAP_PROP_FOURCC)
+        fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
         dbg_print('capturing format = %s' % decode_fourcc(fourcc))
 
         start = time.time()
@@ -103,7 +103,7 @@ class ResTester():
         while True:
             if (time.time() - start) > 2.0:
                 break
-            ret, frame = cap.read()
+            ret, frame = self.cam.read()
             dbg_print('got frame: count = %d' % count)
             count += 1
 
@@ -146,14 +146,12 @@ class ResTester():
             tests = list(map(int, args))
 
         self.err_code = {}
-
         dbg_print('ResTester::test: tests = %s' % repr(tests))
 
         #dictionary of format, resolution, framerate
         frf = {'MJPG' : {'4k', '1080p', '720p'}, 'YUYV' : {'4k', '1080p', '720p'}}
         # frf = {'YUYV' : {'4k', '1080p', '720p'}}
 
-        self.progress_percent = 0 
         for format_ in frf:
             resdict = frf[format_]
             for resolution in resdict:
