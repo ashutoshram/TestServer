@@ -52,30 +52,22 @@ class ResTester():
     def __init__(self):
         self.err_code = {}
         self.progress_percent = 0
-        # set up camera stream
-        for k in range(4):
-            self.cam = cv2.VideoCapture(k)
-            if self.cam.isOpened():
-                print("Panacast device found: ({})".format(k))
-                break
-
-        # check if camera stream exists
-        if self.cam is None:
-            print('cv2.VideoCapture unsuccessful')
-            sys.exit(1)
-        print(self.cam)
 
     def test_res(self, resolution, format_):
         if resolution == '4k':
+            print("Resolution to be set to: 3840 x 1080")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        if resolution == '1080p':
+        elif resolution == '1080p':
+            print("Resolution to be set to: 1920 x 1080")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        if resolution == '720p':
+        elif resolution == '720p':
+            print("Resolution to be set to: 1280 x 720")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        if resolution == '480p':
+        elif resolution == '480p':
+            print("Resolution to be set to: 640 x 480")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
             
@@ -83,17 +75,17 @@ class ResTester():
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         if format_ == 'YUYV':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-        # if format_ == 'YUY2':
-        #     self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
+        if format_ == 'YUY2':
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
 
-        dbg_print('capturing at resolution = %d x %d' % (self.cam.get(cv2.CAP_PROP_FRAME_WIDTH), self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        dbg_print('capturing at resolution: %d x %d' % (self.cam.get(cv2.CAP_PROP_FRAME_WIDTH), self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-        def decode_fourcc(v):
-            v = int(v)
-            return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
+        # def decode_fourcc(v):
+        #     v = int(v)
+        #     return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
 
-        fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
-        dbg_print('capturing format = %s' % decode_fourcc(fourcc))
+        # fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
+        # dbg_print('capturing format = %s' % decode_fourcc(fourcc))
 
         start = time.time()
         frame = 0
@@ -101,14 +93,14 @@ class ResTester():
         skip = 10
 
         while True:
-            if (time.time() - start) > 2.0:
+            if (time.time() - start) > 1.0:
                 break
             ret, frame = self.cam.read()
-            dbg_print('got frame: count = %d' % count)
+            # dbg_print('got frame: count = %d' % count)
             count += 1
 
         h, w = frame.shape[:2]
-        print(h, w)
+        print("Height: {}   Width: {}".format(h, w))
 
         if resolution == '4k':
             if w == 3840 and h == 1080:
@@ -138,7 +130,7 @@ class ResTester():
         return self.err_code
 
     def test(self, args):
-        dbg_print('ResTester::test: args = %s' % repr(args))
+        # dbg_print('ResTester::test: args = %s' % repr(args))
 
         if 'all' in args: 
             tests = []
@@ -146,23 +138,30 @@ class ResTester():
             tests = list(map(int, args))
 
         self.err_code = {}
-        dbg_print('ResTester::test: tests = %s' % repr(tests))
+        # dbg_print('ResTester::test: tests = %s' % repr(tests))
 
         #dictionary of format, resolution, framerate
-        frf = {'MJPG' : {'4k', '1080p', '720p'}, 'YUYV' : {'4k', '1080p', '720p'}}
-        # frf = {'YUYV' : {'4k', '1080p', '720p'}}
+        frf = {'MJPG' : {'4k', '1080p', '720p'}, 'YUY2' : {'4k', '1080p', '720p'}}
 
         for format_ in frf:
             resdict = frf[format_]
             for resolution in resdict:
                 print(resolution, format_)
                 test_type = str(resolution) + ' x ' + str(format_)
+                
+                for k in range(4):
+                    self.cam = cv2.VideoCapture(k)
+                    if self.cam.isOpened():
+                        print("Panacast device found: ({})".format(k))
+                        break
+
                 self.err_code[test_type] = self.test_res(resolution, format_)
                 self.progress_percent += 15
+                self.cam.release()
 
         self.progress_percent = 100
 
-        dbg_print('ResTester::test: err_code = %s' % repr(self.err_code))
+        # dbg_print('ResTester::test: err_code = %s' % repr(self.err_code))
         return self.err_code
 
 if __name__ == "__main__":
