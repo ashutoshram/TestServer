@@ -80,22 +80,16 @@ class ResTester():
 
         dbg_print('capturing at resolution: %d x %d' % (self.cam.get(cv2.CAP_PROP_FRAME_WIDTH), self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-        # def decode_fourcc(v):
-        #     v = int(v)
-        #     return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
-
-        # fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
-        # dbg_print('capturing format = %s' % decode_fourcc(fourcc))
-
-        start = time.time()
-        frame = 0
+        t_end = time.time() + 3
         count = 0
-        skip = 10
 
         while True:
-            if (time.time() - start) > 1.0:
-                break
             ret, frame = self.cam.read()
+            if time.time() > t_end:
+                img = "test_resolution_{}_{}.png".format(format_, resolution)
+                cv2.imwrite(img, frame)
+                print("{} captured".format(img))
+                break
             # dbg_print('got frame: count = %d' % count)
             count += 1
 

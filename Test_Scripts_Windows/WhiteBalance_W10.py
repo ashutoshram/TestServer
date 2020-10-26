@@ -149,6 +149,9 @@ class WhiteBalTester():
 
         # print("Current white balance temperature: {}".format(current_whiteBal))
         WhiteBalTester.count += 1
+        #reset white balance to default
+        self.cam.set(cv2.CAP_PROP_TEMPERATURE, 3700)
+
         return r, g, b
 
 if __name__ == "__main__":

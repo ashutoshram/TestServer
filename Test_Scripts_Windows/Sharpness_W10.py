@@ -145,6 +145,9 @@ class SharpnessTester():
         variance = cv2.Laplacian(f, cv2.CV_64F).var()
         print("Laplacian variance: {}".format(variance))
         SharpnessTester.count += 1
+        #reset sharpness to default
+        self.cam.set(cv2.CAP_PROP_SHARPNESS, 144)
+
         return variance
 
 if __name__ == "__main__":

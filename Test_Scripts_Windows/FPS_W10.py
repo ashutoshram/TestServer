@@ -48,6 +48,7 @@ class FPSTester():
         self.cam = cv2.VideoCapture(2)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
 
         # check if camera stream exists
         if self.cam is None:
@@ -68,21 +69,16 @@ class FPSTester():
         for i in range(len(fourcc_names)):
                 print (i, fourcc_names[i], self.cam.get(i))
 
-    def decode_fourcc(self,v):
-        v = int(v)
-        return "".join([chr((v >> 8 * i) & 0xFF) for i in range(4)])
-
     def test_fps(self, framerate, resolution, format_):
         # open opencv capture device and set the fps
         # capture frames over 5 seconds and calculate fps
-        start = time.time()
-        count = 0
-        skip = 10
+        t_end = time.time() + 3
         print("Setting framerate to: {}".format(framerate))
         self.cam.set(cv2.CAP_PROP_FPS, framerate)
         print("Current framerate: {}".format(self.cam.get(cv2.CAP_PROP_FPS)))
+
         while True:
-            if (time.time() - start) > 5.0:
+            if time.time() > t_end:
                 break
 
             # grab frame and check if it was successful
@@ -94,11 +90,6 @@ class FPSTester():
             else:
                 dbg_print('frame not obtained')
                 skip -= 1
-
-            # if skip == 0:
-            #     start = time.time()
-            #     count = 0
-            #     dbg_print('starting test')
 
         elapsed = time.time() - start
         dbg_print('time elapsed: %f' % elapsed)
@@ -127,11 +118,8 @@ class FPSTester():
         self.err_code = {}
 
         #dictionary of format, resolution, framerate
-        if self.os_type == 'Windows':
-            #fps_params = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
-            fps_params = {'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
-        elif self.os_type == 'Linux':
-            fps_params = {'YUYV' : {'4k' : 30, '1080p' : 27, '720p' : 30 }}
+        #fps_params = {'MJPG' : {'4k' : 22, '1080p' : 30, '720p' : 30 }, 'YUYV' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
+        fps_params = {'YUY2' : {'4k' : 30, '1080p' : 30, '720p' : 30 }}
 
         for format_ in fps_params:
             resdict = fps_params[format_]

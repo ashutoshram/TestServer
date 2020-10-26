@@ -132,8 +132,10 @@ class SaturationTester():
         current_saturation = self.cam.get(cv2.CAP_PROP_SATURATION)
         print("Current saturation: {}".format(current_saturation))
         SaturationTester.count += 1
-        return current_saturation
+        #reset saturation to default
+        self.cam.set(cv2.CAP_PROP_SATURATION, 141)
 
+        return current_saturation
 
 if __name__ == "__main__":
     t = Saturation()

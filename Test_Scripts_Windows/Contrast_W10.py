@@ -134,6 +134,8 @@ class ContrastTester():
         print("{}\n".format(otsu))
         ContrastTester.count += 1
         current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
+        #reset contrast to default
+        self.cam.set(cv2.CAP_PROP_CONTRAST, 95)
 
         return current_contrast, otsu
 

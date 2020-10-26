@@ -137,6 +137,8 @@ class BrightnessTester():
         print("Brightness: {}".format(brightness_level))
         print("luma: {}\n".format(luma))        
         BrightnessTester.count += 1
+        #reset brightness to default
+        self.cam.set(cv2.CAP_PROP_BRIGHTNESS, 111)
 
         return brightness_level, luma
 
