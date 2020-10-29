@@ -29,7 +29,7 @@ class Brightness(ATC.AbstractTestClass):
     def run(self, args, q, results, wait_q):
         self.BrightnessTest = BrightnessTester()
         self.BrightnessTest.test(args, q, results)
-        print("Brightness.run: waiting for wait_q")
+        # print("Brightness.run: waiting for wait_q")
         # got = wait_q.get()
         # print("Brightness.run: got %s" % repr(got))
 
@@ -70,7 +70,7 @@ class BrightnessTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("Panacast device found: ({})".format(k))
+                print("\nPanacast device found: ({})\n".format(k))
                 break
 
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -80,7 +80,6 @@ class BrightnessTester():
         if self.cam is None:
             print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
-        print(self.cam)
 
     def progress(self):
         return self.progress_percent
@@ -106,13 +105,14 @@ class BrightnessTester():
 
         self.progress_percent = 100
         q.put(self.progress_percent)
-        print("Test is Done, Putting err_code in the results")
+        # print("Test is Done, Putting err_code in the results")
         results.put(self.err_code)
 
         return self.err_code
 
     def test_brightness(self, brightness_level):
-        print('entering test_brightness')
+        print("\nBrightness: {}".format(brightness_level))
+
         # set brightness and capture frame after three second delay
         self.cam.set(cv2.CAP_PROP_BRIGHTNESS, brightness_level)
         t_end = time.time() + 3
@@ -121,21 +121,20 @@ class BrightnessTester():
             if time.time() > t_end:
                 img = "test_brightness" + "_{}".format(BrightnessTester.count) + ".png"
                 cv2.imwrite(img, frame)
-                print("{} captured".format(img))
+                # print("{} captured".format(img))
                 # print(frame)
                 break
 
         # check individual channel values
         b, g, r = cv2.split(frame)
-        print("Channel values:")
-        for channel, label in zip((b, g, r), ("b", "g", "r")):
-            print("{}: {}".format(label, np.average(channel)))
+        # print("Channel values:")
+        for channel, label in zip((r, g, b), ("r", "g", "b")):
+            print("{}:          {}".format(label, np.average(channel)))
         
         # convert to grayscale and calculate luma
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         luma = np.average(f)
-        print("Brightness: {}".format(brightness_level))
-        print("luma: {}\n".format(luma))        
+        print("luma:       {}".format(luma))        
         BrightnessTester.count += 1
         #reset brightness to default
         self.cam.set(cv2.CAP_PROP_BRIGHTNESS, 111)
@@ -150,5 +149,5 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print("Generating report...")
-    print(t.generate_report())
+    print("\nGenerating report...")
+    print("{}\n".format(t.generate_report()))

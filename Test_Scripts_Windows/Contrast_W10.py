@@ -28,7 +28,7 @@ class Contrast(ATC.AbstractTestClass):
     def run(self, args, q, results, wait_q):
         self.ContrastTest = ContrastTester()
         self.ContrastTest.test(args, q, results)
-        print("Contrast.run: waiting for wait_q")
+        # print("Contrast.run: waiting for wait_q")
         # got = wait_q.get()
         # print("Contrast.run: got %s" % repr(got))
 
@@ -63,7 +63,7 @@ class ContrastTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("Panacast device found: ({})".format(k))
+                print("\nPanacast device found: ({})".format(k))
                 break
 
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -73,7 +73,7 @@ class ContrastTester():
         if self.cam is None:
             print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
-        print(self.cam)
+        # print(self.cam)
 
     def progress(self):
         return self.progress_percent
@@ -82,7 +82,7 @@ class ContrastTester():
         return self.err_code
 
     def test(self, args, q, results):
-        print(args)
+        # print(args)
         otsu_list = []
         for contrast_level in args:
             return_val, otsu = self.test_contrast(int(contrast_level))
@@ -112,9 +112,9 @@ class ContrastTester():
             return False
         
     def test_contrast(self, contrast_level):
-        print('entering test_contrast')
+        # print('entering test_contrast')
         # set contrast and capture frame after three second delay
-        print("contrast to be tested: {}".format(contrast_level))
+        print("\nContrast level:  {}".format(contrast_level))
         self.cam.set(cv2.CAP_PROP_CONTRAST, contrast_level)
         current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
 
@@ -124,14 +124,14 @@ class ContrastTester():
             if time.time() > t_end:
                 img = "test_contrast" + "_{}".format(ContrastTester.count) + ".png"
                 cv2.imwrite(img, frame)
-                print("{} captured".format(img))
+                # print("{} captured".format(img))
                 # print(frame)
                 break
 
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(f, 0, 255, cv2.THRESH_OTSU)
         otsu = np.average(thresh)
-        print("{}\n".format(otsu))
+        print("Otsu threshold:  {}".format(otsu))
         ContrastTester.count += 1
         current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
         #reset contrast to default
@@ -147,6 +147,7 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print(t.get_progress())
-    print(t.is_done())
-    print(t.generate_report())
+    # print(t.get_progress())
+    # print(t.is_done())
+    print("\nGenerating report...")
+    print("{}\n".format(t.generate_report()))

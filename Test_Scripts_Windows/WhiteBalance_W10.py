@@ -30,7 +30,7 @@ class WhiteBal(ATC.AbstractTestClass):
     def run(self, args, q, results, wait_q):
         self.WhiteBalTest = WhiteBalTester()
         self.WhiteBalTest.test(args, q, results)
-        print("Whitebalance.run: waiting for wait_q")
+        # print("Whitebalance.run: waiting for wait_q")
         # got = wait_q.get()
         # print("Whitebalance.run: got %s" % repr(got))
 
@@ -70,7 +70,7 @@ class WhiteBalTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("Panacast device found: ({})".format(k))
+                print("\nPanacast device found: ({})".format(k))
                 break
 
         # self.cam = cv2.VideoCapture(0)
@@ -81,7 +81,7 @@ class WhiteBalTester():
         if self.cam is None:
             print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
-        print(self.cam)
+        # print(self.cam)
 
     def progress(self):
         return self.progress_percent
@@ -123,8 +123,9 @@ class WhiteBalTester():
         return self.err_code
 
     def test_whiteBal(self, whiteBal_level):
-        print('entering test_whiteBal')
+        # print('entering test_whiteBal')
         # set white balance and capture frame after three second delay
+        print("\nWhite balance: {}".format(whiteBal_level))
         self.cam.set(cv2.CAP_PROP_TEMPERATURE, whiteBal_level)
         # current_whiteBal = self.cam.get(cv2.CAP_PROP_TEMPERATURE)
 
@@ -134,7 +135,7 @@ class WhiteBalTester():
             if time.time() > t_end:
                 img = "test_wb" + "_{}".format(WhiteBalTester.count) + ".png"
                 cv2.imwrite(img, frame)
-                print("{} captured".format(img))
+                # print("{} captured".format(img))
                 # print(frame)
                 break
 
@@ -143,9 +144,9 @@ class WhiteBalTester():
         b = np.average(b)
         g = np.average(g)
         r = np.average(r)
-        print("Channel values:")
+        # print("Channel values:")
         for channel, label in zip((r, g, b), ("r", "g", "b")):
-            print("{}: {}".format(label, channel))
+            print("{}:             {}".format(label, channel))
 
         # print("Current white balance temperature: {}".format(current_whiteBal))
         WhiteBalTester.count += 1
@@ -162,5 +163,5 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print("Generating report...")
-    print(t.generate_report())
+    print("\nGenerating report...")
+    print("{}\n".format(t.generate_report()))

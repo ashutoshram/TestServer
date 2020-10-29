@@ -30,7 +30,7 @@ class Saturation(ATC.AbstractTestClass):
     def run(self, args, q, results, wait_q):
         self.SaturationTest = SaturationTester()
         self.SaturationTest.test(args, q, results)
-        print("Saturation.run: waiting for wait_q")
+        # print("Saturation.run: waiting for wait_q")
         # got = wait_q.get()
         # print("Saturation.run: got %s" % repr(got))
 
@@ -70,7 +70,7 @@ class SaturationTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("Panacast device found")
+                print("Panacast device found: ({})".format(k))
                 break
 
         # self.cam = cv2.VideoCapture(0)
@@ -90,37 +90,48 @@ class SaturationTester():
         return self.err_code
 
     def test(self, args, q, results):
+        sat_list = []
         for saturation_level in args:
             return_val = self.test_saturation(int(saturation_level))
-            print(type(return_val))
-            print(type(saturation_level))
-            if return_val == int(saturation_level):
-                print("Success")
-                self.err_code[saturation_level] = 0
-            else:
-                print("Failure")
-                self.err_code[saturation_level] = -1
+            sat_list.append(return_val)
             self.progress_percent += 33
             q.put(self.progress_percent)
+        
+        for i, saturation_level in zip(range(len(sat_list)), args):
+            if i == len(sat_list) - 2:
+                if sat_list[i] > sat_list[i + 1]:
+                    self.err_code[saturation_level] = 0
+                else:
+                    self.err_code[saturation_level] = -1
+            elif i == len(args) - 1:
+                if sat_list[i] < sat_list[i - 1]:
+                    self.err_code[saturation_level] = 0
+                else:
+                    self.err_code[saturation_level] = -1
+            else:
+                if sat_list[i] < sat_list[i + 1]:
+                    self.err_code[saturation_level] = 0
+                else:
+                    self.err_code[saturation_level] = -1
+            
         self.progress_percent = 100
-        q.put(self.progress_percent)
         results.put(self.err_code)
+        q.put(self.progress_percent)
+
         return self.err_code
 
-
     def test_saturation(self, saturation_level):
-        print('entering test_saturation')
+        # print('entering test_saturation')
         # set saturation and capture frame after three second delay
-        print("saturation to be tested: {}".format(saturation_level))
+        print("\nSaturation to be tested:  {}".format(saturation_level))
         self.cam.set(cv2.CAP_PROP_SATURATION, saturation_level)
-        print("saturation set to: {}".format(self.cam.get(cv2.CAP_PROP_SATURATION)))
         t_end = time.time() + 3
         while True:
             ret, frame = self.cam.read()
             if time.time() > t_end:
                 img = "test_saturation" + "_{}".format(SaturationTester.count) + ".png"
                 cv2.imwrite(img, frame)
-                print("{} captured".format(img))
+                # print("{} captured".format(img))
                 # print(frame)
                 break
 
@@ -128,14 +139,12 @@ class SaturationTester():
         h, s, v = cv2.split(hsv)
         saturation_average = np.average(s)
 
-        print("Saturation average: {}".format(saturation_average))
-        current_saturation = self.cam.get(cv2.CAP_PROP_SATURATION)
-        print("Current saturation: {}".format(current_saturation))
+        print("Saturation (HSV) average: {}".format(saturation_average))
         SaturationTester.count += 1
         #reset saturation to default
         self.cam.set(cv2.CAP_PROP_SATURATION, 141)
 
-        return current_saturation
+        return saturation_average
 
 if __name__ == "__main__":
     t = Saturation()
@@ -145,5 +154,5 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print("Generating report...")
-    print(t.generate_report())
+    print("\nGenerating report...")
+    print("{}\n".format(t.generate_report()))

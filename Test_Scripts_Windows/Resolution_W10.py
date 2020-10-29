@@ -140,13 +140,12 @@ class ResTester():
         for format_ in frf:
             resdict = frf[format_]
             for resolution in resdict:
-                print(resolution, format_)
                 test_type = str(resolution) + ' x ' + str(format_)
                 
                 for k in range(4):
                     self.cam = cv2.VideoCapture(k)
                     if self.cam.isOpened():
-                        print("Panacast device found: ({})".format(k))
+                        print("\nPanacast device found: ({})".format(k))
                         break
 
                 self.err_code[test_type] = self.test_res(resolution, format_)
@@ -159,9 +158,10 @@ class ResTester():
         return self.err_code
 
 if __name__ == "__main__":
-	t = Resolution()
-	args = t.get_args()
-	t.run(args)
-	print(t.get_progress())
-	print(t.is_done())
-	print(t.generate_report())
+    t = Resolution()
+    args = t.get_args()
+    t.run(args)
+    print(t.get_progress())
+    print(t.is_done())
+    # print("\nGenerating report...")
+    print("{}\n".format(t.generate_report()))

@@ -43,20 +43,6 @@ class FPS(ATC.AbstractTestClass):
 class FPSTester():
     def __init__(self):
         self.progress_percent = 0 
-        self.os_type = platform.system()
-
-    def dump_props(self):
-        fourcc_names = ['CAP_PROP_POS_MSEC', 'CAP_PROP_POS_FRAMES', 'CAP_PROP_POS_AVI_RATIO', 'CAP_PROP_FRAME_WIDTH', 'CAP_PROP_FRAME_HEIGHT', 
-        'CAP_PROP_FPS', 'CAP_PROP_FOURCC', 'CAP_PROP_FRAME_COUNT', 'CAP_PROP_FORMAT', 'CAP_PROP_MODE', 'CAP_PROP_BRIGHTNESS', 'CAP_PROP_CONTRAST', 
-        'CAP_PROP_SATURATION', 'CAP_PROP_HUE', 'CAP_PROP_GAIN', 'CAP_PROP_EXPOSURE', 'CAP_PROP_CONVERT_RGB', 'CAP_PROP_WHITE_BALANCE_BLUE_U', 
-        'CAP_PROP_RECTIFICATION', 'CAP_PROP_MONOCHROME', 'CAP_PROP_SHARPNESS', 'CAP_PROP_AUTO_EXPOSURE', 'CAP_PROP_GAMMA', 'CAP_PROP_TEMPERATURE', 
-        'CAP_PROP_TRIGGER', 'CAP_PROP_TRIGGER_DELAY', 'CAP_PROP_WHITE_BALANCE_RED_V', 'CAP_PROP_ZOOM', 'CAP_PROP_FOCUS', 'CAP_PROP_GUID', 
-        'CAP_PROP_ISO_SPEED', 'CAP_PROP_BACKLIGHT', 'CAP_PROP_PAN', 'CAP_PROP_TILT', 'CAP_PROP_ROLL', 'CAP_PROP_IRIS', 'CAP_PROP_SETTINGS', 
-        'CAP_PROP_BUFFERSIZE', 'CAP_PROP_AUTOFOCUS']
-
-        print('dump_props')
-        for i in range(len(fourcc_names)):
-                print (i, fourcc_names[i], self.cam.get(i))
 
     def test_fps(self, framerate, resolution, format_):
         # check if camera stream exists
@@ -93,7 +79,6 @@ class FPSTester():
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
 
         # open opencv capture device and set the fps
-        # capture frames over 5 seconds and calculate fps
         print("Setting framerate to: {}".format(framerate))
         self.cam.set(cv2.CAP_PROP_FPS, framerate)
         current_fps = self.cam.get(cv2.CAP_PROP_FPS)
@@ -107,6 +92,7 @@ class FPSTester():
         count, skipped = (0 for i in range(2))
         one_yes, five_yes, ten_yes = (False for i in range(3))
 
+        # calculate fps
         while True:
             if time.time() >= five and five_yes is False:
                 duration = time.time() - start
@@ -158,12 +144,11 @@ class FPSTester():
         # dbg_print('FPSTester::test: args = %s' % repr(args))
         self.err_code = {}
 
-        #dictionary of format, resolution, framerate
-        # fps_params = {'MJPG': {'4k': 30, '1080p': 24, '720p': 15}, 
-        #               'YUY2': {'4k': 30, '1080p': 24, '720p': 15}}
-
-        fps_params = {'YUY2': {'4k': 30}}
-
+        #dictionary of testing parameters
+        fps_params = {'MJPG': {'4k': 30, '1080p': 24, '720p': 15}, 
+                      'YUY2': {'4k': 30, '1080p': 24, '720p': 15}}
+        
+        # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in fps_params:
             res_dict = fps_params[format_]
             for resolution in res_dict:
@@ -188,9 +173,11 @@ class FPSTester():
         return self.err_code
 
 if __name__ == "__main__":
-	t = FPS()
-	args = t.get_args()
-	t.run(args)
-	print(t.get_progress())
-	print(t.is_done())
-	print(t.generate_report())
+    t = FPS()
+    args = t.get_args()
+    t.run(args)
+    # print(t.get_progress())
+    # print(t.is_done())
+
+    print("\nGenerating report...")
+    print("{}\n".format(t.generate_report()))
