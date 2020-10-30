@@ -1,172 +1,203 @@
-#python 3.6 
-#last updated 6/27 
-import cv2 
-import numpy as np
+import os
+import platform
 import time
-
-production = True
-debug = True 
-if not production:
-    import AbstractTestClass as ATC
-    import webcamPy as wpy
-else:
-    import eos.scripts.AbstractTestClass as ATC
-    import eos.scripts.webcamPy as wpy
+import cv2
+import numpy as np
+import AbstractTestClass as ATC
+debug = True
 
 def dbg_print(*args):
-    if debug: 
-        print("".join(map(str, args)))
+    if debug: print("".join(map(str, args)))
 
-class resolutionFPS(ATC.AbstractTestClass):
-
+class FPS(ATC.AbstractTestClass):
     def __init__(self):
-        self.ResolutionFPSTest = None
+        self.FPSTest = FPSTester()
 
     def get_args(self):
-        ResList =[ '4800x1200' ,'640x480','3840x1088','3840x1080','960x544','1280x720','1920x1080']
-        return ResList
+        return ['all']
 
-    def run(self, args, q, results, wait_q):
-        self.ResolutionFPSTest = ResolutionFPSTester()
-        self.ResolutionFPSTest.test(args,q,results)
-        print("ResolutionFPS.run: waiting for wait_q")
-        time.sleep(5)
-        got = wait_q.get()
-        print("ResolutionFPS.run: got %s" % repr(got))
-
+    def run(self, args):
+        return self.FPSTest.test(args)
 
     def get_progress(self):
-        if self.ResolutionFPSTest is None:
-            return 0
-        return self.ResolutionFPSTest.progress()
+        return self.FPSTest.progress()
 
     def set_default_storage_path(self, path):
         self.storage_path = path
 
+    def get_name(self):
+        return "FPS Test"
+    
+    def is_done(self):
+        if self.FPSTest.progress() == 100:
+            return True
+        else:
+            return False
+    
     def get_storage_path(self):
         return self.storage_path
 
-    def get_name(self):
-        return "resolutionFPS Test"
-    
-    def is_done(self):
-        if self.ResolutionFPSTest is None:
-            return False
-        else:
-            if self.ResolutionFPSTest.progress() == 100:
-                return True
-            else:
-                return False
-
     def generate_report(self):
-        return self.ResolutionFPSTest.results()
+        return self.FPSTest.results()
 
-class ResolutionFPSTester():
-
+class FPSTester():
     def __init__(self):
-        self.err_code = {}
         self.progress_percent = 0 
-        self.cam = wpy.Webcam()
-        print("hello")
-        print("opened panacast device")
+
+    def test_fps(self, framerate, resolution, format_):
+        # check if camera stream exists
+        if self.cam is None:
+            print('cv2.VideoCapture unsuccessful')
+            sys.exit(1)
+            print(self.cam)
+
+        if resolution == '4k':
+            print("Resolution to be set to: 3840 x 1080")
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        elif resolution == '1200p':
+            print("Resolution to be set to: 4800 x 1200")
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 4800)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
+        elif resolution == '1080p':
+            print("Resolution to be set to: 1920 x 1080")
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        elif resolution == '720p':
+            print("Resolution to be set to: 1280 x 720")
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        elif resolution == '540p':
+            print("Resolution to be set to: 960 x 540")
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
+        elif resolution == '360p':
+            print("Resolution to be set to: 640 x 360")
+            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+        if format_ == 'MJPG':
+            print("Video format set to: MJPG")
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        elif format_ == 'YUYV':
+            print("Video format set to: YUYV")
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+        elif format_ == 'YUY2':
+            print("Video format set to: YUY2")
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
+        elif format_ == 'I420':
+            print("Video format set to: I420")
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'I420'))
+        elif format_ == 'NV12':
+            print("Video format set to: NV12")
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
+
+        # open opencv capture device and set the fps
+        print("Setting framerate to: {}".format(framerate))
+        self.cam.set(cv2.CAP_PROP_FPS, framerate)
+        current_fps = self.cam.get(cv2.CAP_PROP_FPS)
+        print("Current framerate set to: {}. Checking video stream...\n".format(current_fps))
         
+        # check fps for 1, 5, and 10 second streams
+        start = time.time()
+        one = start + 1
+        five = start + 5
+        ten = start + 10
+        count, skipped = (0 for i in range(2))
+        one_yes, five_yes, ten_yes = (False for i in range(3))
+
+        # calculate fps
+        while True:
+            if time.time() >= five and five_yes is False:
+                duration = time.time() - start
+                print("Actual duration:      {:<5} seconds".format(duration))
+                print("Total frames counted: {:<5}".format(count))
+                print("Total frames skipped: {:<5}".format(skipped))
+                fps5 = count / duration
+                print("Average fps:          {:<5}\n".format(fps5))
+                five_yes = True
+            elif time.time() >= ten and ten_yes is False:
+                duration = time.time() - start
+                print("Actual duration:      {:<5} seconds".format(duration))
+                print("Total frames counted: {:<5}".format(count))
+                print("Total frames skipped: {:<5}".format(skipped))
+                fps10 = count / duration
+                print("Average fps:          {:<5}\n".format(fps10))
+                ten_yes = True
+                break
+
+            retval, frame = self.cam.read()
+            if retval is True:
+                count += 1
+            else:
+                print("Frame skipped")
+                skipped += 1
+
+        diff5 = abs(float(framerate) - float(fps5))
+        diff10 = abs(float(framerate) - float(fps10))
+        
+        # set framerate back to default
+        self.cam.set(cv2.CAP_PROP_FPS, 30)
+    
+        # success
+        if diff5 <= 2 and diff10 <= 2:
+            dbg_print("Success.")
+            return 0
+        #failure
+        else:
+            dbg_print("Failure.")
+            return -1
+
     def progress(self):
         return self.progress_percent
 
     def results(self):
         return self.err_code
-    #function to test FPS, collects frames for 5 seconds, calculates FPS and compares 
-    def testFPS(self,fps):
-        start= time.time()  #start time of func
-        count= 0            
-        skip= 10
-        while True:
-            if( time.time() - start) > 5.0:     #if 5 seconds has passed,then break 
-                break
-            frame = self.cam.getFrame()          #get frame
-            skip -=1
-            if skip == 0:                   #after getting 10 frames
-                start = time.time()         
-                count = 0
-                print('starting fps test')
-            count+=1
 
-        elapsed = time.time() - start
-        calc_fps = float(count) / elapsed
-        print('Expected FPS= %f'% fps)
-        print('Actual FPS = %f' % calc_fps)
-        eps = 1.0
-        # if fps difference is >1, its a fail
-        abs_diff = abs(calc_fps - fps)
-        if abs_diff < eps:
-            print('success')
-            return 0
-        else:
-            print('FPS fail')
-            return -1
-               
-    #main driver function to run full test 
-    def test(self, args,q,results):
-        #dict and lists of all possible values 
-        w_h = {4800:1200 ,640:480,3840:1088,3840:1080,960:544,1280:720,1920:1080}
-        width = [4800,640,3840,3840,960,1280,1920]
-        height= [1200,480,1088,1080,544,720,1080]
-        FPS = [15.0,24.0,27.0,30.0]
-        ResList =[ '4800x1200' ,'640x480','3840x1088','3840x1080','960x544','1280x720','1920x1080']
+    def test(self, args):
+        # dbg_print('FPSTester::test: args = %s' % repr(args))
+        self.err_code = {}
 
-        args_ind = []   #contains indeces in width, height where chosen args are located 
-        args_length= len(args)
-        increment = int(100/(args_length*4)) # increment for progress bar 
-        #files which indeces to pull resolution size from,from the user selected parameters 
-        for x in range(len(args)):
-            if args[x] in ResList:
-                print(ResList.index(args[x]))
-                args_ind.append(ResList.index(args[x]))
+        #dictionary of testing parameters
+        fps_params = {'I420': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]}, 
+                      'YUY2': {'4k': [30], '1200p': [15]}, 
+                      'MJPG': {'1080p': [30], '720p': [30], '540p': [30], '360p': [30]}, 
+                      'NV12': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]}}
 
-        #main driver code to run the test
-        # first for loop iterates through chosen args , 2nd for loop iterates through all possible FPS's
-        for x in range(args_length):
-            for z in range(0,4):
-                print(str(FPS[z])+'FPS') 
-                #skips over resolution FPS pairs that aren't supported                
-                if (FPS[z] !=15.0 and width[args_ind[x]]==4800) or (width[args_ind[x]]==1920 and FPS[z]==27.0) :
-                    print('skipping this test')
-                    pass 
-                else:
-                    if not self.cam.open(width[args_ind[x]] ,height[args_ind[x]],FPS[z], 'YUY2'):
-                        print("Can't Open Camera")
-                    F = self.cam.getFrame()
-                    F = cv2.cvtColor(F, cv2.COLOR_YUV2BGR_YUY2) 
-                    string =str(FPS[z])+'FPS'+str(width[args_ind[x]]) +'x'+str(height[args_ind[x]])+'.jpg'
-                    cv2.imwrite(string,F)
-                    print(string+' file create was successful')
-                    h,w,c = F.shape        
-                    print('testing: '+str(FPS[z]))   
-                    #tests wether resolution of created frame is correct and puts result into err_code  
-                    if(h== height[args_ind[x]]) and ( w == width[args_ind[x]]):
-                        print(string+' resolution was successful')
-                        if self.testFPS(FPS[z])== 0:
-                            #good for both
-                            self.err_code[string] = 0
-                        else:
-                            #FPS failed,Res Passed
-                            self.err_code[string] = -1
-                    elif self.testFPS(FPS[z])== 0:
-                        #Res Fail,FPS PASS
-                        self.err_code[string] = -1
-                    else:
-                        #BothFail
-                        self.err_code[string] = -1
-                self.progress_percent +=increment
-                q.put(self.progress_percent)
-                print(self.err_code)
-        self.progress_percent=100
-        q.put(self.progress_percent)
-        results.put(self.err_code)
+        # fps_params = {'MJPG': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15]}, 
+        #               'YUY2': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15]}}
+
+        # iterate through the dictionary and test each format, resolution, and framerate
+        for format_ in fps_params:
+            res_dict = fps_params[format_]
+            for resolution in res_dict:
+                framerate = res_dict[resolution]
+                for fps in framerate:
+                    print(format_, resolution, fps)
+                    test_type = str(framerate) + ' x ' + str(resolution) + ' x ' + str(format_)
+                
+                    # set up camera stream
+                    for k in range(4):
+                        self.cam = cv2.VideoCapture(k)
+                        if self.cam.isOpened():
+                            print("\nPanacast device found: ({})".format(k))
+                            break
+
+                    self.err_code[test_type] = self.test_fps(fps, resolution, format_)
+                    self.progress_percent += 33
+                    self.cam.release()
+
+            self.progress_percent = 100
+
+        # dbg_print('FPSTester::test: err_code = %s' % repr(self.err_code))
         return self.err_code
-        
+
 if __name__ == "__main__":
-    t = resolutionFPS()
+    t = FPS()
     args = t.get_args()
     t.run(args)
-    print(t.generate_report())
+    # print(t.get_progress())
+    # print(t.is_done())
+
+    print("\nGenerating report...")
+    print("{}\n".format(t.generate_report()))
