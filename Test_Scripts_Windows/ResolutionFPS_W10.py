@@ -2,6 +2,7 @@ import os
 import platform
 import time
 import cv2
+import sys
 import numpy as np
 import AbstractTestClass as ATC
 debug = True
@@ -104,7 +105,7 @@ class FPSTester():
         five = start + 5
         ten = start + 10
         count, skipped = (0 for i in range(2))
-        one_yes, five_yes, ten_yes = (False for i in range(3))
+        five_yes, ten_yes = (False for i in range(2))
 
         # calculate fps
         while True:
@@ -161,11 +162,8 @@ class FPSTester():
         #dictionary of testing parameters
         fps_params = {'I420': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]}, 
                       'YUY2': {'4k': [30], '1200p': [15]}, 
-                      'MJPG': {'1080p': [30], '720p': [30], '540p': [30], '360p': [30]}, 
+                      'MJPG': {'1080p': [30], '720p': [30], '540p': [30], '360p': [30]},
                       'NV12': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]}}
-
-        # fps_params = {'MJPG': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15]}, 
-        #               'YUY2': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15]}}
 
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in fps_params:
@@ -200,4 +198,5 @@ if __name__ == "__main__":
     # print(t.is_done())
 
     print("\nGenerating report...")
+    # print json.dumps(FPSTester.err_code, indent=1)
     print("{}\n".format(t.generate_report()))
