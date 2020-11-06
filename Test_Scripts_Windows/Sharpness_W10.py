@@ -5,19 +5,36 @@ import numpy as np
 import sys
 import cv2
 from queue import Queue
+from datetime import date
+import AbstractTestClass as ATC
+import pprint as p
 
-production = False
-debug = True 
-if not production:
-    import AbstractTestClass as ATC
-    # import webcamPy as wpy
-else:
-    import eos.scripts.AbstractTestClass as ATC
-    import eos.scripts.webcamPy as wpy
+# production = False
+# debug = True 
+# if not production:
+#     import AbstractTestClass as ATC
+#     # import webcamPy as wpy
+# else:
+#     import eos.scripts.AbstractTestClass as ATC
+#     import eos.scripts.webcamPy as wpy
 
-def dbg_print(*args):
-    if debug: 
-        print("".join(map(str, args)))
+debug = True
+current = date.today()
+path = os.getcwd()
+
+filename = "{}_sharpness.log".format(current)
+file_path = os.path.join(path+"\\sharpness", filename)
+# create directory for log and .png files if it doesn't already exist
+if not os.path.exists(path+"\\sharpness"):
+    os.makedirs(path+"\\sharpness")
+
+log_file = open(file_path, "a")
+
+def log_print(args):
+    msg = args + "\n"
+    log_file.write(msg)
+    if debug is True: 
+        print(args)
 
 class Sharpness(ATC.AbstractTestClass):
     def __init__(self):
@@ -69,7 +86,8 @@ class SharpnessTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("Panacast device found: ({})\n".format(k))
+                log_print(55*"=")
+                log_print("\nPanacast device found:  {}\n".format(k))
                 break
 
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -77,9 +95,8 @@ class SharpnessTester():
 
         # check if camera stream exists
         if self.cam is None:
-            print('cv2.VideoCapture unsuccessful')
+            log_print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
-        # print(self.cam)
 
     def progress(self):
         return self.progress_percent
@@ -97,7 +114,7 @@ class SharpnessTester():
         
         # check if correct # of arguments is returned
         if len(args) != len(var_list):
-            print("Something went wrong: # of sharpness values does not match # of inputs")
+            log_print("Something went wrong: # of sharpness values does not match # of inputs")
             sys.exit(1)
 
         for i, sharpness_level in zip(range(len(var_list)), args):
@@ -126,7 +143,7 @@ class SharpnessTester():
     def test_sharpness(self, sharpness_level):
         # print('entering test_sharpness')
         # set sharpness and capture frame after three second delay
-        print("Sharpness to be tested: {}".format(sharpness_level))
+        log_print("Sharpness to test:      {}".format(sharpness_level))
         self.cam.set(cv2.CAP_PROP_SHARPNESS, sharpness_level)
         current_sharpness = self.cam.get(cv2.CAP_PROP_SHARPNESS)
         t_end = time.time() + 3
@@ -134,7 +151,8 @@ class SharpnessTester():
         while True:
             ret, frame = self.cam.read()
             if time.time() > t_end:
-                img = "test_sharpness" + "_{}".format(SharpnessTester.count) + ".png"
+                img = "{}_sharpness_{}.png".format(current, SharpnessTester.count)
+                img = os.path.join(path+"\\sharpness", img)
                 cv2.imwrite(img, frame)
                 # print("{} captured".format(img))
                 # print(frame)
@@ -142,7 +160,7 @@ class SharpnessTester():
         
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         variance = cv2.Laplacian(f, cv2.CV_64F).var()
-        print("Laplacian variance:     {}\n".format(variance))
+        log_print("Laplacian variance:     {}\n".format(variance))
         SharpnessTester.count += 1
         #reset sharpness to default
         self.cam.set(cv2.CAP_PROP_SHARPNESS, 144)
@@ -157,5 +175,7 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print("\nGenerating report...")
-    print("{}\n".format(t.generate_report()))
+    log_print("\nGenerating report...")
+    report = p.pformat(t.generate_report())
+    log_print("{}\n".format(report))
+    log_file.close()

@@ -5,19 +5,27 @@ import numpy as np
 import sys
 import cv2
 from queue import Queue
+from datetime import date
+import AbstractTestClass as ATC
+import pprint as p
 
-production = False
-debug = True 
-if not production:
-    import AbstractTestClass as ATC
-    # import webcamPy as wpy
-else:
-    import eos.scripts.AbstractTestClass as ATC
-    import eos.scripts.webcamPy as wpy
+debug = True
+current = date.today()
+path = os.getcwd()
 
-def dbg_print(*args):
-    if debug: 
-        print("".join(map(str, args)))
+filename = "{}_brightness.log".format(current)
+file_path = os.path.join(path+"\\brightness", filename)
+# create directory for log and .png files if it doesn't already exist
+if not os.path.exists(path+"\\brightness"):
+    os.makedirs(path+"\\brightness")
+
+log_file = open(file_path, "a")
+
+def log_print(args):
+    msg = args + "\n"
+    log_file.write(msg)
+    if debug is True: 
+        print(args)
 
 class Brightness(ATC.AbstractTestClass):
     def __init__(self):
@@ -70,7 +78,8 @@ class BrightnessTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("\nPanacast device found: ({})\n".format(k))
+                log_print(55*"=")
+                log_print("\nPanacast device found:  {}".format(k))
                 break
 
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -78,7 +87,7 @@ class BrightnessTester():
 
         # check if camera stream exists
         if self.cam is None:
-            print('cv2.VideoCapture unsuccessful')
+            log_print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
 
     def progress(self):
@@ -111,30 +120,31 @@ class BrightnessTester():
         return self.err_code
 
     def test_brightness(self, brightness_level):
-        print("\nBrightness: {}".format(brightness_level))
-
+        log_print("\nBrightness:             {:<5}".format(brightness_level))
         # set brightness and capture frame after three second delay
         self.cam.set(cv2.CAP_PROP_BRIGHTNESS, brightness_level)
         t_end = time.time() + 3
         while True:
             ret, frame = self.cam.read()
             if time.time() > t_end:
-                img = "test_brightness" + "_{}".format(BrightnessTester.count) + ".png"
+                # capture and save frame as a .png to brightness folder
+                img = "{}_brightness_{}.png".format(current, brightness_level)
+                img = os.path.join(path+"\\brightness", img)
                 cv2.imwrite(img, frame)
-                # print("{} captured".format(img))
+                # log_print("{} captured".format(img))
                 # print(frame)
                 break
-
+            
         # check individual channel values
         b, g, r = cv2.split(frame)
         # print("Channel values:")
         for channel, label in zip((r, g, b), ("r", "g", "b")):
-            print("{}:          {}".format(label, np.average(channel)))
+            log_print("{}:                      {:<5}".format(label, np.average(channel)))
         
         # convert to grayscale and calculate luma
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         luma = np.average(f)
-        print("luma:       {}".format(luma))        
+        log_print("luma:                   {:<5}".format(luma))        
         BrightnessTester.count += 1
         #reset brightness to default
         self.cam.set(cv2.CAP_PROP_BRIGHTNESS, 111)
@@ -149,5 +159,7 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print("\nGenerating report...")
-    print("{}\n".format(t.generate_report()))
+    log_print("\nGenerating report...")
+    report = p.pformat(t.generate_report())
+    log_print("{}\n".format(report))
+    log_file.close()

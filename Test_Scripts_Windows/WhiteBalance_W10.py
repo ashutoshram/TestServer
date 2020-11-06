@@ -5,19 +5,36 @@ import numpy as np
 import sys
 import cv2
 from queue import Queue
+from datetime import date
+import AbstractTestClass as ATC
+import pprint as p
 
-production = False
-debug = False 
-if not production:
-    import AbstractTestClass as ATC
-    # import webcamPy as wpy
-else:
-    import eos.scripts.AbstractTestClass as ATC
-    import eos.scripts.webcamPy as wpy
+# production = False
+# debug = False 
+# if not production:
+#     import AbstractTestClass as ATC
+#     # import webcamPy as wpy
+# else:
+#     import eos.scripts.AbstractTestClass as ATC
+#     import eos.scripts.webcamPy as wpy
 
-def dbg_print(*args):
-    if debug: 
-        print("".join(map(str, args)))
+debug = True
+current = date.today()
+path = os.getcwd()
+
+filename = "{}_whitebalance.log".format(current)
+file_path = os.path.join(path+"\\whitebalance", filename)
+# create directory for log and .png files if it doesn't already exist
+if not os.path.exists(path+"\\whitebalance"):
+    os.makedirs(path+"\\whitebalance")
+
+log_file = open(file_path, "a")
+
+def log_print(args):
+    msg = args + "\n"
+    log_file.write(msg)
+    if debug is True: 
+        print(args)
 
 class WhiteBal(ATC.AbstractTestClass):
     def __init__(self):
@@ -70,7 +87,8 @@ class WhiteBalTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("\nPanacast device found: ({})".format(k))
+                log_print(55*"=")
+                log_print("\nPanacast device found:  {}".format(k))
                 break
 
         # self.cam = cv2.VideoCapture(0)
@@ -79,9 +97,8 @@ class WhiteBalTester():
 
         # check if camera stream exists
         if self.cam is None:
-            print('cv2.VideoCapture unsuccessful')
+            log_print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
-        # print(self.cam)
 
     def progress(self):
         return self.progress_percent
@@ -101,7 +118,7 @@ class WhiteBalTester():
 
         # check if correct # of arguments is returned
         if len(args) != len(red) or len(args) != len(green) or len(args) != len(blue):
-            print("Something went wrong: # of color values in each channel does not match # of inputs")
+            log_print("Something went wrong: # of color values in each channel does not match # of inputs")
             sys.exit(1)
 
         for i, j, k, whiteBal_level in zip(range(len(red)), range(len(green)), range(len(blue)), args):
@@ -125,7 +142,7 @@ class WhiteBalTester():
     def test_whiteBal(self, whiteBal_level):
         # print('entering test_whiteBal')
         # set white balance and capture frame after three second delay
-        print("\nWhite balance: {}".format(whiteBal_level))
+        log_print("\nWhite balance:          {}k".format(whiteBal_level))
         self.cam.set(cv2.CAP_PROP_TEMPERATURE, whiteBal_level)
         # current_whiteBal = self.cam.get(cv2.CAP_PROP_TEMPERATURE)
 
@@ -133,7 +150,9 @@ class WhiteBalTester():
         while True:
             ret, frame = self.cam.read()
             if time.time() > t_end:
-                img = "test_wb" + "_{}".format(WhiteBalTester.count) + ".png"
+                # capture and save frame as a .png to whitebalance folder
+                img = "{}_wb_{}.png".format(current, whiteBal_level)
+                img = os.path.join(path+"\\whitebalance", img)
                 cv2.imwrite(img, frame)
                 # print("{} captured".format(img))
                 # print(frame)
@@ -146,7 +165,7 @@ class WhiteBalTester():
         r = np.average(r)
         # print("Channel values:")
         for channel, label in zip((r, g, b), ("r", "g", "b")):
-            print("{}:             {}".format(label, channel))
+            log_print("{}:                      {}".format(label, channel))
 
         # print("Current white balance temperature: {}".format(current_whiteBal))
         WhiteBalTester.count += 1
@@ -163,5 +182,7 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print("\nGenerating report...")
-    print("{}\n".format(t.generate_report()))
+    log_print("\nGenerating report...")
+    report = p.pformat(t.generate_report())
+    log_print("{}\n".format(report))
+    log_file.close()

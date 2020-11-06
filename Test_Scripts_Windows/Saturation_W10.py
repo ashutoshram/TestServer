@@ -5,19 +5,35 @@ import numpy as np
 import sys
 import cv2
 from queue import Queue
+from datetime import date
+import AbstractTestClass as ATC
+import pprint as p
 
-production = False
-debug = False 
-if not production:
-    import AbstractTestClass as ATC
-    # import webcamPy as wpy
-else:
-    import eos.scripts.AbstractTestClass as ATC
-    import eos.scripts.webcamPy as wpy
+# if not production:
+#     import AbstractTestClass as ATC
+#     # import webcamPy as wpy
+# else:
+#     import eos.scripts.AbstractTestClass as ATC
+#     import eos.scripts.webcamPy as wpy
 
-def dbg_print(*args):
-    if debug: 
-        print("".join(map(str, args)))
+# production = False
+debug = True
+current = date.today()
+path = os.getcwd()
+
+filename = "{}_saturation.log".format(current)
+file_path = os.path.join(path+"\\saturation", filename)
+# create directory for log and .png files if it doesn't already exist
+if not os.path.exists(path+"\\saturation"):
+    os.makedirs(path+"\\saturation")
+
+log_file = open(file_path, "a")
+
+def log_print(args):
+    msg = args + "\n"
+    log_file.write(msg)
+    if debug is True: 
+        print(args)
 
 class Saturation(ATC.AbstractTestClass):
 
@@ -70,7 +86,8 @@ class SaturationTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("Panacast device found: ({})".format(k))
+                log_print(55*"=")
+                log_print("\nPanacast device found:  {}".format(k))
                 break
 
         # self.cam = cv2.VideoCapture(0)
@@ -79,9 +96,8 @@ class SaturationTester():
 
         # check if camera stream exists
         if self.cam is None:
-            print('cv2.VideoCapture unsuccessful')
+            log_print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
-        print(self.cam)
 
     def progress(self):
         return self.progress_percent
@@ -123,13 +139,15 @@ class SaturationTester():
     def test_saturation(self, saturation_level):
         # print('entering test_saturation')
         # set saturation and capture frame after three second delay
-        print("\nSaturation to be tested:  {}".format(saturation_level))
+        log_print("\nSaturation to test:     {}".format(saturation_level))
         self.cam.set(cv2.CAP_PROP_SATURATION, saturation_level)
         t_end = time.time() + 3
         while True:
             ret, frame = self.cam.read()
             if time.time() > t_end:
-                img = "test_saturation" + "_{}".format(SaturationTester.count) + ".png"
+                # capture and save frame as a .png to saturation folder
+                img = "{}_saturation_{}.png".format(current, saturation_level)
+                img = os.path.join(path+"\\saturation", img)
                 cv2.imwrite(img, frame)
                 # print("{} captured".format(img))
                 # print(frame)
@@ -139,7 +157,7 @@ class SaturationTester():
         h, s, v = cv2.split(hsv)
         saturation_average = np.average(s)
 
-        print("Saturation (HSV) average: {}".format(saturation_average))
+        log_print("Saturation (HSV) avg:   {}".format(saturation_average))
         SaturationTester.count += 1
         #reset saturation to default
         self.cam.set(cv2.CAP_PROP_SATURATION, 141)
@@ -154,5 +172,7 @@ if __name__ == "__main__":
     wait_q = Queue()
     t.run(args, q, results, wait_q)
 
-    print("\nGenerating report...")
-    print("{}\n".format(t.generate_report()))
+    log_print("\nGenerating report...")
+    report = p.pformat(t.generate_report())
+    log_print("{}\n".format(report))
+    log_file.close()

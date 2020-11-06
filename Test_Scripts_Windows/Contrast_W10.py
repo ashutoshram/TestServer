@@ -1,22 +1,31 @@
 import os
-import sys
 import time
-import cv2
 import platform
 import numpy as np
+import sys
+import cv2
 from queue import Queue
+from datetime import date
+import AbstractTestClass as ATC
+import pprint as p
 
-production = False
-debug = True 
-if not production:
-    import AbstractTestClass as ATC
-    # import webcamPy as wpy
-else:
-    import eos.scripts.AbstractTestClass as ATC
-    import eos.scripts.webcamPy as wpy
+debug = True
+current = date.today()
+path = os.getcwd()
 
-def dbg_print(*args):
-    if debug: print("".join(map(str, args)))
+filename = "{}_contrast.log".format(current)
+file_path = os.path.join(path+"\\contrast", filename)
+# create directory for log and .png files if it doesn't already exist
+if not os.path.exists(path+"\\contrast"):
+    os.makedirs(path+"\\contrast")
+
+log_file = open(file_path, "a")
+
+def log_print(args):
+    msg = args + "\n"
+    log_file.write(msg)
+    if debug is True: 
+        print(args)
 
 class Contrast(ATC.AbstractTestClass):
     def __init__(self):
@@ -63,7 +72,8 @@ class ContrastTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                print("\nPanacast device found: ({})".format(k))
+                log_print(55*"=")
+                log_print("\nPanacast device found:  {}".format(k))
                 break
 
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
@@ -71,7 +81,7 @@ class ContrastTester():
 
         # check if camera stream exists
         if self.cam is None:
-            print('cv2.VideoCapture unsuccessful')
+            log_print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
         # print(self.cam)
 
@@ -112,26 +122,32 @@ class ContrastTester():
             return False
         
     def test_contrast(self, contrast_level):
-        # print('entering test_contrast')
         # set contrast and capture frame after three second delay
-        print("\nContrast level:  {}".format(contrast_level))
+        log_print("\nContrast level:         {}".format(contrast_level))
         self.cam.set(cv2.CAP_PROP_CONTRAST, contrast_level)
         current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
 
         t_end = time.time() + 3
         while True:
-            ret, frame = self.cam.read()
-            if time.time() > t_end:
-                img = "test_contrast" + "_{}".format(ContrastTester.count) + ".png"
-                cv2.imwrite(img, frame)
-                # print("{} captured".format(img))
-                # print(frame)
-                break
+            try:
+                ret, frame = self.cam.read()
+                if time.time() > t_end:
+                    # capture and save frame as a .png to contrast folder
+                    img = "{}_contrast_{}.png".format(current, contrast_level)
+                    img = os.path.join(path+"\\contrast", img)
+                    cv2.imwrite(img, frame)
+                    # print("{} captured".format(img))
+                    # print(frame)
+                    break
+            
+            except Exception as e:
+                log_print("{}".format(e))
+                sys.exit(1)
 
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(f, 0, 255, cv2.THRESH_OTSU)
         otsu = np.average(thresh)
-        print("Otsu threshold:  {}".format(otsu))
+        log_print("Otsu threshold:         {}".format(otsu))
         ContrastTester.count += 1
         current_contrast = self.cam.get(cv2.CAP_PROP_CONTRAST)
         #reset contrast to default
@@ -149,5 +165,7 @@ if __name__ == "__main__":
 
     # print(t.get_progress())
     # print(t.is_done())
-    print("\nGenerating report...")
-    print("{}\n".format(t.generate_report()))
+    log_print("\nGenerating report...")
+    report = p.pformat(t.generate_report())
+    log_print("{}\n".format(report))
+    log_file.close()
