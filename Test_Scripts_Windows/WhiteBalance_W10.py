@@ -148,15 +148,22 @@ class WhiteBalTester():
 
         t_end = time.time() + 3
         while True:
-            ret, frame = self.cam.read()
-            if time.time() > t_end:
-                # capture and save frame as a .png to whitebalance folder
-                img = "{}_wb_{}.png".format(current, whiteBal_level)
-                img = os.path.join(path+"\\whitebalance", img)
-                cv2.imwrite(img, frame)
-                # print("{} captured".format(img))
-                # print(frame)
-                break
+            try:
+                ret, frame = self.cam.read()
+                if time.time() > t_end:
+                    # capture and save frame as a .png to whitebalance folder
+                    img = "{}_wb_{}.png".format(current, whiteBal_level)
+                    img = os.path.join(path+"\\whitebalance", img)
+                    cv2.imwrite(img, frame)
+                    # print("{} captured".format(img))
+                    # print(frame)
+                    break
+            except cv2.error as e:
+                log_print("{}".format(e))
+                log_print("Panacast device crashed, rebooting...")
+                os.system("adb reboot")
+                time.sleep(15)
+                return -1
 
         # check individual channel values
         b, g, r = cv2.split(frame)

@@ -102,7 +102,7 @@ class FPSTester():
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
             log_print("Video format set to:    YUYV")
         elif format_ == 'YUY2':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
             log_print("Video format set to:    YUY2")
         elif format_ == 'I420':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'I420'))
@@ -110,6 +110,11 @@ class FPSTester():
         elif format_ == 'NV12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
             log_print("Video format set to:    NV12")
+
+        # fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
+        # fourcc = int(fourcc)
+        # codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+        # log_print("Video format set to:    {} ({})".format(codec, fourcc))
 
         # open opencv capture device and set the fps
         log_print("Setting framerate to:   {}".format(framerate))
@@ -127,6 +132,20 @@ class FPSTester():
 
         # calculate fps
         while True:
+            try:
+                retval, frame = self.cam.read()
+                if retval is True:
+                    count += 1
+                else:
+                    raise cv2.error("OpenCV error")
+            except cv2.error as e:
+                skipped += 1
+                log_print("{}".format(e))
+                log_print("Panacast device crashed, rebooting...")
+                os.system("adb reboot")
+                time.sleep(20)
+                return -1
+
             if time.time() >= five and five_yes is False:
                 duration = time.time() - start
                 log_print("Test duration:          5 s")
@@ -145,16 +164,6 @@ class FPSTester():
                 fps10 = count / duration
                 log_print("Average fps:            {:<5}\n".format(fps10))
                 ten_yes = True
-                break
-
-            retval, frame = self.cam.read()
-            if retval is True:
-                count += 1
-            else:
-                skipped += 1
-                log_print("Panacast device crashed, rebooting...")
-                os.system("adb reboot")
-                time.sleep(15)
                 break
         
         diff5 = abs(float(framerate) - float(fps5))
@@ -184,7 +193,7 @@ class FPSTester():
         fps_params = {'I420': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]},  
                       'MJPG': {'1080p': [30], '720p': [30], '540p': [30], '360p': [30]},
                       'NV12': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]},
-                      'YUY2': {'4k': [30], '1200p': [15]}}
+                      'YUYV': {'4k': [30], '1200p': [15]}}
 
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in fps_params:

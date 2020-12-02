@@ -125,15 +125,22 @@ class BrightnessTester():
         self.cam.set(cv2.CAP_PROP_BRIGHTNESS, brightness_level)
         t_end = time.time() + 3
         while True:
-            ret, frame = self.cam.read()
-            if time.time() > t_end:
-                # capture and save frame as a .png to brightness folder
-                img = "{}_brightness_{}.png".format(current, brightness_level)
-                img = os.path.join(path+"\\brightness", img)
-                cv2.imwrite(img, frame)
-                # log_print("{} captured".format(img))
-                # print(frame)
-                break
+            try:
+                ret, frame = self.cam.read()
+                if time.time() > t_end:
+                    # capture and save frame as a .png to brightness folder
+                    img = "{}_brightness_{}.png".format(current, brightness_level)
+                    img = os.path.join(path+"\\brightness", img)
+                    cv2.imwrite(img, frame)
+                    # log_print("{} captured".format(img))
+                    # print(frame)
+                    break
+            except cv2.error as e:
+                log_print("{}".format(e))
+                log_print("Panacast device crashed, rebooting...")
+                os.system("adb reboot")
+                time.sleep(20)
+                return -1
             
         # check individual channel values
         b, g, r = cv2.split(frame)

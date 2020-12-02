@@ -102,6 +102,11 @@ class FPSTester():
         elif format_ == 'NV12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
             log_print("Video format set to:    NV12")
+
+        # fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
+        # fourcc = int(fourcc)
+        # codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+        # log_print("Video format set to:    {} ({})".format(codec, fourcc))
         
         # open opencv capture device and set the fps
         log_print("Setting framerate to:   {}".format(framerate))
@@ -119,8 +124,23 @@ class FPSTester():
 
         # calculate fps
         while True:
+            try:
+                retval, frame = self.cam.read()
+                if retval is True:
+                    count += 1
+                else:
+                    raise cv2.error("OpenCV error")
+            except cv2.error as e:
+                skipped += 1
+                log_print("{}".format(e))
+                log_print("Panacast device crashed, rebooting...")
+                os.system("adb reboot")
+                time.sleep(20)
+                return -1
+
             if time.time() >= five and five_yes is False:
                 duration = time.time() - start
+                log_print("Test duration:          5 s")
                 log_print("Duration:               {:<5} s".format(duration))
                 log_print("Total frames counted:   {:<5}".format(count))
                 log_print("Total frames skipped:   {:<5}".format(skipped))
@@ -129,6 +149,7 @@ class FPSTester():
                 five_yes = True
             elif time.time() >= ten and ten_yes is False:
                 duration = time.time() - start
+                log_print("Test duration:          10 s")
                 log_print("Duration:               {:<5} s".format(duration))
                 log_print("Total frames counted:   {:<5}".format(count))
                 log_print("Total frames skipped:   {:<5}".format(skipped))
@@ -136,15 +157,6 @@ class FPSTester():
                 log_print("Average fps:            {:<5}\n".format(fps10))
                 ten_yes = True
                 break
-
-            retval, frame = self.cam.read()
-            if retval is True:
-                count += 1
-            else:
-                skipped += 1
-                log_print("Panacast device crashed, rebooting...")
-                os.system("adb reboot")
-                time.sleep(10)
 
         diff5 = abs(float(framerate) - float(fps5))
         diff10 = abs(float(framerate) - float(fps10))
@@ -187,7 +199,7 @@ class FPSTester():
                 for fps in framerate:
                     # set up camera stream
                     for k in range(4):
-                        self.cam = cv2.VideoCapture(k)
+                        self.cam = cv2.VideoCapture(k, cv2.CAP_ANY)
                         if self.cam.isOpened():
                             log_print("\nPanacast device found:  {}".format(k))
                             break

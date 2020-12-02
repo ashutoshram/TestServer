@@ -143,15 +143,22 @@ class SaturationTester():
         self.cam.set(cv2.CAP_PROP_SATURATION, saturation_level)
         t_end = time.time() + 3
         while True:
-            ret, frame = self.cam.read()
-            if time.time() > t_end:
-                # capture and save frame as a .png to saturation folder
-                img = "{}_saturation_{}.png".format(current, saturation_level)
-                img = os.path.join(path+"\\saturation", img)
-                cv2.imwrite(img, frame)
-                # print("{} captured".format(img))
-                # print(frame)
-                break
+            try:
+                ret, frame = self.cam.read()
+                if time.time() > t_end:
+                    # capture and save frame as a .png to saturation folder
+                    img = "{}_saturation_{}.png".format(current, saturation_level)
+                    img = os.path.join(path+"\\saturation", img)
+                    cv2.imwrite(img, frame)
+                    # print("{} captured".format(img))
+                    # print(frame)
+                    break
+            except cv2.error as e:
+                log_print("{}".format(e))
+                log_print("Panacast device crashed, rebooting...")
+                os.system("adb reboot")
+                time.sleep(20)
+                return -1
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         h, s, v = cv2.split(hsv)

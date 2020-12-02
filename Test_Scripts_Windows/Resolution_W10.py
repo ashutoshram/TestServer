@@ -109,6 +109,11 @@ class ResTester():
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
             log_print("Video format set to:    NV12")
 
+        # fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
+        # fourcc = int(fourcc)
+        # codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+        # log_print("Video format set to:    {} ({})".format(codec, fourcc))
+
         t_end = time.time() + 3
         count = 0
 
@@ -124,11 +129,11 @@ class ResTester():
                 # dbg_print('got frame: count = %d' % count)
                 count += 1
             
-            except Exception as e:
+            except cv2.error as e:
                 log_print("{}".format(e))
                 log_print("Panacast device crashed, rebooting...")
                 os.system("adb reboot")
-                time.sleep(15)
+                time.sleep(20)
                 return -1
                 # sys.exit(1)
 

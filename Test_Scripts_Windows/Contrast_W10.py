@@ -139,10 +139,12 @@ class ContrastTester():
                     # print("{} captured".format(img))
                     # print(frame)
                     break
-            
-            except Exception as e:
+            except cv2.error as e:
                 log_print("{}".format(e))
-                sys.exit(1)
+                log_print("Panacast device crashed, rebooting...")
+                os.system("adb reboot")
+                time.sleep(20)
+                return -1
 
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(f, 0, 255, cv2.THRESH_OTSU)
