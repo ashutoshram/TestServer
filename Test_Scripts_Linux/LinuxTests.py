@@ -22,6 +22,3 @@ for key in cam_props:
         print("PASS: Successful {} Test conducted".format(str(key)))
         print("%s now set to %s" % (key, value.group(2)))
         print("Exiting now!")
-
-
-

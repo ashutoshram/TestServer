@@ -6,7 +6,7 @@ import sys
 import cv2
 
 production = True
-debug = False 
+debug = True 
 if not production:
     import AbstractTestClass as ATC
     import webcamPy as wpy
