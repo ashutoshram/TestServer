@@ -30,7 +30,8 @@ if not os.path.exists(path+"/resolutionfps"):
 
 log_file = open(file_path, "a")
 timestamp = datetime.datetime.now()
-log_print("{}\n".format(timestamp))
+log_print(55*"=")
+log_print("\n{}\n".format(timestamp))
 
 class FPS(ATC.AbstractTestClass):
     def __init__(self):
