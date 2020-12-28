@@ -121,7 +121,8 @@ class FPSTester():
         log_print("Current framerate:      {}\n".format(current_fps))
 
         # set number of frames to be counted
-        frames = [(framerate*5), (framerate*10)]
+        # add "(framerate*5), " to frames to calculate 5 sec fps
+        frames = [(framerate*10)]
         fps_list = []
 
         # calculate fps
@@ -154,15 +155,16 @@ class FPSTester():
             fps_list.append(f / elapsed)
             log_print("Average fps:            {:<5}\n".format(fps))
         
-        diff5 = abs(float(framerate) - float(fps_list[0]))
-        diff10 = abs(float(framerate) - float(fps_list[1]))
+        # diff5 = abs(float(framerate) - float(fps_list[0]))
+        diff10 = abs(float(framerate) - float(fps_list[0])) # change back to fps_list[1]
         
         # set framerate back to default
         self.cam.set(cv2.CAP_PROP_FPS, 30)
         self.cam.release()
  
         # success
-        if diff5 <= 2 and diff10 <= 2:
+        # add "diff5 <= 2 and" to evaluate 5 sec fps 
+        if diff10 <= 2:
             return 0
         #failure
         else:
