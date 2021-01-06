@@ -111,7 +111,7 @@ class FPSTester():
         log_print("Video format set to:    {} ({})".format(codec, fourcc))
 
         # set zoom level
-        device = 'v4l2-ctl -d /dev/video0'
+        device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
         log_print("Setting zoom level to:  {}".format(zoom))
         subprocess.call(['{} -c zoom_absolute={}'.format(device, str(zoom))], shell=True)
 
@@ -134,23 +134,26 @@ class FPSTester():
                     retval, frame = self.cam.read()
                     if retval is False:
                         raise cv2.error("OpenCV error")
+                    if time.time() > start + 30:
+                        raise cv2.error("Timeout error")
                 except cv2.error as e:
                     log_print("{}".format(e))
                     log_print("Panacast device crashed, rebooting...")
                     os.system("sudo adb kill-server")
                     os.system("sudo adb devices")
                     os.system("adb reboot")
-                    time.sleep(50)
+                    time.sleep(95)
+                    device_num = 0
                     while True:
-                        for k in range(10):
-                            self.cam = cv2.VideoCapture(k)
-                            if self.cam.isOpened():
-                                device_num = k
-                                self.cam = cv2.VideoCapture(device_num)
-                                log_print("Device back online")
-                                time.sleep(10)
-                                break
-                        time.sleep(10)
+                        self.cam = cv2.VideoCapture(device_num)
+                        if self.cam.isOpened():
+                            self.cam = cv2.VideoCapture(device_num)
+                            log_print("Device back online: {}".format(device_num))
+                            time.sleep(20)
+                            break
+                        else:
+                            device_num += 1
+                            time.sleep(20)
                     return -1
         
             end = time.time()
@@ -188,19 +191,6 @@ class FPSTester():
         self.err_code = {}
 
         #dictionary of testing parameters
-        # fps_params = {'YU12': {'4k': [30, 27, 24, 15], 
-        #                        '1080p': [30, 27, 24, 15], 
-        #                        '720p': [30, 27, 24, 15], 
-        #                        '540p': [30, 27, 24, 15], 
-        #                        '360p': [30, 27, 24, 15]},
-        #               'YUYV': {'4k': [30], 
-        #                        '1200p': [15]},
-        #               'NV12': {'4k': [30, 27, 24, 15], 
-        #                        '1080p': [30, 27, 24, 15], 
-        #                        '720p': [30, 27, 24, 15], 
-        #                        '540p': [30, 27, 24, 15], 
-        #                        '360p': [30, 27, 24, 15]}}
-
         fps_params = {'YU12': {'1080p': [30], 
                                '720p': [30], 
                                '540p': [30], 
@@ -209,6 +199,11 @@ class FPSTester():
                                '720p': [30], 
                                '540p': [30], 
                                '360p': [30]}}
+
+        # fps_params = {'NV12': {'1080p': [30], 
+        #                        '720p': [30], 
+        #                        '540p': [30], 
+        #                        '360p': [30]}}
 
         zoom_levels = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
                        34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
@@ -232,7 +227,7 @@ class FPSTester():
 
                 for fps in framerate:
                     for z in zoom_levels:
-                        log_print("Testing:                {} {} fps={} zoom={}\n".format(format_, resolution, fps, z))
+                        log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {} {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
                         self.cam.release()
