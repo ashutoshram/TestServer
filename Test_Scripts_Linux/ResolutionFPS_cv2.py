@@ -169,12 +169,12 @@ class FPSTester():
         diff10 = abs(float(framerate) - float(fps_list[0])) # change back to fps_list[1]
         
         # set framerate back to default
-        self.cam.set(cv2.CAP_PROP_FPS, 30)
-        self.cam.release()
+        # self.cam.set(cv2.CAP_PROP_FPS, 30)
+        # self.cam.release()
  
         # success
         # add "diff5 <= 2 and" to evaluate 5 sec fps 
-        if diff10 <= 2:
+        if diff10 <= 3:
             return 0
         #failure
         else:
@@ -230,10 +230,11 @@ class FPSTester():
                         log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {} {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
-                        self.cam.release()
+
 
                 # self.progress_percent += 33
             self.progress_percent = 100
+            self.cam.release()
 
         # dbg_print('FPSTester::test: err_code = %s' % repr(self.err_code))
         return self.err_code
