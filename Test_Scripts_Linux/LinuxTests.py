@@ -31,7 +31,15 @@ cam_props = {'brightness': [0, 128, 255],
 
 err_code = {}
 
-device = 'v4l2-ctl -d /dev/video0'
+# set up camera stream
+for k in range(4):
+    cam = cv2.VideoCapture(k)
+    if cam.isOpened():
+        log_print("\nPanacast device found:  {}".format(k))
+        device_num = k
+        break
+
+device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
 
 # iterate thru cam_props dict and test each value of each cam prop
 for prop in cam_props:

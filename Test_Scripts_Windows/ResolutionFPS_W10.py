@@ -9,9 +9,16 @@ from datetime import date
 import AbstractTestClass as ATC
 import pprint as p
 
+def log_print(args):
+    msg = args + "\n"
+    log_file.write(msg)
+    if debug is True: 
+        print(args)
+
 debug = True
 current = date.today()
 path = os.getcwd()
+device_num = 0
 
 filename = "{}_resolutionfps.log".format(current)
 file_path = os.path.join(path+"\\resolutionfps", filename)
@@ -20,12 +27,9 @@ if not os.path.exists(path+"\\resolutionfps"):
     os.makedirs(path+"\\resolutionfps")
 
 log_file = open(file_path, "a")
-
-def log_print(args):
-    msg = args + "\n"
-    log_file.write(msg)
-    if debug is True: 
-        print(args)
+timestamp = datetime.datetime.now()
+log_print(55*"=")
+log_print("\n{}\n".format(timestamp))
 
 class FPS(ATC.AbstractTestClass):
     def __init__(self):
@@ -64,32 +68,27 @@ class FPSTester():
 
     def test_fps(self, format_, resolution, framerate):
         # check if camera stream exists
+        global device_num
         if self.cam is None:
             print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
 
         if resolution == '4k':
-            # print("Resolution to be set to: 3840 x 1080")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         elif resolution == '1200p':
-            # print("Resolution to be set to: 4800 x 1200")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 4800)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
         elif resolution == '1080p':
-            # print("Resolution to be set to: 1920 x 1080")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         elif resolution == '720p':
-            # print("Resolution to be set to: 1280 x 720")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         elif resolution == '540p':
-            # print("Resolution to be set to: 960 x 540")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
         elif resolution == '360p':
-            # print("Resolution to be set to: 640 x 360")
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
@@ -97,24 +96,19 @@ class FPSTester():
 
         if format_ == 'MJPG':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-            log_print("Video format set to:    MJPG")
         elif format_ == 'YUYV':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-            log_print("Video format set to:    YUYV")
         elif format_ == 'YUY2':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-            log_print("Video format set to:    YUY2")
         elif format_ == 'I420':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'I420'))
-            log_print("Video format set to:    I420")
         elif format_ == 'NV12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
-            log_print("Video format set to:    NV12")
 
-        # fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
-        # fourcc = int(fourcc)
-        # codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
-        # log_print("Video format set to:    {} ({})".format(codec, fourcc))
+        fourcc = self.cam.get(cv2.CAP_PROP_FOURCC)
+        fourcc = int(fourcc)
+        codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+        log_print("Video format set to:    {} ({})".format(codec, fourcc))
 
         # open opencv capture device and set the fps
         log_print("Setting framerate to:   {}".format(framerate))
@@ -131,49 +125,52 @@ class FPSTester():
         five_yes, ten_yes = (False for i in range(2))
 
         # calculate fps
-        while True:
-            try:
-                retval, frame = self.cam.read()
-                if retval is True:
-                    count += 1
-                else:
-                    raise cv2.error("OpenCV error")
-            except cv2.error as e:
-                skipped += 1
-                log_print("{}".format(e))
-                log_print("Panacast device crashed, rebooting...")
-                os.system("adb reboot")
-                time.sleep(20)
-                return -1
-
-            if time.time() >= five and five_yes is False:
-                duration = time.time() - start
-                log_print("Test duration:          5 s")
-                log_print("Actual duration:        {:<5} s".format(duration))
-                log_print("Total frames counted:   {:<5}".format(count))
-                log_print("Total frames skipped:   {:<5}".format(skipped))
-                fps5 = count / duration
-                log_print("Average fps:            {:<5}\n".format(fps5))
-                five_yes = True
-            elif time.time() >= ten and ten_yes is False:
-                duration = time.time() - start
-                log_print("Test duration:          10 s")
-                log_print("Actual duration:        {:<5} s".format(duration))
-                log_print("Total frames counted:   {:<5}".format(count))
-                log_print("Total frames skipped:   {:<5}".format(skipped))
-                fps10 = count / duration
-                log_print("Average fps:            {:<5}\n".format(fps10))
-                ten_yes = True
-                break
+        for f in frames:
+            start = time.time()
+            for i in range(0, f):
+                try:
+                    retval, frame = self.cam.read()
+                    if retval is False:
+                        raise cv2.error("OpenCV error")
+                    if time.time() > start + 30:
+                        raise cv2.error("Timeout error")
+                except cv2.error as e:
+                    log_print("{}".format(e))
+                    log_print("Panacast device crashed, rebooting...")
+                    os.system("adb reboot")
+                    time.sleep(95)
+                    device_num = 0
+                    while True:
+                        self.cam = cv2.VideoCapture(device_num)
+                        if self.cam.isOpened():
+                            self.cam = cv2.VideoCapture(device_num)
+                            log_print("Device back online: {}".format(device_num))
+                            time.sleep(20)
+                            break
+                        else:
+                            device_num += 1
+                            time.sleep(20)
+                    return -1
         
-        diff5 = abs(float(framerate) - float(fps5))
-        diff10 = abs(float(framerate) - float(fps10))
+            end = time.time()
+            elapsed = end - start
+
+            log_print("Test duration:          {:<5} s".format(elapsed))
+            log_print("Total frames counted:   {:<5}".format(f))
+            fps = float(f / elapsed)
+            fps_list.append(f / elapsed)
+            log_print("Average fps:            {:<5}\n".format(fps))
+        
+        # diff5 = abs(float(framerate) - float(fps_list[0]))
+        diff10 = abs(float(framerate) - float(fps_list[0])) # change back to fps_list[1]
         
         # set framerate back to default
-        # self.cam.set(cv2.CAP_PROP_FPS, 30)
-    
+        self.cam.set(cv2.CAP_PROP_FPS, 30)
+        self.cam.release()
+ 
         # success
-        if diff5 <= 2 and diff10 <= 2:
+        # add "diff5 <= 2 and" to evaluate 5 sec fps 
+        if diff10 <= 2:
             return 0
         #failure
         else:
@@ -190,32 +187,43 @@ class FPSTester():
         self.err_code = {}
 
         #dictionary of testing parameters
-        fps_params = {'I420': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]},  
-                      'MJPG': {'1080p': [30], '720p': [30], '540p': [30], '360p': [30]},
-                      'NV12': {'4k': [30, 27, 24, 15], '1080p': [30, 27, 24, 15], '720p': [30, 27, 24, 15], '540p': [30, 27, 24, 15], '360p': [30, 27, 24, 15]},
-                      'YUYV': {'4k': [30], '1200p': [15]}}
+        fps_params = {'YU12': {'1080p': [30], 
+                               '720p': [30], 
+                               '540p': [30], 
+                               '360p': [30]},
+                      'NV12': {'1080p': [30], 
+                               '720p': [30], 
+                               '540p': [30], 
+                               '360p': [30]}}
+
+        zoom_levels = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
+                       34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+
+        # set up camera stream
+        for k in range(4):
+            self.cam = cv2.VideoCapture(k)
+            if self.cam.isOpened():
+                log_print("\nPanacast device found:  {}".format(k))
+                device_num = k
+                break
 
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in fps_params:
             res_dict = fps_params[format_]
+
             for resolution in res_dict:
                 framerate = res_dict[resolution]
                 log_print(55*"=")
                 log_print("Parameters:             {} {} {}".format(format_, resolution, framerate))
+
                 for fps in framerate:
-                    # set up camera stream
-                    for k in range(4):
-                        self.cam = cv2.VideoCapture(k)
-                        if self.cam.isOpened():
-                            log_print("\nPanacast device found:  {}".format(k))
-                            break
+                    for z in zoom_levels:
+                        log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
+                        test_type = "{} {} {} {}".format(format_, resolution, fps, z)
+                        self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
+                        self.cam.release()
 
-                    log_print("Testing:                {} {} {}\n".format(format_, resolution, fps))
-                    test_type = "{} {} {}".format(format_, resolution, fps)
-                    self.err_code[test_type] = self.test_fps(format_, resolution, fps)
-                    self.cam.release()
-
-                self.progress_percent += 33
+                # self.progress_percent += 33
             self.progress_percent = 100
 
         # dbg_print('FPSTester::test: err_code = %s' % repr(self.err_code))
