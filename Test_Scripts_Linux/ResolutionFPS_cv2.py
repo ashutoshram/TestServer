@@ -108,6 +108,9 @@ class FPSTester():
 
         fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
         codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+        if codec == "MJPG":
+            log_print("Device negotiated USB 2.0 connection.")
+            raise cv2.error("USB error")
         log_print("Video format set to:    {} ({})".format(codec, fourcc))
 
         # set zoom level
@@ -125,6 +128,9 @@ class FPSTester():
         # add "(framerate*5), " to frames to calculate 5 sec fps
         frames = [(framerate*10)]
         fps_list = []
+        prev_frame = 0
+        drops = 0
+        count = 0
 
         # calculate fps
         for f in frames:
@@ -132,16 +138,28 @@ class FPSTester():
             for i in range(0, f):
                 try:
                     retval, frame = self.cam.read()
+                    # print(np.sum(frame))
+                    current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
+                    if current_frame - prev_frame > 38:
+                        drops += 1
+                    # print(current_frame)
+                    prev_frame = current_frame
+
                     if retval is False:
-                        raise cv2.error("OpenCV error")
+                        # raise cv2.error("Device error")
+                        # drops += 1
+                        log_print("Failed to grab frame!")
                     if time.time() > start + 30:
                         raise cv2.error("Timeout error")
+                    count += 1
+
                 except cv2.error as e:
                     log_print("{}".format(e))
-                    log_print("Panacast device crashed, rebooting...")
+                    log_print("Panacast device error")
                     os.system("sudo adb kill-server")
                     os.system("sudo adb devices")
                     os.system("adb reboot")
+                    log_print("Rebooting...")
                     time.sleep(95)
                     device_num = 0
                     while True:
@@ -160,7 +178,8 @@ class FPSTester():
             elapsed = end - start
 
             log_print("Test duration:          {:<5} s".format(elapsed))
-            log_print("Total frames counted:   {:<5}".format(f))
+            log_print("Total frames counted:   {:<5}".format(count))
+            log_print("Total frames dropped:   {:<5}".format(drops))
             fps = float(f / elapsed)
             fps_list.append(f / elapsed)
             log_print("Average fps:            {:<5}\n".format(fps))
