@@ -11,6 +11,12 @@ import AbstractTestClass as ATC
 import pprint as p
 import json
 import subprocess
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
+args = vars(ap.parse_args())
+debug = args["debug"]
 
 def log_print(args):
     msg = args + "\n"
@@ -18,7 +24,6 @@ def log_print(args):
     if debug is True: 
         print(args)
 
-debug = True
 current = date.today()
 path = os.getcwd()
 device_num = 0
@@ -69,6 +74,27 @@ class FPSTester():
     def __init__(self):
         self.progress_percent = 0 
 
+    def reboot_device(self):
+        log_print("Panacast device error")
+        os.system("sudo adb kill-server")
+        os.system("sudo adb devices")
+        os.system("adb reboot")
+        log_print("Rebooting...")
+        time.sleep(95)
+        global device_num
+        device_num = 0
+
+        while True:
+            self.cam = cv2.VideoCapture(device_num)
+            if self.cam.isOpened():
+                self.cam = cv2.VideoCapture(device_num)
+                log_print("Device back online: {}".format(device_num))
+                time.sleep(5)
+                break
+            else:
+                device_num += 1
+                time.sleep(15)
+
     def test_fps(self, format_, resolution, framerate, zoom):
         # check if camera stream exists
         global device_num
@@ -108,9 +134,6 @@ class FPSTester():
 
         fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
         codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
-        if codec == "MJPG":
-            log_print("Device negotiated USB 2.0 connection.")
-            raise cv2.error("USB error")
         log_print("Video format set to:    {} ({})".format(codec, fourcc))
 
         # set zoom level
@@ -129,8 +152,7 @@ class FPSTester():
         frames = [(framerate*10)]
         fps_list = []
         prev_frame = 0
-        drops = 0
-        count = 0
+        drops, delayed, count = (0 for x in range(3))
 
         # calculate fps
         for f in frames:
@@ -138,50 +160,43 @@ class FPSTester():
             for i in range(0, f):
                 try:
                     retval, frame = self.cam.read()
-                    # print(np.sum(frame))
                     current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
-                    if current_frame - prev_frame > 38:
-                        drops += 1
-                    # print(current_frame)
+                    diff = current_frame - prev_frame
                     prev_frame = current_frame
 
-                    if retval is False:
-                        # raise cv2.error("Device error")
-                        # drops += 1
-                        log_print("Failed to grab frame!")
+                    if diff > 38.33 and count > 0:
+                        delayed += 1
+                        continue
+
+                    if codec == "MJPG":
+                        log_print("Device negotiated USB 2.0 connection.")
+                        self.reboot_device()
+                        i, drops, count = (0 for x in range(3))
+
                     if time.time() > start + 30:
                         raise cv2.error("Timeout error")
-                    count += 1
+
+                    if retval is False:
+                        drops += 1
+                        # log_print("Failed to grab frame!")
+                        continue
+                    else:
+                        count += 1
 
                 except cv2.error as e:
                     log_print("{}".format(e))
-                    log_print("Panacast device error")
-                    os.system("sudo adb kill-server")
-                    os.system("sudo adb devices")
-                    os.system("adb reboot")
-                    log_print("Rebooting...")
-                    time.sleep(95)
-                    device_num = 0
-                    while True:
-                        self.cam = cv2.VideoCapture(device_num)
-                        if self.cam.isOpened():
-                            self.cam = cv2.VideoCapture(device_num)
-                            log_print("Device back online: {}".format(device_num))
-                            time.sleep(20)
-                            break
-                        else:
-                            device_num += 1
-                            time.sleep(20)
+                    self.reboot_device()
                     return -1
         
             end = time.time()
             elapsed = end - start
 
             log_print("Test duration:          {:<5} s".format(elapsed))
-            log_print("Total frames counted:   {:<5}".format(count))
+            log_print("Total frames grabbed:   {:<5}".format(count))
+            log_print("Total frames delayed:   {:<5}".format(delayed))
             log_print("Total frames dropped:   {:<5}".format(drops))
-            fps = float(f / elapsed)
-            fps_list.append(f / elapsed)
+            fps = float((count+delayed) / elapsed)
+            fps_list.append(fps)
             log_print("Average fps:            {:<5}\n".format(fps))
         
         # diff5 = abs(float(framerate) - float(fps_list[0]))
@@ -206,8 +221,8 @@ class FPSTester():
         return self.err_code
 
     def test(self, args):
-        # dbg_print('FPSTester::test: args = %s' % repr(args))
         self.err_code = {}
+        global device_num
 
         #dictionary of testing parameters
         fps_params = {'YU12': {'1080p': [30], 
@@ -231,7 +246,7 @@ class FPSTester():
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
-                log_print("\nPanacast device found:  {}".format(k))
+                log_print("Panacast device found:  {}".format(k))
                 device_num = k
                 break
 
@@ -246,6 +261,7 @@ class FPSTester():
 
                 for fps in framerate:
                     for z in zoom_levels:
+                        log_print(55*"=")
                         log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {} {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
