@@ -12,7 +12,8 @@ Run the command to install dependencies (opencv and numpy): pip3 install -r requ
 
 To run the scripts:
 
-    python3 LinuxTests.py
+    Run with flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
+    python3 LinuxTests.py -d True
 
     This will generate folders: brightness, contrast, saturation, sharpness, and white_balance_temperature and saves the corresponding log files to each of them.
     The script tests to see if the device is able to get and set camera controls. To add/change the values you want to test, edit the cam_props dictionary (line 26).
@@ -20,12 +21,12 @@ To run the scripts:
 
     *NOTE: ResolutionFPS_cv2.py will need sudo permissions to reboot device in case of freeze/crash. 
            Please run from root terminal (or using sudo python3) for best results (otherwise you will need to enter your password in case of device failure).
-
-    sudo python3 ResolutionFPS_cv2.py
+    
+    Run with flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
+    sudo python3 ResolutionFPS_cv2.py -d True
 
     This will genereate folder resolutionfps and save the corresponding log files to it.
     The script tests to see if the device is able to stream video at each framerate and each resolution. To add/change the values you want to test, edit the fps_params dictionary (line 182).
     A report will be generated at the end of each log file, where 0 denotes a test PASS (framerate stable at that resolution) and a -1 denotes FAIL.
     By default, the threshold to pass the test is for the average framerate to be within 2 fps of the actual setting. To change that threshold, edit the variables diff5 and diff10 (line 165).
 
-    For both scripts, set the variable debug=True if you want messages to be printed to terminal and set debug=False if you want it to only be saved in the log files.
