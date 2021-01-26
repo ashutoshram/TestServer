@@ -35,7 +35,6 @@ err_code = {}
 for k in range(4):
     cam = cv2.VideoCapture(k)
     if cam.isOpened():
-        log_print("\nPanacast device found:  {}".format(k))
         device_num = k
         break
 
