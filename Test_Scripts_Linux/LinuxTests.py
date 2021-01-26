@@ -7,10 +7,15 @@ from datetime import date
 import datetime
 import pprint as p
 import json
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
+args = vars(ap.parse_args())
+debug = args["debug"]
 
 current = date.today()
 path = os.getcwd()
-debug = True
 
 # print to file (and optionally terminal)
 def log_print(args):
@@ -53,6 +58,7 @@ for prop in cam_props:
 
     timestamp = datetime.datetime.now()
     log_print("{}\n".format(timestamp))
+    log_print("Panacast device found:  {}\n".format(device_num))
 
     ctrl = cam_props[prop]
 
