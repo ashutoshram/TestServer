@@ -26,7 +26,9 @@ To run the scripts:
     sudo python3 ResolutionFPS_cv2.py -d True
 
     This will genereate folder resolutionfps and save the corresponding log files to it.
-    The script tests to see if the device is able to stream video at each framerate and each resolution. To add/change the values you want to test, edit the fps_params dictionary (line 182).
+    The script tests to see if the device is able to stream video at each framerate and each resolution.
     A report will be generated at the end of each log file, where 0 denotes a test PASS (framerate stable at that resolution) and a -1 denotes FAIL.
-    By default, the threshold to pass the test is for the average framerate to be within 2 fps of the actual setting. To change that threshold, edit the variables diff5 and diff10 (line 165).
+    By default, the threshold to pass the test is for the average framerate to be within 3 fps of the actual setting.
 
+Formatting for ResolutionFPS_cv2.py logs:
+NV12 (video format) 540p (resolution) 30 (framerate) 45 (zoom level)
