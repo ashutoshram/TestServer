@@ -13,7 +13,7 @@ Run the command to install dependencies (opencv and numpy): pip3 install -r requ
 To run the scripts:
 
     Run with flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
-    python3 LinuxTests.py -d True
+    python3 CamPropControls.py -d True
 
     This will generate folders: brightness, contrast, saturation, sharpness, and white_balance_temperature and saves the corresponding log files to each of them.
     The script tests to see if the device is able to get and set camera controls. To add/change the values you want to test, edit the cam_props dictionary (line 26).
