@@ -80,7 +80,7 @@ class FPSTester():
         os.system("sudo adb devices")
         os.system("adb reboot")
         log_print("Rebooting...")
-        time.sleep(95)
+        time.sleep(65)
         global device_num
         device_num = 0
 
@@ -88,7 +88,7 @@ class FPSTester():
             self.cam = cv2.VideoCapture(device_num)
             if self.cam.isOpened():
                 self.cam = cv2.VideoCapture(device_num)
-                log_print("Device back online: {}".format(device_num))
+                log_print("Device back online: {}\n".format(device_num))
                 time.sleep(5)
                 break
             else:
@@ -122,8 +122,10 @@ class FPSTester():
         elif resolution == '360p':
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
-
-        log_print("Resolution set to:      {} x {}".format(int(self.cam.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+        
+        width = int(self.cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        log_print("Resolution set to:      {} x {}".format(width, height))
 
         if format_ == 'YU12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YU12'))
@@ -147,8 +149,12 @@ class FPSTester():
         current_fps = self.cam.get(cv2.CAP_PROP_FPS)
         log_print("Current framerate:      {}\n".format(current_fps))
 
+        # check if device is responding to get/set commands and try rebooting if it isn't
+        if width == 0 and height == 0 and current_fps == 0:
+            log_print("Device not responding to get/set commands")
+            self.reboot_device()
+
         # set number of frames to be counted
-        # add "(framerate*5), " to frames to calculate 5 sec fps
         frames = [(framerate*10)]
         fps_list = []
         prev_frame = 0
@@ -171,14 +177,14 @@ class FPSTester():
                     if codec == "MJPG":
                         log_print("Device negotiated USB 2.0 connection.")
                         self.reboot_device()
-                        i, drops, count = (0 for x in range(3))
+                        break
 
                     if time.time() > start + 30:
                         raise cv2.error("Timeout error")
 
                     if retval is False:
                         drops += 1
-                        # log_print("Failed to grab frame!")
+                        log_print("Failed to grab frame!")
                         continue
                     else:
                         count += 1
@@ -186,7 +192,7 @@ class FPSTester():
                 except cv2.error as e:
                     log_print("{}".format(e))
                     self.reboot_device()
-                    return -1
+                    break
         
             end = time.time()
             elapsed = end - start
@@ -199,15 +205,9 @@ class FPSTester():
             fps_list.append(fps)
             log_print("Average fps:            {:<5}\n".format(fps))
         
-        # diff5 = abs(float(framerate) - float(fps_list[0]))
-        diff10 = abs(float(framerate) - float(fps_list[0])) # change back to fps_list[1]
-        
-        # set framerate back to default
-        # self.cam.set(cv2.CAP_PROP_FPS, 30)
-        # self.cam.release()
- 
+        diff10 = abs(float(framerate) - float(fps_list[0]))
+         
         # success
-        # add "diff5 <= 2 and" to evaluate 5 sec fps 
         if diff10 <= 3:
             return 0
         #failure
@@ -233,11 +233,6 @@ class FPSTester():
                                '720p': [30], 
                                '540p': [30], 
                                '360p': [30]}}
-
-        # fps_params = {'NV12': {'1080p': [30], 
-        #                        '720p': [30], 
-        #                        '540p': [30], 
-        #                        '360p': [30]}}
 
         zoom_levels = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
                        34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
@@ -266,20 +261,15 @@ class FPSTester():
                         test_type = "{} {} {} {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
 
-
-                # self.progress_percent += 33
             self.progress_percent = 100
             self.cam.release()
 
-        # dbg_print('FPSTester::test: err_code = %s' % repr(self.err_code))
         return self.err_code
 
 if __name__ == "__main__":
     t = FPS()
     args = t.get_args()
     t.run(args)
-    # print(t.get_progress())
-    # print(t.is_done())
 
     log_print("\nGenerating report...")
     report = p.pformat(t.generate_report())
