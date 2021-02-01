@@ -240,7 +240,7 @@ class FPSTester():
                                '720p': [30], 
                                '540p': [30], 
                                '360p': [30]},
-                      'YUYV': {'4k': [30]}
+                      'YUYV': {'4k': [30]}}
 
         zoom_levels = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
                        34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
@@ -256,8 +256,8 @@ class FPSTester():
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in fps_params:
             # skip some formats for now
-            # if format_ == "YU12" or format_ == "NV12":
-            #     continue
+            if format_ == "YU12":
+                continue
             res_dict = fps_params[format_]
 
             for resolution in res_dict:
