@@ -83,6 +83,7 @@ class FPSTester():
         log_print("Rebooting...")
         time.sleep(65)
         global device_num
+        global reboots
         device_num = 0
         reboots += 1
 
@@ -236,7 +237,8 @@ class FPSTester():
                                '720p': [30], 
                                '540p': [30], 
                                '360p': [30]},
-                      'NV12': {'1080p': [30], 
+                      'NV12': {'4k': [30],
+                               '1080p': [30], 
                                '720p': [30], 
                                '540p': [30], 
                                '360p': [30]},
