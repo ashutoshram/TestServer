@@ -27,6 +27,7 @@ def log_print(args):
 current = date.today()
 path = os.getcwd()
 device_num = 0
+reboots = 0
 
 filename = "{}_resolutionfps.log".format(current)
 file_path = os.path.join(path+"/resolutionfps", filename)
@@ -83,6 +84,7 @@ class FPSTester():
         time.sleep(65)
         global device_num
         device_num = 0
+        reboots += 1
 
         while True:
             self.cam = cv2.VideoCapture(device_num)
@@ -169,10 +171,15 @@ class FPSTester():
                     current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
                     diff = current_frame - prev_frame
                     prev_frame = current_frame
-
-                    if diff > 38.33 and count > 0:
-                        delayed += 1
-                        continue
+                    
+                    if framerate == 30:
+                        if diff > 38.33 and count > 0:
+                            delayed += 1
+                            continue
+                    elif framerate == 15:
+                        if diff > 71.67 and count > 0:
+                            delayed += 1
+                            continue
 
                     if codec == "MJPG":
                         log_print("Device negotiated USB 2.0 connection.")
@@ -232,7 +239,8 @@ class FPSTester():
                       'NV12': {'1080p': [30], 
                                '720p': [30], 
                                '540p': [30], 
-                               '360p': [30]}}
+                               '360p': [30]},
+                      'YUYV': {'4k': [30]}
 
         zoom_levels = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
                        34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
@@ -247,6 +255,9 @@ class FPSTester():
 
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in fps_params:
+            # skip some formats for now
+            # if format_ == "YU12" or format_ == "NV12":
+            #     continue
             res_dict = fps_params[format_]
 
             for resolution in res_dict:
@@ -257,6 +268,13 @@ class FPSTester():
                 for fps in framerate:
                     for z in zoom_levels:
                         log_print(55*"=")
+                        # special case for YUYV
+                        if format_ == "YUYV":
+                            log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, 1))
+                            test_type = "{} {} {} {}".format(format_, resolution, fps, 1)
+                            self.err_code[test_type] = self.test_fps(format_, resolution, fps, 1)
+                            break
+
                         log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {} {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
@@ -272,6 +290,7 @@ if __name__ == "__main__":
     t.run(args)
 
     log_print("\nGenerating report...")
+    log_print("Number of video crashes/freezes (that required reboots): {}".format(reboots))
     report = p.pformat(t.generate_report())
     log_print("{}\n".format(report))
     log_file.close()
