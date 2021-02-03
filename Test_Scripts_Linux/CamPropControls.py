@@ -48,12 +48,12 @@ device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
 # iterate thru cam_props dict and test each value of each cam prop
 for prop in cam_props:
     # create log file for the current cam prop
-    filename = "{}_{}.log".format(current, prop)
-    file_path = os.path.join(path+"/{}".format(prop), filename)
+    filename = "{}_CamPropControls.log".format(current)
+    file_path = os.path.join(path+"/CamPropControls", filename)
 
-    # create directory for long and .png files if it doesn't already exist
-    if not os.path.exists(path+"/{}".format(prop)):
-        os.makedirs(path+"/{}".format(prop))
+    # create directory for log files if it doesn't already exist
+    if not os.path.exists(path+"/CamPropControls"):
+        os.makedirs(path+"/CamPropControls")
     log_file = open(file_path, "a")
 
     timestamp = datetime.datetime.now()
