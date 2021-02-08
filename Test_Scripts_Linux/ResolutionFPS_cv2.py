@@ -107,6 +107,17 @@ class FPSTester():
         
         self.cam.open(device_num)
 
+        if format_ == 'YU12':
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YU12'))
+        elif format_ == 'YUYV':
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+        elif format_ == 'NV12':
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
+
+        fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
+        codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+        log_print("Video format set to:    {} ({})".format(codec, fourcc))
+
         if resolution == '4k':
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -130,17 +141,6 @@ class FPSTester():
         height = int(self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
         log_print("Resolution set to:      {} x {}".format(width, height))
 
-        if format_ == 'YU12':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YU12'))
-        elif format_ == 'YUYV':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-        elif format_ == 'NV12':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
-
-        fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
-        codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
-        log_print("Video format set to:    {} ({})".format(codec, fourcc))
-
         # set zoom level
         device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
         log_print("Setting zoom level to:  {}".format(zoom))
@@ -158,10 +158,10 @@ class FPSTester():
             self.reboot_device()
 
         # set number of frames to be counted
-        frames = [(framerate*10)]
+        frames = [(framerate*40)]
         fps_list = []
         prev_frame = 0
-        drops, delayed, count = (0 for x in range(3))
+        drops, delayed, count, initial_frames = (0 for x in range(4))
 
         # calculate fps
         for f in frames:
@@ -187,15 +187,20 @@ class FPSTester():
                         self.reboot_device()
                         break
 
-                    if time.time() > start + 30:
-                        raise cv2.error("Timeout error")
-
                     if retval is False:
                         drops += 1
                         log_print("Failed to grab frame!")
+                        if time.time() > start + 30:
+                            raise cv2.error("Timeout error")
                         continue
                     else:
                         count += 1
+                    
+                    if framerate == 30 and i == 899:
+                        initial_frames = count + delayed
+                        initial_end = time.time()
+                        initial_elapsed = initial_end - start
+                        # print("HERE")
 
                 except cv2.error as e:
                     log_print("{}".format(e))
@@ -203,22 +208,32 @@ class FPSTester():
                     break
         
             end = time.time()
-            elapsed = end - start
+            total_elapsed = end - start
+            elapsed = total_elapsed - initial_elapsed
+            actual_frames = count + delayed
 
-            log_print("Test duration:          {:<5} s".format(elapsed))
+            log_print("Test duration:          {:<5} s".format(total_elapsed))
             log_print("Total frames grabbed:   {:<5}".format(count))
             log_print("Total frames delayed:   {:<5}".format(delayed))
             log_print("Total frames dropped:   {:<5}".format(drops))
-            fps = float((count+delayed) / elapsed)
+
+            initial_fps = float(initial_frames / initial_elapsed)
+            fps_list.append(initial_fps)
+            log_print("Initial average fps:    {:<5}".format(initial_fps))
+
+            fps = float((actual_frames-initial_frames) / elapsed)
             fps_list.append(fps)
-            log_print("Average fps:            {:<5}\n".format(fps))
+            log_print("Actual average fps:     {:<5}\n".format(fps))
         
-        diff10 = abs(float(framerate) - float(fps_list[0]))
+        diff = abs(float(framerate) - float(fps_list[1]))
          
         # success
-        if diff10 <= 3:
+        if diff <= 1:
+            return 1
+        # soft failure
+        elif diff <= 3 and diff > 1:
             return 0
-        #failure
+        # hard failure
         else:
             return -1
 
@@ -237,8 +252,7 @@ class FPSTester():
                                '720p': [30], 
                                '540p': [30], 
                                '360p': [30]},
-                      'NV12': {'4k': [30],
-                               '1080p': [30], 
+                      'NV12': {'1080p': [30], 
                                '720p': [30], 
                                '540p': [30], 
                                '360p': [30]},
@@ -246,6 +260,9 @@ class FPSTester():
 
         zoom_levels = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
                        34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+
+        # deep zoom
+        # zoom_levels = [1]
 
         # set up camera stream
         for k in range(4):
