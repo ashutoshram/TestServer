@@ -74,7 +74,7 @@ for prop in cam_props:
         else:
             log_print("{} set to: {}".format(prop, value.group(2)))
             log_print("PASS: Successful {} test conducted".format(prop))
-            err_code[val] = 0
+            err_code[val] = 1
     
     log_print("\nGenerating report...\n")
     # report = p.pformat(err_code)
