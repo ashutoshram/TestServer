@@ -178,31 +178,33 @@ class FPSTester():
                     current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
                     diff = current_frame - prev_frame
                     prev_frame = current_frame
+                    skip = False
                     
                     if framerate == 30:
                         if diff > 38.33 and count > 0:
                             delayed += 1
-                            continue
+                            skip = True
                     elif framerate == 15:
                         if diff > 71.67 and count > 0:
                             delayed += 1
-                            continue
+                            skip = True
 
-                    if codec == "MJPG":
+                    if codec == "MJPG" and format_ != "MJPG":
                         log_print("Device negotiated USB 2.0 connection.")
                         self.reboot_device()
-                        break
+                        self.test_fps(format_, resolution, framerate, zoom)
 
-                    if retval is False:
-                        drops += 1
-                        log_print("Failed to grab frame!")
-                        if time.time() > start + 30:
-                            raise cv2.error("Timeout error")
-                        continue
-                    else:
-                        count += 1
+                    if skip is False:
+                        if retval is False:
+                            drops += 1
+                            # log_print("Failed to grab frame!")
+                            if time.time() > start + 30:
+                                raise cv2.error("Timeout error")
+                            continue
+                        else:
+                            count += 1
                     
-                    if framerate == 30 and i == 899:
+                    if framerate == 30 and (count + delayed) == 899:
                         initial_frames = count + delayed
                         initial_end = time.time()
                         initial_elapsed = initial_end - start
@@ -211,7 +213,7 @@ class FPSTester():
                 except cv2.error as e:
                     log_print("{}".format(e))
                     self.reboot_device()
-                    break
+                    return -1
         
             end = time.time()
             total_elapsed = end - start
