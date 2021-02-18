@@ -192,7 +192,7 @@ class FPSTester():
                     if codec == "MJPG" and format_ != "MJPG":
                         log_print("Device negotiated USB 2.0 connection.")
                         self.reboot_device()
-                        self.test_fps(format_, resolution, framerate, zoom)
+                        return -1
 
                     if skip is False:
                         if retval is False:
