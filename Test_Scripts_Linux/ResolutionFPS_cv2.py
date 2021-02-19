@@ -167,7 +167,7 @@ class FPSTester():
         frames = [(framerate*40)]
         fps_list = []
         prev_frame = 0
-        drops, delayed, count, initial_frames = (0 for x in range(4))
+        drops, delayed, count, initial_frames, initial_elapsed = (0 for x in range(5))
 
         # calculate fps
         for f in frames:
@@ -204,11 +204,10 @@ class FPSTester():
                         else:
                             count += 1
                     
-                    if framerate == 30 and (count + delayed) == 899:
+                    if framerate == 30 and i == 899:
                         initial_frames = count + delayed
                         initial_end = time.time()
                         initial_elapsed = initial_end - start
-                        # print("HERE")
 
                 except cv2.error as e:
                     log_print("{}".format(e))
