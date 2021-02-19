@@ -172,6 +172,7 @@ class FPSTester():
         # calculate fps
         for f in frames:
             start = time.time()
+            initial_elapsed = 1
             for i in range(0, f):
                 try:
                     retval, frame = self.cam.read()
