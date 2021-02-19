@@ -34,8 +34,6 @@ cam_props = {'brightness': [0, 128, 255],
              'sharpness': [0, 110, 128, 255, 193],
              'white_balance_temperature': [0, 5000, 6500]}
 
-err_code = {}
-
 # set up camera stream
 for k in range(4):
     cam = cv2.VideoCapture(k)
@@ -61,6 +59,7 @@ for prop in cam_props:
     log_print("Panacast device found:  {}\n".format(device_num))
 
     ctrl = cam_props[prop]
+    err_code = {}
 
     for val in ctrl:
         # log_print("{}: {}".format(prop, val))
