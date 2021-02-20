@@ -24,7 +24,9 @@ Please run from root terminal (or using sudo python3) for best results (otherwis
 
 Flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
 Flag -f filename.json to run the script with test cases outlined in a json file (sample.json by default, use that file format to create your own test cases)
-sudo python3 ResolutionFPS_cv2.py -d True -f sample.json
+Flag -p True if you are running it on the devkit + Jenkins server in order to power cycle using the network power strip (set to False by default)
+
+python3 ResolutionFPS_cv2.py -d True -f sample.json
 
 This will genereate folder resolutionfps and save the corresponding log files to it.
 The script tests to see if the device is able to stream video at each framerate and each resolution.
