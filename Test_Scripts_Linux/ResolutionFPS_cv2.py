@@ -16,9 +16,11 @@ import argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
 ap.add_argument("-f","--file", type=str, default="sample.json", help="Specify .json file to load test cases")
+ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
 args = vars(ap.parse_args())
 debug = args["debug"]
 json_file = args["file"]
+power_cycle = args["power"]
 
 input_file = open(json_file)
 json_str = input_file.read()
@@ -83,9 +85,15 @@ class FPSTester():
 
     def reboot_device(self):
         log_print("Panacast device error")
-        os.system("sudo adb kill-server")
-        os.system("sudo adb devices")
-        os.system("adb reboot")
+        if power_cycle is True:
+            subprocess.check_call(['/home/altia/tobey/scripts/power_switch.sh', '0', '0'])
+            time.sleep(3)
+            subprocess.check_call(['/home/altia/tobey/scripts/power_switch.sh', '0', '1'])
+        else:
+            os.system("sudo adb kill-server")
+            os.system("sudo adb devices")
+            os.system("adb reboot")
+
         log_print("Rebooting...")
         time.sleep(65)
         global device_num
@@ -102,7 +110,7 @@ class FPSTester():
                 break
             else:
                 device_num += 1
-                time.sleep(15)
+                time.sleep(5)
 
     def test_fps(self, format_, resolution, framerate, zoom):
         # check if camera stream exists
