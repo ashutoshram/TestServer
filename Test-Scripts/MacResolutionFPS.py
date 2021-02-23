@@ -14,6 +14,28 @@ import json
 import subprocess
 import argparse
 
+
+
+# IN ORDER TO RUN THIS SCRIPT: 
+
+# You must have the JabraCamera API installed through JabraCameraControl. 
+
+# You must have a .so file called jabracamera-{your-python-distribution}.so in the same folder as this file.
+
+# Then you may run the script using python3 MacResolutionFPS.py
+ 
+
+
+
+
+
+
+
+
+
+
+
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
 args = vars(ap.parse_args())
