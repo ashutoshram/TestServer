@@ -58,31 +58,10 @@ class FPS(ATC.AbstractTestClass):
     def run(self, args):
         return self.FPSTest.test(args)
 
-    def get_progress(self):
-        return self.FPSTest.progress()
-
-    def set_default_storage_path(self, path):
-        self.storage_path = path
-
-    def get_name(self):
-        return "ResolutionFPS Test"
-    
-    def is_done(self):
-        if self.FPSTest.progress() == 100:
-            return True
-        else:
-            return False
-    
-    def get_storage_path(self):
-        return self.storage_path
-
     def generate_report(self):
         return self.FPSTest.results()
 
 class FPSTester():
-    def __init__(self):
-        self.progress_percent = 0 
-
     def reboot_device(self):
         log_print("Panacast device error")
         if power_cycle is True:
@@ -95,7 +74,7 @@ class FPSTester():
             os.system("adb reboot")
 
         log_print("Rebooting...")
-        time.sleep(65)
+        time.sleep(55)
         global device_num
         global reboots
         device_num = 0
@@ -106,11 +85,11 @@ class FPSTester():
             if self.cam.isOpened():
                 self.cam = cv2.VideoCapture(device_num)
                 log_print("Device back online: {}\n".format(device_num))
-                time.sleep(5)
+                # time.sleep(5)
                 break
             else:
                 device_num += 1
-                time.sleep(5)
+                # time.sleep(5)
 
     def test_fps(self, format_, resolution, framerate, zoom):
         # check if camera stream exists
@@ -119,8 +98,8 @@ class FPSTester():
             print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
         
+        # open device and set video format
         self.cam.open(device_num)
-
         if format_ == 'YU12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YU12'))
         elif format_ == 'YUYV':
@@ -128,10 +107,12 @@ class FPSTester():
         elif format_ == 'NV12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
 
+        # convert video codec number to format and check if set correctly
         fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
         codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
         log_print("Video format set to:    {} ({})".format(codec, fourcc))
 
+        # set resolution and check if set correctly
         if resolution == '4k':
             self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
             self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -254,9 +235,6 @@ class FPSTester():
         else:
             return -1
 
-    def progress(self):
-        return self.progress_percent
-
     def results(self):
         return self.err_code
 
@@ -278,7 +256,6 @@ class FPSTester():
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in test_cases:
             res_dict = test_cases[format_]
-
             for resolution in res_dict:
                 framerate = res_dict[resolution]
                 log_print(55*"=")
@@ -293,12 +270,10 @@ class FPSTester():
                             test_type = "{} {} {} {}".format(format_, resolution, fps, 1)
                             self.err_code[test_type] = self.test_fps(format_, resolution, fps, 1)
                             break
-
                         log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {} {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
 
-            self.progress_percent = 100
             self.cam.release()
 
         return self.err_code
@@ -307,7 +282,6 @@ if __name__ == "__main__":
     t = FPS()
     args = t.get_args()
     t.run(args)
-
     log_print("\nGenerating report...")
     log_print("Number of video crashes/freezes (that required reboots): {}".format(reboots))
     report = p.pformat(t.generate_report())
