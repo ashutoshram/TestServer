@@ -23,10 +23,11 @@ A report will be generated at the end of each log file, where 1 denotes a test P
 Please run from root terminal (or using sudo python3) for best results (otherwise you will need to enter your password in case of device failure).
 
 Flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
-Flag -f filename.json to run the script with test cases outlined in a json file (sample.json by default, use that file format to create your own test cases)
+Flag -t filename.json to run the script with test cases outlined in a json file (sample.json by default, use that file format to create your own test cases)
+Flag -z filename.json to run the script with zoom levels outlined in a json file (zoom.json by default, use that file format to create your own test cases)
 Flag -p True if you are running it on the devkit + Jenkins server in order to power cycle using the network power strip (set to False by default)
 
-python3 ResolutionFPS_cv2.py -d True -f sample.json
+python3 ResolutionFPS_cv2.py -d True -f sample.json -z zoom.json
 
 This will genereate folder resolutionfps and save the corresponding log files to it.
 The script tests to see if the device is able to stream video at each framerate and each resolution.
