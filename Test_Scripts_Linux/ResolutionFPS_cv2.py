@@ -158,7 +158,7 @@ class FPSTester():
             self.reboot_device()
 
         # set number of frames to be counted
-        frames = [(framerate*40)]
+        frames = [(framerate*30)]
         fps_list = []
         prev_frame = 0
         drops, delayed, count, initial_frames, initial_elapsed = (0 for x in range(5))
@@ -200,7 +200,7 @@ class FPSTester():
                         else:
                             count += 1
                     
-                    if framerate == 30 and i == 899:
+                    if framerate == 30 and i == 599:
                         initial_frames = count + delayed
                         initial_end = time.time()
                         initial_elapsed = initial_end - start
