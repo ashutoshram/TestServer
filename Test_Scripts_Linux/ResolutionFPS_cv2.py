@@ -70,9 +70,9 @@ class FPSTester():
     def reboot_device(self):
         log_print("Panacast device error")
         if power_cycle is True:
-            subprocess.check_call(['/home/altia/tthai/scripts/power_switch.sh', '0', '0'])
+            subprocess.check_call(['./power_switch.sh', '0', '0'])
             time.sleep(3)
-            subprocess.check_call(['/home/altia/tthai/scripts/power_switch.sh', '0', '1'])
+            subprocess.check_call(['./power_switch.sh', '0', '1'])
         else:
             os.system("sudo adb kill-server")
             os.system("sudo adb devices")
