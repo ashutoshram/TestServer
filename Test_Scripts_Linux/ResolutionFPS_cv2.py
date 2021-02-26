@@ -15,16 +15,21 @@ import argparse
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
-ap.add_argument("-f","--file", type=str, default="sample.json", help="Specify .json file to load test cases")
+ap.add_argument("-t","--test", type=str, default="sample.json", help="Specify .json file to load test cases")
+ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
 ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
 args = vars(ap.parse_args())
 debug = args["debug"]
-json_file = args["file"]
+test_file = args["test"]
+zoom_file = args["zoom"]
 power_cycle = args["power"]
 
-input_file = open(json_file)
-json_str = input_file.read()
+input_tests = open(test_file)
+json_str = input_tests.read()
 test_cases = json.loads(json_str)
+input_zooms = open(zoom_file)
+json_str = input_zooms.read()
+zoom_levels = json.loads(json_str)
 
 def log_print(args):
     msg = args + "\n"
@@ -242,9 +247,6 @@ class FPSTester():
         self.err_code = {}
         global device_num
 
-        zoom_levels = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
-                       34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
-
         # set up camera stream
         for k in range(4):
             self.cam = cv2.VideoCapture(k)
@@ -262,7 +264,7 @@ class FPSTester():
                 log_print("Parameters:             {} {} {}".format(format_, resolution, framerate))
 
                 for fps in framerate:
-                    for z in zoom_levels:
+                    for z in zoom_levels["ZOOM"]:
                         log_print(55*"=")
                         # special case for YUYV
                         if format_ == "YUYV":
