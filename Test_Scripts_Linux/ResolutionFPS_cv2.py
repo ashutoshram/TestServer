@@ -70,9 +70,9 @@ class FPSTester():
     def reboot_device(self):
         log_print("Panacast device error")
         if power_cycle is True:
-            subprocess.check_call(['/home/altia/tobey/scripts/power_switch.sh', '0', '0'])
+            subprocess.check_call(['/home/altia/tthai/scripts/power_switch.sh', '0', '0'])
             time.sleep(3)
-            subprocess.check_call(['/home/altia/tobey/scripts/power_switch.sh', '0', '1'])
+            subprocess.check_call(['/home/altia/tthai/scripts/power_switch.sh', '0', '1'])
         else:
             os.system("sudo adb kill-server")
             os.system("sudo adb devices")
@@ -158,75 +158,74 @@ class FPSTester():
             self.reboot_device()
 
         # set number of frames to be counted
-        frames = [(framerate*30)]
+        frames = framerate*30
         fps_list = []
         prev_frame = 0
         drops, delayed, count, initial_frames, initial_elapsed = (0 for x in range(5))
 
         # calculate fps
-        for f in frames:
-            start = time.time()
-            # default initial value
-            initial_elapsed = 30
-            for i in range(0, f):
-                try:
-                    retval, frame = self.cam.read()
-                    current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
-                    diff = current_frame - prev_frame
-                    prev_frame = current_frame
-                    skip = False
-                    
-                    if framerate == 30:
-                        if diff > 38.33 and count > 0:
-                            delayed += 1
-                            skip = True
-                    elif framerate == 15:
-                        if diff > 71.67 and count > 0:
-                            delayed += 1
-                            skip = True
+        start = time.time()
+        # default initial value
+        initial_elapsed = 30
+        for i in range(0, frames):
+            try:
+                retval, frame = self.cam.read()
+                current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
+                diff = current_frame - prev_frame
+                prev_frame = current_frame
+                skip = False
+                
+                if framerate == 30:
+                    if diff > 38.33 and count > 0:
+                        delayed += 1
+                        skip = True
+                elif framerate == 15:
+                    if diff > 71.67 and count > 0:
+                        delayed += 1
+                        skip = True
 
-                    if codec == "MJPG" and format_ != "MJPG":
-                        log_print("Device negotiated USB 2.0 connection.")
-                        self.reboot_device()
-                        return -1
-
-                    if skip is False:
-                        if retval is False:
-                            drops += 1
-                            # log_print("Failed to grab frame!")
-                            if time.time() > start + 30:
-                                raise cv2.error("Timeout error")
-                            continue
-                        else:
-                            count += 1
-                    
-                    if framerate == 30 and i == 599:
-                        initial_frames = count + delayed
-                        initial_end = time.time()
-                        initial_elapsed = initial_end - start
-
-                except cv2.error as e:
-                    log_print("{}".format(e))
+                if codec == "MJPG" and format_ != "MJPG":
+                    log_print("Device negotiated USB 2.0 connection.")
                     self.reboot_device()
                     return -1
+
+                if skip is False:
+                    if retval is False:
+                        drops += 1
+                        # log_print("Failed to grab frame!")
+                        if time.time() > start + 30:
+                            raise cv2.error("Timeout error")
+                        continue
+                    else:
+                        count += 1
+                
+                if framerate == 30 and i == 599:
+                    initial_frames = count + delayed
+                    initial_end = time.time()
+                    initial_elapsed = initial_end - start
+
+            except cv2.error as e:
+                log_print("{}".format(e))
+                self.reboot_device()
+                return -1
         
-            end = time.time()
-            total_elapsed = end - start
-            elapsed = total_elapsed - initial_elapsed
-            actual_frames = count + delayed
+        end = time.time()
+        total_elapsed = end - start
+        elapsed = total_elapsed - initial_elapsed
+        actual_frames = count + delayed
 
-            log_print("Test duration:          {:<5} s".format(total_elapsed))
-            log_print("Total frames grabbed:   {:<5}".format(count))
-            log_print("Total frames delayed:   {:<5}".format(delayed))
-            log_print("Total frames dropped:   {:<5}".format(drops))
+        log_print("Test duration:          {:<5} s".format(total_elapsed))
+        log_print("Total frames grabbed:   {:<5}".format(count))
+        log_print("Total frames delayed:   {:<5}".format(delayed))
+        log_print("Total frames dropped:   {:<5}".format(drops))
 
-            initial_fps = float(initial_frames / initial_elapsed)
-            fps_list.append(initial_fps)
-            log_print("Initial average fps:    {:<5}".format(initial_fps))
+        initial_fps = float(initial_frames / initial_elapsed)
+        fps_list.append(initial_fps)
+        log_print("Initial average fps:    {:<5}".format(initial_fps))
 
-            fps = float((actual_frames-initial_frames) / elapsed)
-            fps_list.append(fps)
-            log_print("Actual average fps:     {:<5}\n".format(fps))
+        fps = float((actual_frames-initial_frames) / elapsed)
+        fps_list.append(fps)
+        log_print("Actual average fps:     {:<5}\n".format(fps))
         
         diff = abs(float(framerate) - float(fps_list[1]))
          
