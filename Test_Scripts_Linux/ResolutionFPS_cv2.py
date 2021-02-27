@@ -250,11 +250,12 @@ class FPSTester():
         for k in range(10):
             self.cam = cv2.VideoCapture(k)
             if self.cam.isOpened():
+                log_print("Trying device number:   {}".format(k))
                 log_print("Panacast device found:  {}".format(k))
                 device_num = k
                 break
             else:
-                Log_print("Not a Panacast device:      {}".format(k))
+                log_print("Not a Panacast device:      {}".format(k))
 
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in test_cases:
