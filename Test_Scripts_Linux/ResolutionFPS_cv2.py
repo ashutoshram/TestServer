@@ -12,17 +12,20 @@ import pprint as p
 import json
 import subprocess
 import argparse
+import re
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
 ap.add_argument("-t","--test", type=str, default="sample.json", help="Specify .json file to load test cases")
 ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
 ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
+ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
 args = vars(ap.parse_args())
 debug = args["debug"]
 test_file = args["test"]
 zoom_file = args["zoom"]
 power_cycle = args["power"]
+device_name = args["video"]
 
 input_tests = open(test_file)
 json_str = input_tests.read()
@@ -42,9 +45,9 @@ path = os.getcwd()
 device_num = 0
 reboots = 0
 
+# create directory for log and .png files if it doesn't already exist
 filename = "{}_resolutionfps.log".format(current)
 file_path = os.path.join(path+"/resolutionfps", filename)
-# create directory for log and .png files if it doesn't already exist
 if not os.path.exists(path+"/resolutionfps"):
     os.makedirs(path+"/resolutionfps")
 
@@ -82,19 +85,17 @@ class FPSTester():
         time.sleep(55)
         global device_num
         global reboots
-        device_num = 0
         reboots += 1
 
-        while True:
-            self.cam = cv2.VideoCapture(device_num)
-            if self.cam.isOpened():
-                self.cam = cv2.VideoCapture(device_num)
-                log_print("Device back online: {}\n".format(device_num))
-                # time.sleep(5)
-                break
-            else:
-                device_num += 1
-                # time.sleep(5)
+        # grab reenumerated device       
+        device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
+        self.cam = cv2.VideoCapture(device_num)
+        while not self.cam.isOpened():
+            time.sleep(5)
+            device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
+        
+        if self.cam.isOpened():
+            log_print("Device back online:  {}\n".format(device_num))
 
     def test_fps(self, format_, resolution, framerate, zoom):
         # check if camera stream exists
@@ -192,7 +193,6 @@ class FPSTester():
                 if skip is False:
                     if retval is False:
                         drops += 1
-                        # log_print("Failed to grab frame!")
                         if time.time() > start + 30:
                             raise cv2.error("Timeout error")
                         continue
@@ -246,16 +246,14 @@ class FPSTester():
         self.err_code = {}
         global device_num
 
-        # set up camera stream
-        for k in range(10):
-            self.cam = cv2.VideoCapture(k)
-            if self.cam.isOpened():
-                log_print("Trying device number:   {}".format(k))
-                log_print("Panacast device found:  {}".format(k))
-                device_num = k
-                break
-            else:
-                log_print("Not a Panacast device:      {}".format(k))
+        # set up camera stream        
+        device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
+        self.cam = cv2.VideoCapture(device_num)
+        if device_num is None:
+            log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
+            sys.exit(1)
+        if self.cam.isOpened():
+            log_print("PanaCast device found:  {}".format(device_num))
 
         # iterate through the dictionary and test each format, resolution, and framerate
         for format_ in test_cases:
@@ -270,12 +268,12 @@ class FPSTester():
                         log_print(55*"=")
                         # special case for YUYV
                         if format_ == "YUYV":
-                            log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, 1))
+                            log_print("Testing:                {} {} {} z{}\n".format(format_, resolution, fps, 1))
                             test_type = "{} {} {} {}".format(format_, resolution, fps, 1)
                             self.err_code[test_type] = self.test_fps(format_, resolution, fps, 1)
                             break
-                        log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
-                        test_type = "{} {} {} {}".format(format_, resolution, fps, z)
+                        log_print("Testing:                {} {} {}fps z{}\n".format(format_, resolution, fps, z))
+                        test_type = "{} {} {}fps z{}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
 
             self.cam.release()
