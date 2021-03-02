@@ -87,15 +87,17 @@ class FPSTester():
         global reboots
         reboots += 1
 
-        # grab reenumerated device       
-        device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
-        self.cam = cv2.VideoCapture(device_num)
-        while not self.cam.isOpened():
-            time.sleep(5)
-            device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
-        
-        if self.cam.isOpened():
-            log_print("Device back online:  {}\n".format(device_num))
+        # grab reenumerated device
+        while True:       
+            device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
+            device = device.decode("utf-8")
+            device_num = int(re.search(r'\d+', device).group())
+            self.cam = cv2.VideoCapture(device_num)
+            if self.cam.isOpened():
+                log_print("Device back online:  {}\n".format(device_num))
+                break
+            else:
+                time.sleep(5)
 
     def test_fps(self, format_, resolution, framerate, zoom):
         # check if camera stream exists
@@ -247,8 +249,11 @@ class FPSTester():
         global device_num
 
         # set up camera stream        
-        device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
+        device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
+        device = device.decode("utf-8")
+        device_num = int(re.search(r'\d+', device).group())
         self.cam = cv2.VideoCapture(device_num)
+
         if device_num is None:
             log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
             sys.exit(1)
