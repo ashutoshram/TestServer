@@ -44,14 +44,18 @@ current = date.today()
 path = os.getcwd()
 device_num = 0
 reboots = 0
+failures = {}
 
 # create directory for log and .png files if it doesn't already exist
 filename = "{}_resolutionfps.log".format(current)
-file_path = os.path.join(path+"/resolutionfps", filename)
+log_path = os.path.join(path+"/resolutionfps", filename)
+fail = "{}_failed_cases.log".format(current)
+fail_path = os.path.join(path+"/resolutionfps", fail)
 if not os.path.exists(path+"/resolutionfps"):
     os.makedirs(path+"/resolutionfps")
 
-log_file = open(file_path, "a")
+log_file = open(log_path, "a")
+fail_file = open(fail_path, "a")
 timestamp = datetime.datetime.now()
 log_print(55*"=")
 log_print("\n{}\n".format(timestamp))
@@ -87,15 +91,17 @@ class FPSTester():
         global reboots
         reboots += 1
 
-        # grab reenumerated device       
-        device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
-        self.cam = cv2.VideoCapture(device_num)
-        while not self.cam.isOpened():
-            time.sleep(5)
-            device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
-        
-        if self.cam.isOpened():
-            log_print("Device back online:  {}\n".format(device_num))
+        # grab reenumerated device
+        while True:       
+            device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
+            device = device.decode("utf-8")
+            device_num = int(re.search(r'\d+', device).group())
+            self.cam = cv2.VideoCapture(device_num)
+            if self.cam.isOpened():
+                log_print("Device back online:  {}\n".format(device_num))
+                break
+            else:
+                time.sleep(5)
 
     def test_fps(self, format_, resolution, framerate, zoom):
         # check if camera stream exists
@@ -244,11 +250,15 @@ class FPSTester():
 
     def test(self, args):
         self.err_code = {}
+        global failures
         global device_num
 
         # set up camera stream        
-        device_num = os.system('v4l2-ctl --list-devices | grep "{}" -A 1 | grep video >/dev/null 2>&1'.format(device_name))
+        device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
+        device = device.decode("utf-8")
+        device_num = int(re.search(r'\d+', device).group())
         self.cam = cv2.VideoCapture(device_num)
+
         if device_num is None:
             log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
             sys.exit(1)
@@ -272,9 +282,13 @@ class FPSTester():
                             test_type = "{} {} {} {}".format(format_, resolution, fps, 1)
                             self.err_code[test_type] = self.test_fps(format_, resolution, fps, 1)
                             break
+                        # for NV12 and other formats
                         log_print("Testing:                {} {} {}fps z{}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {}fps z{}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
+
+                        if self.err_code[test_type] == 0 or self.err_code[test_type] == -1:
+                            failures[test_type] = self.err_code[test_type] 
 
             self.cam.release()
 
@@ -289,3 +303,8 @@ if __name__ == "__main__":
     report = p.pformat(t.generate_report())
     log_print("{}\n".format(report))
     log_file.close()
+
+    fail_file.write("Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.\n")
+    fail_report = p.pformat(failures)
+    fail_file.write("{}".format(fail_report))
+    fail_file.close()
