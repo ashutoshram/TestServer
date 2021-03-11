@@ -75,7 +75,6 @@ class FPS(ATC.AbstractTestClass):
 
 class FPSTester():
     def reboot_device(self):
-        log_print("Panacast device error")
         if power_cycle is True:
             subprocess.check_call(['./power_switch.sh', '0', '0'])
             time.sleep(3)
@@ -123,6 +122,11 @@ class FPSTester():
         fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
         codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
         log_print("Video format set to:    {} ({})".format(codec, fourcc))
+        # make sure it's a usb 3.0 connection
+        if codec == "MJPG" and format_ != "MJPG":
+            log_print("Device negotiated USB 2.0 connection.")
+            self.reboot_device()
+            return -1
 
         # set resolution and check if set correctly
         if resolution == '4k':
@@ -166,9 +170,9 @@ class FPSTester():
 
         # set number of frames to be counted
         frames = framerate*30
-        fps_list = []
         prev_frame = 0
-        drops, delayed, count, initial_frames, initial_elapsed = (0 for x in range(5))
+        fps_list, jitters = ([] for x in range(2))
+        drops, count, initial_frames, initial_elapsed = (0 for x in range(4))
 
         # calculate fps
         start = time.time()
@@ -180,33 +184,22 @@ class FPSTester():
                 current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
                 diff = current_frame - prev_frame
                 prev_frame = current_frame
-                skip = False
-                
+                # save jitter between current and previous frame to average later
                 if framerate == 30:
-                    if diff > 38.33 and count > 0:
-                        delayed += 1
-                        skip = True
+                    jitters.append(abs(diff - 33.33))
                 elif framerate == 15:
-                    if diff > 71.67 and count > 0:
-                        delayed += 1
-                        skip = True
+                    jitters.append(abs(diff - 66.67))
 
-                if codec == "MJPG" and format_ != "MJPG":
-                    log_print("Device negotiated USB 2.0 connection.")
-                    self.reboot_device()
-                    return -1
-
-                if skip is False:
-                    if retval is False:
-                        drops += 1
-                        if time.time() > start + 30:
-                            raise cv2.error("Timeout error")
-                        continue
-                    else:
-                        count += 1
+                if retval is False:
+                    drops += 1
+                    if time.time() > start + 30:
+                        raise cv2.error("Timeout error")
+                    continue
+                else:
+                    count += 1
                 
                 if framerate == 30 and i == 599:
-                    initial_frames = count + delayed
+                    initial_frames = count
                     initial_end = time.time()
                     initial_elapsed = initial_end - start
 
@@ -218,12 +211,15 @@ class FPSTester():
         end = time.time()
         total_elapsed = end - start
         elapsed = total_elapsed - initial_elapsed
-        actual_frames = count + delayed
+        actual_frames = count
+        del jitters[0]
+        avg_jitter = sum(jitters) / len(jitters)
+        # print(jitters)
 
-        log_print("Test duration:          {:<5} s".format(total_elapsed))
+        log_print("Test duration (s):      {:<5}".format(total_elapsed))
         log_print("Total frames grabbed:   {:<5}".format(count))
-        log_print("Total frames delayed:   {:<5}".format(delayed))
         log_print("Total frames dropped:   {:<5}".format(drops))
+        log_print("Average jitter (ms):    {:<5}".format(avg_jitter))
 
         initial_fps = float(initial_frames / initial_elapsed)
         fps_list.append(initial_fps)
@@ -278,13 +274,13 @@ class FPSTester():
                         log_print(55*"=")
                         # special case for YUYV
                         if format_ == "YUYV":
-                            log_print("Testing:                {} {} {} z{}\n".format(format_, resolution, fps, 1))
+                            log_print("Testing:                {} {} {} zoom {}\n".format(format_, resolution, fps, 1))
                             test_type = "{} {} {} {}".format(format_, resolution, fps, 1)
                             self.err_code[test_type] = self.test_fps(format_, resolution, fps, 1)
                             break
                         # for NV12 and other formats
-                        log_print("Testing:                {} {} {}fps z{}\n".format(format_, resolution, fps, z))
-                        test_type = "{} {} {}fps z{}".format(format_, resolution, fps, z)
+                        log_print("Testing:                {} {} {}fps zoom {}\n".format(format_, resolution, fps, z))
+                        test_type = "{} {} {}fps zoom {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
 
                         if self.err_code[test_type] == 0 or self.err_code[test_type] == -1:
@@ -305,6 +301,7 @@ if __name__ == "__main__":
     log_file.close()
 
     fail_file.write("Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.\n")
+    fail_file.write("[-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps).\n")
     fail_report = p.pformat(failures)
     fail_file.write("{}".format(fail_report))
     fail_file.close()
