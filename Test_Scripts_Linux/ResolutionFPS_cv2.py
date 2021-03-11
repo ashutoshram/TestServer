@@ -301,7 +301,7 @@ if __name__ == "__main__":
     log_file.close()
 
     fail_file.write("Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.\n")
-    fail_file.write("[-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps).\n")
+    fail_file.write("[-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps).\n\n")
     fail_report = p.pformat(failures)
     fail_file.write("{}".format(fail_report))
     fail_file.close()
