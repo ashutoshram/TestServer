@@ -2,7 +2,15 @@ import numpy as np
 import cv2
 import time
 import os
+import subprocess
+import argparse
+import re
 from datetime import date, datetime
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-f","--frame", type=bool, default=False, help="Set to True to enable live view")
+args = vars(ap.parse_args())
+live_view = args["frame"]
 
 global cap
 global reboots
@@ -47,20 +55,25 @@ def reboot_device(cap):
         device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "Jabra PanaCast 50" -A 1 | grep video', shell=True)
         device = device.decode("utf-8")
         device_num = int(re.search(r'\d+', device).group())
-        self.cam = cv2.VideoCapture(device_num)
-        if self.cam.isOpened():
+        cap = cv2.VideoCapture(device_num)
+        if cap.isOpened():
             log_print("Device back online:  {}\n".format(device_num))
             break
         else:
             time.sleep(5)
 
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
+    # set up camera stream        
+    device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "Jabra PanaCast 50" -A 1 | grep video', shell=True)
+    device = device.decode("utf-8")
+    device_num = int(re.search(r'\d+', device).group())
+    cap = cv2.VideoCapture(device_num)
 
+    if device_num is None:
+        log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
+        sys.exit(1)
     if cap.isOpened():
-        print("Device Running")
-    else:
-        reboot_device(cap)
+        log_print("PanaCast device found:  {}".format(device_num))
 
     frame_count = 900
     resolution_set = [(1920, 1080), (1280,720), (1920,1080), (960, 540), (1920,1080), (640, 360), (1280, 720), (1920, 1080), (1280,720), (960, 540), (1280, 720), (640, 360), (960, 540), (1920, 1080), (960, 540), (1280, 720), (960, 540), (640, 360), (1920, 1080), (640, 360), (1280, 720)]
@@ -78,7 +91,7 @@ if __name__ == "__main__":
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, resolution_set[0][0])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution_set[0][1])
-    log_print("Resolution set to %d x %d" % (resolution_set[0][0], resolution_set[0][1]))
+    log_print("Resolution set to %d x %d\n" % (resolution_set[0][0], resolution_set[0][1]))
     
     while(True):
         if start_frame == (frame_count*num_res)+frame_count-1:
@@ -96,31 +109,34 @@ if __name__ == "__main__":
         test_frame += 1
         total_frame += 1
         
-        # cv2.imshow('frame',frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        if live_view is True:
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
         # check framerate every five seconds
         if test_frame % 150 == 0:
             test_end = time.time()
             current = test_end - half_start
             overall = test_end - test_start
-            log_print("Test {} duration (sec):  {:<5} s".format(i, overall))
+            log_print("Test {} duration (sec):  {:>2} s".format(i, overall))
             log_print("Total frames grabbed:   {:<5}".format(test_frame))
 
             fps = float((test_frame) / current)
             log_print("Current average fps:    {:<5}\n".format(fps))
-            log_print("total_frame:          {}\n".format(total_frame))
+            # log_print("total_frame:          {}\n".format(total_frame))
             if total_frame >= frame_count:
                 try:
                     log_print(55*"=")
-                    log_print("Resolution set to %d x %d" % (resolution_set[i][0], resolution_set[i][1]))
+                    log_print("Resolution set to %d x %d\n" % (resolution_set[i][0], resolution_set[i][1]))
                     cap.set(cv2.CAP_PROP_FRAME_WIDTH, resolution_set[i][0])
                     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution_set[i][1])
                     i += 1
                     total_frame = 0
                     half_elapsed = 0
-                    full_start = time.time()
+                    overall = 0
+                    test_start = time.time()
+                    # full_start = time.time()
                 except:
                     break
             
