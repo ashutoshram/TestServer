@@ -115,6 +115,8 @@ class FPSTester():
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YU12'))
         elif format_ == 'YUYV':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+        elif format_ == 'YUY2':
+            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
         elif format_ == 'NV12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
 
@@ -182,6 +184,8 @@ class FPSTester():
             try:
                 retval, frame = self.cam.read()
                 current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
+                if prev_frame == 0:
+                    prev_frame = current_frame
                 diff = current_frame - prev_frame
                 prev_frame = current_frame
                 # save jitter between current and previous frame to average later
@@ -192,6 +196,7 @@ class FPSTester():
 
                 if retval is False:
                     drops += 1
+                    log_print("Frame #{} dropped!".format(drops))
                     if time.time() > start + 30:
                         raise cv2.error("Timeout error")
                     continue
@@ -214,7 +219,6 @@ class FPSTester():
         actual_frames = count
         del jitters[0]
         avg_jitter = sum(jitters) / len(jitters)
-        # print(jitters)
 
         log_print("Test duration (s):      {:<5}".format(total_elapsed))
         log_print("Total frames grabbed:   {:<5}".format(count))
@@ -272,13 +276,6 @@ class FPSTester():
                 for fps in framerate:
                     for z in zoom_levels["ZOOM"]:
                         log_print(55*"=")
-                        # special case for YUYV
-                        if format_ == "YUYV":
-                            log_print("Testing:                {} {} {} zoom {}\n".format(format_, resolution, fps, 1))
-                            test_type = "{} {} {} {}".format(format_, resolution, fps, 1)
-                            self.err_code[test_type] = self.test_fps(format_, resolution, fps, 1)
-                            break
-                        # for NV12 and other formats
                         log_print("Testing:                {} {} {}fps zoom {}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {}fps zoom {}".format(format_, resolution, fps, z)
                         self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
@@ -301,7 +298,8 @@ if __name__ == "__main__":
     log_file.close()
 
     fail_file.write("Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.\n")
-    fail_file.write("[-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps).\n\n")
+    fail_file.write("[-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps).\n")
+    fail_file.write("Number of video crashes/freezes (that required reboots): {}\n\n".format(reboots))
     fail_report = p.pformat(failures)
     fail_file.write("{}".format(fail_report))
     fail_file.close()
