@@ -16,7 +16,7 @@ import re
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
-ap.add_argument("-t","--test", type=str, default="sample.json", help="Specify .json file to load test cases")
+ap.add_argument("-t","--test", type=str, default="res_fps.json", help="Specify .json file to load test cases")
 ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
 ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
 ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
