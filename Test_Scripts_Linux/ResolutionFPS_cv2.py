@@ -189,10 +189,7 @@ class FPSTester():
                 diff = current_frame - prev_frame
                 prev_frame = current_frame
                 # save jitter between current and previous frame to average later
-                if framerate == 30:
-                    jitters.append(abs(diff - 33.33))
-                elif framerate == 15:
-                    jitters.append(abs(diff - 66.67))
+                jitters.append(abs(diff - (1000/framerate)))
 
                 if retval is False:
                     drops += 1
@@ -202,8 +199,8 @@ class FPSTester():
                     continue
                 else:
                     count += 1
-                
-                if framerate == 30 and i == 599:
+                # 2/3 frames - 1 to get the first 20 seconds
+                if i == (((frames * 2) / 3) - 1):
                     initial_frames = count
                     initial_end = time.time()
                     initial_elapsed = initial_end - start
@@ -217,7 +214,7 @@ class FPSTester():
         total_elapsed = end - start
         elapsed = total_elapsed - initial_elapsed
         actual_frames = count
-        del jitters[0]
+        # del jitters[0]
         avg_jitter = sum(jitters) / len(jitters)
 
         log_print("Test duration (s):      {:<5}".format(total_elapsed))
