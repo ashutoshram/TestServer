@@ -80,83 +80,95 @@ def reboot_device():
         else:
             time.sleep(5)
 
-def test_fps(width, height, target_res, frame_count):
+def check_frame(check_width, check_height, fps):
+    while True:
+        retval, frame = cap.read()
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        f = int(cap.get(cv2.CAP_PROP_FPS))
+        if retval is True and w == check_width and h == check_height and f == fps:
+            print("Resolution set to:    {} x {}".format(w, h))
+            return True
+
+def test_fps(width, height, target_res, start_fps, target_fps):
     start_frame, test_frame, total_frame, drop_frame = (0 for x in range(4))
     all_fps = []
     global err_code
-    # set initial resolution
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    retval, frame = cap.read()
-    switch_start = time.time()
 
-    for target in target_res:
-        if target[0] == width and target[1] == height:
-            continue
-        else:
-            test_type = "{}x{} -> {}x{}".format(width, height, target[0], target[1])
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, target[0])
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, target[1])
-            # check when frame is available to grab after switching resolutions
-            while True:
-                retval, frame = cap.read()
-                w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                if retval is True and w == target[0] and h == target[1]:
+    for t_res in target_res:
+        for s_fps in start_fps:
+            for t_fps in target_fps:
+                # set start res/fps and start switch timer
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                cap.set(cv2.CAP_PROP_FPS, s_fps)
+                if check_frame(width, height, s_fps):
+                    switch_start = time.time()
+                
+                # set target res/fps and stop switch timer
+                if t_res[0] == width and t_res[1] == height:
+                    continue
+                test_type = "{}x{} [{} fps] -> {}x{} [{} fps]".format(width, height, s_fps, t_res[0], t_res[1], t_fps)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
+                cap.set(cv2.CAP_PROP_FPS, t_fps)
+                if check_frame(t_res[0], t_res[1], t_fps):
                     switch_end = time.time()
                     switch_time = switch_end - switch_start
-                    break
 
-        log_print(55*"=")
-        log_print(test_type)
-        log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
-        test_start, test_time = (time.time() for x in range(2))
-        # grab frames for 30 seconds (900 frames)
-        for i in range(0, frame_count):
-            retval, frame = cap.read()
-            if retval is False:
-                drop_frame += 1
-                log_print("Frame #{} dropped!".format(drop_frame))
-                if time.time() > test_start + 30:
-                    log_print("Timeout error")
-                    reboot_device()
-            else:
-                test_frame += 1
-                if live_view is True:
-                    cv2.imshow('frame', frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                log_print(55*"=")
+                log_print("{}\n".format(test_type))
+                log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
+                test_start, test_time = (time.time() for x in range(2))
+                
+                # grab frames for 30 seconds
+                frame_count = t_fps * 30
+                for i in range(0, frame_count):
+                    retval, frame = cap.read()
+                    # reboot device in event of frame drop/error
+                    if retval is False:
+                        drop_frame += 1
+                        log_print("Frame #{} dropped!".format(drop_frame))
+                        if time.time() > test_start + 30:
+                            log_print("Timeout error")
+                            reboot_device()
+                    else:
+                        if live_view is True:
+                            cv2.imshow('frame', frame)
+                            if cv2.waitKey(1) & 0xFF == ord('q'):
+                                break
+                        test_frame += 1
             
-            # check framerate every five seconds
-            if test_frame % 150 == 0:
-                test_end = time.time()
-                current = test_end - test_time
-                time_elapsed = test_end - test_start
-                log_print("Test duration (sec):   {:>2}".format(time_elapsed))
-                log_print("Total frames grabbed:  {:<5}".format(test_frame))
+                    # check framerate every five seconds
+                    if test_frame % (frame_count / 6) == 0:
+                        test_end = time.time()
+                        current = test_end - test_time
+                        time_elapsed = test_end - test_start
+                        log_print("Test duration (sec):   {:>2}".format(time_elapsed))
+                        log_print("Total frames grabbed:  {:<5}".format(test_frame))
 
-                fps = float(test_frame / current)
-                log_print("Current average fps:   {:<5}\n".format(fps))
-                all_fps.append(fps)
-                test_time = time.time()
-                test_frame = 0
+                        fps = float(test_frame / current)
+                        log_print("Current average fps:   {:<5}\n".format(fps))
+                        all_fps.append(fps)
+                        test_time = time.time()
+                        test_frame = 0
         
-        # write pass/fail report to dict
-        avg_fps = sum(all_fps) / len(all_fps)
-        if switch_time < 1.4:
-            if avg_fps >= 29:
-                err_code[test_type] = 1
-            elif avg_fps < 29 and avg_fps >= 27:
-                err_code[test_type] = 0
-            else:
-                err_code[test_type] = -1
-        else:
-            err_code[test_type] = -1
-
-        # reset to starting resolution
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        switch_start = time.time()
+                # write pass/fail report to dict
+                avg_fps = sum(all_fps) / len(all_fps)
+                if switch_time < 1:
+                    if avg_fps >= t_fps - 1:
+                        err_code[test_type] = 1
+                        print("SUCCESS! AVG FPS: {}".format(avg_fps))
+                    elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
+                        err_code[test_type] = 0
+                        print("SOFT FAIL! AVG FPS: {}".format(avg_fps))
+                    else:
+                        err_code[test_type] = -1
+                        print("HARD FAIL! AVG FPS: {}".format(avg_fps))
+                else:
+                    err_code[test_type] = -1
+                
+                all_fps.clear()
 
 if __name__ == "__main__":
     # set up camera stream        
@@ -171,19 +183,20 @@ if __name__ == "__main__":
     if cap.isOpened():
         log_print("PanaCast device found:  {}\n".format(device_num))
     # cylce through all test cases provided by json file
-    frame_count = 900
     for fmt in test_cases:
         codec = test_cases[fmt]
-        start_res = codec['start']
-        target_res = codec['target']
+        start_res = codec['start res']
+        target_res = codec['target res']
+        start_fps = codec['start fps']
+        target_fps = codec['target fps']
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
         for start in start_res:
             width = start[0]
             height = start[1]
-            test_fps(width, height, target_res, frame_count)
+            test_fps(width, height, target_res, start_fps, target_fps)
     
     log_print("\nGenerating report...")
-    log_print("Number of video crashes/freezes (that required reboots): {}".format(reboots))
+    log_print("Number of video crashes/freezes: {}".format(reboots))
     report = p.pformat(err_code)
     log_print("{}\n".format(report))
     log_file.close()
