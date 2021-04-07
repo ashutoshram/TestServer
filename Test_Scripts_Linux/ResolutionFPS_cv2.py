@@ -214,7 +214,6 @@ class FPSTester():
         total_elapsed = end - start
         elapsed = total_elapsed - initial_elapsed
         actual_frames = count
-        # del jitters[0]
         avg_jitter = sum(jitters) / len(jitters)
 
         log_print("Test duration (s):      {:<5}".format(total_elapsed))

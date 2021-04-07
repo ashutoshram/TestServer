@@ -158,16 +158,13 @@ def test_fps(width, height, target_res, start_fps, target_fps):
                 if switch_time < 1:
                     if avg_fps >= t_fps - 1:
                         err_code[test_type] = 1
-                        print("SUCCESS! AVG FPS: {}".format(avg_fps))
                     elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
                         err_code[test_type] = 0
-                        print("SOFT FAIL! AVG FPS: {}".format(avg_fps))
                     else:
                         err_code[test_type] = -1
-                        print("HARD FAIL! AVG FPS: {}".format(avg_fps))
                 else:
                     err_code[test_type] = -1
-                
+
                 all_fps.clear()
 
 if __name__ == "__main__":
