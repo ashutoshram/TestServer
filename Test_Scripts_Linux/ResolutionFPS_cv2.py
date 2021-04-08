@@ -194,7 +194,7 @@ class FPSTester():
                 if retval is False:
                     drops += 1
                     log_print("Frame #{} dropped!".format(drops))
-                    if time.time() > start + 30:
+                    if time.time() > start + 10:
                         raise cv2.error("Timeout error")
                     continue
                 else:
