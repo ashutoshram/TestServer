@@ -5,8 +5,7 @@ import numpy as np
 import sys
 import cv2
 from queue import Queue
-from datetime import date
-import datetime
+from datetime import date, datetime
 import AbstractTestClass as ATC
 import pprint as p
 import json
@@ -49,14 +48,14 @@ failures = {}
 # create directory for log and .png files if it doesn't already exist
 filename = "{}_resolutionfps.log".format(current)
 log_path = os.path.join(path+"/resolutionfps", filename)
-fail = "{}_failed_cases.log".format(current)
+fail = "{}_failed_resolutionfps.log".format(current)
 fail_path = os.path.join(path+"/resolutionfps", fail)
 if not os.path.exists(path+"/resolutionfps"):
     os.makedirs(path+"/resolutionfps")
 
 log_file = open(log_path, "a")
 fail_file = open(fail_path, "a")
-timestamp = datetime.datetime.now()
+timestamp = datetime.now()
 log_print(55*"=")
 log_print("\n{}\n".format(timestamp))
 
@@ -293,9 +292,9 @@ if __name__ == "__main__":
     log_print("{}\n".format(report))
     log_file.close()
 
-    fail_file.write("Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.\n")
-    fail_file.write("[-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps).\n")
-    fail_file.write("Number of video crashes/freezes (that required reboots): {}\n\n".format(reboots))
+    fail_file.write("""Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
+    [-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps)
+    Number of video crashes/freezes: {}\n\n""".format(reboots))
     fail_report = p.pformat(failures)
-    fail_file.write("{}".format(fail_report))
+    fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()

@@ -32,6 +32,7 @@ current = date.today()
 path = os.getcwd()
 device_num = 0
 reboots = 0
+failures = {}
 err_code = {}
 
 def log_print(args):
@@ -42,11 +43,14 @@ def log_print(args):
 
 filename = "{}_resolutionswitch.log".format(current)
 file_path = os.path.join(path+"/resolutionswitch", filename)
+fail = "{}_failed_resolutionswitch.log".format(current)
+fail_path = os.path.join(path+"/resolutionswitch", fail)
 # create directory for log and .png files if it doesn't already exist
 if not os.path.exists(path+"/resolutionswitch"):
     os.makedirs(path+"/resolutionswitch")
 
 log_file = open(file_path, "a")
+fail_file = open(fail_path, "a")
 timestamp = datetime.now()
 log_print(55*"=")
 log_print("\n{}\n".format(timestamp))
@@ -67,6 +71,7 @@ def reboot_device():
     global device_num
     global reboots
     reboots += 1
+    cap.open(device_num)
 
     # grab reenumerated device
     while True:       
@@ -87,13 +92,14 @@ def check_frame(check_width, check_height, fps):
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         f = int(cap.get(cv2.CAP_PROP_FPS))
         if retval is True and w == check_width and h == check_height and f == fps:
-            print("Resolution set to:    {} x {}".format(w, h))
+            # print("Resolution set to:    {} x {}".format(w, h))
             return True
 
 def test_fps(width, height, target_res, start_fps, target_fps):
     start_frame, test_frame, total_frame, drop_frame = (0 for x in range(4))
     all_fps = []
     global err_code
+    global failures
 
     for t_res in target_res:
         for s_fps in start_fps:
@@ -129,7 +135,7 @@ def test_fps(width, height, target_res, start_fps, target_fps):
                     if retval is False:
                         drop_frame += 1
                         log_print("Frame #{} dropped!".format(drop_frame))
-                        if time.time() > test_start + 30:
+                        if time.time() > test_start + 10:
                             log_print("Timeout error")
                             reboot_device()
                     else:
@@ -155,7 +161,7 @@ def test_fps(width, height, target_res, start_fps, target_fps):
         
                 # write pass/fail report to dict
                 avg_fps = sum(all_fps) / len(all_fps)
-                if switch_time < 1:
+                if switch_time * 1000 < 1200:
                     if avg_fps >= t_fps - 1:
                         err_code[test_type] = 1
                     elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
@@ -164,6 +170,9 @@ def test_fps(width, height, target_res, start_fps, target_fps):
                         err_code[test_type] = -1
                 else:
                     err_code[test_type] = -1
+                # save copy of failed test cases
+                if err_code[test_type] == 0 or err_code[test_type] == -1:
+                    failures[test_type] = err_code[test_type]
 
                 all_fps.clear()
 
@@ -180,6 +189,7 @@ if __name__ == "__main__":
     if cap.isOpened():
         log_print("PanaCast device found:  {}\n".format(device_num))
     # cylce through all test cases provided by json file
+    cap.open(device_num)
     for fmt in test_cases:
         codec = test_cases[fmt]
         start_res = codec['start res']
@@ -197,6 +207,14 @@ if __name__ == "__main__":
     report = p.pformat(err_code)
     log_print("{}\n".format(report))
     log_file.close()
+
+    fail_file.write("""Test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
+    [-1] denotes hard failure (<27 fps, >1200ms switch time, or crash/freeze)
+    [0] denotes soft failure (27-28.99 fps)
+    Number of video crashes/freezes: {}\n\n""".format(reboots))
+    fail_report = p.pformat(failures)
+    fail_file.write("{}\n\n".format(fail_report))
+    fail_file.close()
 
     cap.release()
     cv2.destroyAllWindows()
