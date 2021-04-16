@@ -13,7 +13,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
 ap.add_argument("-f","--frame", type=bool, default=False, help="Set to True to enable live view")
 ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
-ap.add_argument("-t","--test", type=str, default="res_switch.json", help="Specify .json file to load test cases")
+ap.add_argument("-t","--test", type=str, default="res_switch_p50.json", help="Specify .json file to load test cases")
 ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
 args = vars(ap.parse_args())
 debug = args["debug"]
@@ -160,7 +160,10 @@ def test_fps(width, height, target_res, start_fps, target_fps):
                         test_frame = 0
         
                 # write pass/fail report to dict
-                avg_fps = sum(all_fps) / len(all_fps)
+                try:
+                    avg_fps = sum(all_fps) / len(all_fps)
+                except:
+                    avg_fps = 0
                 if switch_time * 1000 < 1200:
                     if avg_fps >= t_fps - 1:
                         err_code[test_type] = 1
