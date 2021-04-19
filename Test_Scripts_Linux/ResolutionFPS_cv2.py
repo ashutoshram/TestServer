@@ -15,7 +15,7 @@ import re
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
-ap.add_argument("-t","--test", type=str, default="res_fps.json", help="Specify .json file to load test cases")
+ap.add_argument("-t","--test", type=str, default="res_fps_p50.json", help="Specify .json file to load test cases")
 ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
 ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
 ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
@@ -74,14 +74,22 @@ class FPS(ATC.AbstractTestClass):
 
 class FPSTester():
     def reboot_device(self):
-        if power_cycle is True:
-            subprocess.check_call(['./power_switch.sh', '0', '0'])
-            time.sleep(3)
-            subprocess.check_call(['./power_switch.sh', '0', '1'])
+        # reboot by resetting USB if testing P20
+        if device_name == "Jabra PanaCast 20":
+            device_info = subprocess.check_output('lsusb | grep "Jabra PanaCast 20"', shell==True)
+            device_info = device_info.decode("utf-8")
+            ids = re.search('Bus (\d+) Device (\d+)', device_info).group()
+            ids = re.findall('(\d+)', ids)
+            subprocess.check_call(['sudo', './usbreset', '/dev/bus/usb/{}/{}'.format(ids[0], ids[1])])
         else:
-            os.system("sudo adb kill-server")
-            os.system("sudo adb devices")
-            os.system("adb reboot")
+            if power_cycle is True:
+                subprocess.check_call(['./power_switch.sh', '0', '0'])
+                time.sleep(3)
+                subprocess.check_call(['./power_switch.sh', '0', '1'])
+            else:
+                os.system("sudo adb kill-server")
+                os.system("sudo adb devices")
+                os.system("adb reboot")
 
         log_print("Rebooting...")
         time.sleep(55)
@@ -108,8 +116,7 @@ class FPSTester():
             print('cv2.VideoCapture unsuccessful')
             sys.exit(1)
         
-        # open device and set video format
-        self.cam.open(device_num)
+        # set video format
         if format_ == 'YU12':
             self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YU12'))
         elif format_ == 'YUYV':
@@ -261,6 +268,7 @@ class FPSTester():
             log_print("PanaCast device found:  {}".format(device_num))
 
         # iterate through the dictionary and test each format, resolution, and framerate
+        self.cam.open(device_num)
         for format_ in test_cases:
             res_dict = test_cases[format_]
             for resolution in res_dict:
@@ -293,7 +301,8 @@ if __name__ == "__main__":
     log_file.close()
 
     fail_file.write("""Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
-    [-1] denotes hard failure (<27 fps or crash/freeze), [0] denotes soft failure (27-28.99 fps)
+    [-1] denotes hard failure (<27 fps or crash/freeze)
+    [0] denotes soft failure (27-28.99 fps)
     Number of video crashes/freezes: {}\n\n""".format(reboots))
     fail_report = p.pformat(failures)
     fail_file.write("{}\n\n".format(fail_report))
