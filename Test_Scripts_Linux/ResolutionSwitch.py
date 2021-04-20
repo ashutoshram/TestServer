@@ -57,22 +57,22 @@ log_print("\n{}\n".format(timestamp))
 
 def reboot_device():
     print("Panacast device error")
-        # reboot by resetting USB if testing P20
-        if device_name == "Jabra PanaCast 20":
-            device_info = subprocess.check_output('lsusb | grep "Jabra PanaCast 20"', shell==True)
-            device_info = device_info.decode("utf-8")
-            ids = re.search('Bus (\d+) Device (\d+)', device_info).group()
-            ids = re.findall('(\d+)', ids)
-            subprocess.check_call(['sudo', './usbreset', '/dev/bus/usb/{}/{}'.format(ids[0], ids[1])])
+    # reboot by resetting USB if testing P20
+    if device_name == "Jabra PanaCast 20":
+        device_info = subprocess.check_output('lsusb | grep "Jabra PanaCast 20"', shell==True)
+        device_info = device_info.decode("utf-8")
+        ids = re.search('Bus (\d+) Device (\d+)', device_info).group()
+        ids = re.findall('(\d+)', ids)
+        subprocess.check_call(['sudo', './usbreset', '/dev/bus/usb/{}/{}'.format(ids[0], ids[1])])
+    else:
+        if power_cycle is True:
+            subprocess.check_call(['./power_switch.sh', '0', '0'])
+            time.sleep(3)
+            subprocess.check_call(['./power_switch.sh', '0', '1'])
         else:
-            if power_cycle is True:
-                subprocess.check_call(['./power_switch.sh', '0', '0'])
-                time.sleep(3)
-                subprocess.check_call(['./power_switch.sh', '0', '1'])
-            else:
-                os.system("sudo adb kill-server")
-                os.system("sudo adb devices")
-                os.system("adb reboot")
+            os.system("sudo adb kill-server")
+            os.system("sudo adb devices")
+            os.system("adb reboot")
 
     print("Rebooting...")
     time.sleep(55)
