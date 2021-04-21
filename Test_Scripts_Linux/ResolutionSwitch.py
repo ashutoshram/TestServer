@@ -79,7 +79,6 @@ def reboot_device():
     global device_num
     global reboots
     reboots += 1
-    cap.open(device_num)
 
     # grab reenumerated device
     while True:       
@@ -89,21 +88,20 @@ def reboot_device():
         cap = cv2.VideoCapture(device_num)
         if cap.isOpened():
             log_print("Device back online:  {}\n".format(device_num))
+            cap.open(device_num)
             break
         else:
             time.sleep(5)
 
-def check_frame(check_width, check_height, fps):
+def check_frame(check_width, check_height):
     while True:
         retval, frame = cap.read()
-        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        f = int(cap.get(cv2.CAP_PROP_FPS))
-        if retval is True and w == check_width and h == check_height and f == fps:
+        h, w = frame.shape[:2]
+        if retval is True and w == check_width and h == check_height:
             # print("Resolution set to:    {} x {}".format(w, h))
             return True
 
-def test_fps(width, height, target_res, start_fps, target_fps):
+def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     start_frame, test_frame, total_frame, drop_frame = (0 for x in range(4))
     all_fps = []
     global err_code
@@ -116,19 +114,19 @@ def test_fps(width, height, target_res, start_fps, target_fps):
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
                 cap.set(cv2.CAP_PROP_FPS, s_fps)
-                if check_frame(width, height, s_fps):
+                if check_frame(width, height):
                     switch_start = time.time()
                 
                 # set target res/fps and stop switch timer
                 if t_res[0] == width and t_res[1] == height:
                     continue
-                test_type = "{}x{} [{} fps] -> {}x{} [{} fps]".format(width, height, s_fps, t_res[0], t_res[1], t_fps)
+                test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, width, height, s_fps, t_res[0], t_res[1], t_fps)
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
                 cap.set(cv2.CAP_PROP_FPS, t_fps)
-                if check_frame(t_res[0], t_res[1], t_fps):
+                if check_frame(t_res[0], t_res[1]):
                     switch_end = time.time()
-                    switch_time = switch_end - switch_start
+                switch_time = switch_end - switch_start
 
                 log_print(55*"=")
                 log_print("{}\n".format(test_type))
@@ -172,7 +170,7 @@ def test_fps(width, height, target_res, start_fps, target_fps):
                     avg_fps = sum(all_fps) / len(all_fps)
                 except:
                     avg_fps = 0
-                if switch_time * 1000 < 1200:
+                if switch_time * 1000 < 1500:
                     if avg_fps >= t_fps - 1:
                         err_code[test_type] = 1
                     elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
@@ -208,10 +206,14 @@ if __name__ == "__main__":
         start_fps = codec['start fps']
         target_fps = codec['target fps']
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
+        # convert video codec number to format and check if set correctly
+        fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
+        codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+        log_print("Video format set to:    {} ({})".format(codec, fourcc))
         for start in start_res:
             width = start[0]
             height = start[1]
-            test_fps(width, height, target_res, start_fps, target_fps)
+            test_fps(width, height, target_res, start_fps, target_fps, fmt)
     
     log_print("\nGenerating report...")
     log_print("Number of video crashes/freezes: {}".format(reboots))
