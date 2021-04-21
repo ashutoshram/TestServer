@@ -105,11 +105,12 @@ class FPSTester():
             self.cam = cv2.VideoCapture(device_num)
             if self.cam.isOpened():
                 log_print("Device back online:  {}\n".format(device_num))
+                self.cam.open(device_num)
                 break
             else:
                 time.sleep(5)
 
-    def test_fps(self, format_, resolution, framerate, zoom):
+    def test_fps(self, fmt, resolution, framerate, zoom):
         # check if camera stream exists
         global device_num
         if self.cam is None:
@@ -117,21 +118,13 @@ class FPSTester():
             sys.exit(1)
         
         # set video format
-        if format_ == 'YU12':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YU12'))
-        elif format_ == 'YUYV':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
-        elif format_ == 'YUY2':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
-        elif format_ == 'NV12':
-            self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'NV12'))
-
+        self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
         # convert video codec number to format and check if set correctly
         fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
         codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
         log_print("Video format set to:    {} ({})".format(codec, fourcc))
         # make sure it's a usb 3.0 connection
-        if codec == "MJPG" and format_ != "MJPG":
+        if codec == "MJPG" and fmt != "MJPG":
             log_print("Device negotiated USB 2.0 connection.")
             self.reboot_device()
             return -1
@@ -269,19 +262,19 @@ class FPSTester():
 
         # iterate through the dictionary and test each format, resolution, and framerate
         self.cam.open(device_num)
-        for format_ in test_cases:
-            res_dict = test_cases[format_]
+        for fmt in test_cases:
+            res_dict = test_cases[fmt]
             for resolution in res_dict:
                 framerate = res_dict[resolution]
                 log_print(55*"=")
-                log_print("Parameters:             {} {} {}".format(format_, resolution, framerate))
+                log_print("Parameters:             {} {} {}".format(fmt, resolution, framerate))
 
                 for fps in framerate:
                     for z in zoom_levels["ZOOM"]:
                         log_print(55*"=")
-                        log_print("Testing:                {} {} {}fps zoom {}\n".format(format_, resolution, fps, z))
-                        test_type = "{} {} {}fps zoom {}".format(format_, resolution, fps, z)
-                        self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
+                        log_print("Testing:                {} {} {}fps zoom {}\n".format(fmt, resolution, fps, z))
+                        test_type = "{} {} {}fps zoom {}".format(fmt, resolution, fps, z)
+                        self.err_code[test_type] = self.test_fps(fmt, resolution, fps, z)
 
                         if self.err_code[test_type] == 0 or self.err_code[test_type] == -1:
                             failures[test_type] = self.err_code[test_type] 
