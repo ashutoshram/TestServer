@@ -8,11 +8,14 @@ import datetime
 import pprint as p
 import json
 import argparse
+import subprocess
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
+ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
 args = vars(ap.parse_args())
 debug = args["debug"]
+device_name = args["video"]
 
 current = date.today()
 path = os.getcwd()
@@ -28,19 +31,16 @@ def log_print(args):
     if debug is True: 
         print(args)
 
-cam_props = {'brightness': [0, 128, 255],
-             'contrast': [0, 95, 191],
-             'saturation': [128, 136, 160, 176, 155],
-             'sharpness': [0, 110, 128, 255, 193],
-             'white_balance_temperature': [0, 5000, 6500]}
+cam_props = {'brightness': [0, 128, 255, 110],
+             'contrast': [0, 95, 191, 150],
+             'saturation': [128, 136, 160, 176, 155, 143],
+             'sharpness': [0, 110, 128, 255, 193, 121],
+             'white_balance_temperature': [0, 6500, 5000]}
 
 # set up camera stream
-for k in range(4):
-    cam = cv2.VideoCapture(k)
-    if cam.isOpened():
-        device_num = k
-        break
-
+cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
+cam = cam.decode("utf-8")
+device_num = int(re.search(r'\d+', cam).group())
 device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
 
 # iterate thru cam_props dict and test each value of each cam prop
