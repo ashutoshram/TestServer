@@ -110,20 +110,21 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     for t_res in target_res:
         for s_fps in start_fps:
             for t_fps in target_fps:
-                # set start res/fps and start switch timer
+                # set start res/fps
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
                 cap.set(cv2.CAP_PROP_FPS, s_fps)
-                if check_frame(width, height):
-                    switch_start = time.time()
                 
-                # set target res/fps and stop switch timer
+                # set target res/fps
                 if t_res[0] == width and t_res[1] == height:
                     continue
                 test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, width, height, s_fps, t_res[0], t_res[1], t_fps)
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
                 cap.set(cv2.CAP_PROP_FPS, t_fps)
+                switch_start = time.time()
+
+                # calculate switch time
                 if check_frame(t_res[0], t_res[1]):
                     switch_end = time.time()
                 switch_time = switch_end - switch_start
@@ -173,12 +174,16 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 if switch_time * 1000 < 1500:
                     if avg_fps >= t_fps - 1:
                         err_code[test_type] = 1
+                        log_print("PASS\n")
                     elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
                         err_code[test_type] = 0
+                        log_print("SOFT FAIL\n")
                     else:
                         err_code[test_type] = -1
+                        log_print("HARD FAIL\n")
                 else:
                     err_code[test_type] = -1
+                    log_print("HARD FAIL\n")
                 # save copy of failed test cases
                 if err_code[test_type] == 0 or err_code[test_type] == -1:
                     failures[test_type] = err_code[test_type]

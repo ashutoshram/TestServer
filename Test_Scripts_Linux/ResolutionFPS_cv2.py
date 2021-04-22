@@ -232,12 +232,15 @@ class FPSTester():
          
         # success
         if diff <= 1:
+            log_print("PASS\n")
             return 1
         # soft failure
         elif diff <= 3 and diff > 1:
+            log_print("SOFT FAIL\n")
             return 0
         # hard failure
         else:
+            log_print("HARD FAIL\n")
             return -1
 
     def results(self):
