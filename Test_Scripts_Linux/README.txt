@@ -33,7 +33,7 @@ Flag -z filename.json to run the script with zoom levels outlined in a json file
 Flag -p True if you are running it on the devkit + Jenkins server in order to power cycle using the network power strip (set to False by default)
 Flag -v *device_name* to specify the device you want to test (set to Jabra PanaCast 50 by default)
 
-python3 ResolutionFPS_cv2.py -d True -f sample.json -z zoom.json -v "Jabra PanaCast 50"
+python3 ResolutionFPS_cv2.py -d True -f res_fps_p50.json -z zoom.json -v "Jabra PanaCast 50"
 
 This will genereate folder resolutionfps and save the corresponding log files to it.
 The script tests to see if the device is able to stream video at each framerate and each resolution.
@@ -74,7 +74,7 @@ Please run from root terminal (or using sudo python3) for best results (otherwis
 Flag -f True to enable live video preview (set to False/disabled by default)
 Flag -t filename.json to run the script with test cases outlined in a json file (res_switch.json by default, use that file format to create your own test cases)
 
-python3 ResolutionSwitch.py -f True -t res_switch.json
+python3 ResolutionSwitch.py -f True -t res_switch_p50.json -v "Jabra PanaCast 50"
 
 This will genereate folder resolutionswitch and save the corresponding log files to it.
 The script tests the framerate when switching between resolutions, taking measurements every 5 seconds.
