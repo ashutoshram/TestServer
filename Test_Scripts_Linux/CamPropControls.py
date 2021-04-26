@@ -38,10 +38,13 @@ cam_props = {'brightness': [0, 128, 255, 110],
              'white_balance_temperature': [0, 6500, 5000]}
 
 # set up camera stream
-cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
-cam = cam.decode("utf-8")
-device_num = int(re.search(r'\d+', cam).group())
-device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+try:
+    cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+    cam = cam.decode("utf-8")
+    device_num = int(re.search(r'\d+', cam).group())
+    device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+except subprocess.CalledProcessError as e:
+    raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
 
 # iterate thru cam_props dict and test each value of each cam prop
 for prop in cam_props:

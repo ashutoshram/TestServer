@@ -99,16 +99,20 @@ class FPSTester():
 
         # grab reenumerated device
         while True:       
-            device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
-            device = device.decode("utf-8")
-            device_num = int(re.search(r'\d+', device).group())
-            self.cam = cv2.VideoCapture(device_num)
+            try:
+                cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+                cam = cam.decode("utf-8")
+                device_num = int(re.search(r'\d+', cam).group())
+                self.cam = cv2.VideoCapture(device_num)
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+
             if self.cam.isOpened():
                 log_print("Device back online:  {}\n".format(device_num))
                 self.cam.open(device_num)
                 break
             else:
-                time.sleep(5)
+                sys.exit(1)
 
     def test_fps(self, fmt, resolution, framerate, zoom):
         # check if camera stream exists
@@ -123,9 +127,9 @@ class FPSTester():
         fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
         codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
         log_print("Video format set to:    {} ({})".format(codec, fourcc))
-        # make sure it's a usb 3.0 connection
-        if codec == "MJPG" and fmt != "MJPG":
-            log_print("Device negotiated USB 2.0 connection.")
+        # make sure format is set correctly
+        if codec != fmt:
+            log_print("Unable to set video format correctly.")
             self.reboot_device()
             return -1
 
@@ -207,6 +211,7 @@ class FPSTester():
             except cv2.error as e:
                 log_print("{}".format(e))
                 self.reboot_device()
+                log_print("FREEZE FAIL\n")
                 return -1
         
         end = time.time()
@@ -252,10 +257,13 @@ class FPSTester():
         global device_num
 
         # set up camera stream        
-        device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
-        device = device.decode("utf-8")
-        device_num = int(re.search(r'\d+', device).group())
-        self.cam = cv2.VideoCapture(device_num)
+        try:
+            cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+            cam = cam.decode("utf-8")
+            device_num = int(re.search(r'\d+', cam).group())
+            self.cam = cv2.VideoCapture(device_num)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
 
         if device_num is None:
             log_print("PanaCast device not found. Please make sure the device is properly connected and try again")

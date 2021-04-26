@@ -81,17 +81,22 @@ def reboot_device():
     reboots += 1
 
     # grab reenumerated device
-    while True:       
-        device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
-        device = device.decode("utf-8")
-        device_num = int(re.search(r'\d+', device).group())
-        cap = cv2.VideoCapture(device_num)
+    while True:
+        try:
+            cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+            cam = cam.decode("utf-8")
+            device_num = int(re.search(r'\d+', cam).group())
+            device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+            cap = cv2.VideoCapture(device_num)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+
         if cap.isOpened():
             log_print("Device back online:  {}\n".format(device_num))
             cap.open(device_num)
             break
         else:
-            time.sleep(5)
+            sys.exit(1)
 
 def check_frame(check_width, check_height):
     while True:
@@ -110,6 +115,17 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     for t_res in target_res:
         for s_fps in start_fps:
             for t_fps in target_fps:
+                # convert video codec number to format and check if set correctly
+                cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
+                fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
+                codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+                log_print("Video format set to:    {} ({})".format(codec, fourcc))
+                # make sure format is set correctly
+                if codec != fmt:
+                    log_print("Unable to set video format correctly.")
+                    reboot_device()
+                    return -1
+
                 # set start res/fps
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -119,10 +135,10 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 if t_res[0] == width and t_res[1] == height:
                     continue
                 test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, width, height, s_fps, t_res[0], t_res[1], t_fps)
+                switch_start = time.time()
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
                 cap.set(cv2.CAP_PROP_FPS, t_fps)
-                switch_start = time.time()
 
                 # calculate switch time
                 if check_frame(t_res[0], t_res[1]):
@@ -191,12 +207,15 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 all_fps.clear()
 
 if __name__ == "__main__":
-    # set up camera stream        
-    device = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True)
-    device = device.decode("utf-8")
-    device_num = int(re.search(r'\d+', device).group())
-    cap = cv2.VideoCapture(device_num)
-
+    # set up camera stream 
+    try:
+        cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+        cam = cam.decode("utf-8")
+        device_num = int(re.search(r'\d+', cam).group())
+        cap = cv2.VideoCapture(device_num)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+       
     if device_num is None:
         log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
         sys.exit(1)
@@ -210,11 +229,6 @@ if __name__ == "__main__":
         target_res = codec['target res']
         start_fps = codec['start fps']
         target_fps = codec['target fps']
-        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
-        # convert video codec number to format and check if set correctly
-        fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
-        codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
-        log_print("Video format set to:    {} ({})".format(codec, fourcc))
         for start in start_res:
             width = start[0]
             height = start[1]
