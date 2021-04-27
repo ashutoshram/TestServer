@@ -71,8 +71,11 @@ Actual average fps:     [fps after initial 30 seconds]
 *NOTE: ResolutionSwitch.py will need sudo permissions to reboot device in case of freeze/crash. 
 Please run from root terminal (or using sudo python3) for best results (otherwise you will need to enter your password in case of device failure).
 
+Flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
 Flag -f True to enable live video preview (set to False/disabled by default)
+Flag -p True if you are running it on the devkit + Jenkins server in order to power cycle using the network power strip (set to False by default)
 Flag -t filename.json to run the script with test cases outlined in a json file (res_switch.json by default, use that file format to create your own test cases)
+Flag -v *device_name* to specify the device you want to test (set to Jabra PanaCast 50 by default)
 
 python3 ResolutionSwitch.py -f True -t res_switch_p50.json -v "Jabra PanaCast 50"
 
