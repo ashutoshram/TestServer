@@ -121,10 +121,9 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
                 log_print("Video format set to:    {} ({})".format(codec, fourcc))
                 # make sure format is set correctly
-                if codec != fmt:
-                    log_print("Unable to set video format correctly.")
-                    reboot_device()
-                    return -1
+                # if codec != fmt:
+                #     log_print("Unable to set video format correctly.")
+                #     reboot_device()
 
                 # set start res/fps
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -161,6 +160,9 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                         if time.time() > test_start + 10:
                             log_print("Timeout error")
                             reboot_device()
+                            err_code[test_type] = -1
+                            return
+                            
                     else:
                         if live_view is True:
                             cv2.imshow('frame', frame)
