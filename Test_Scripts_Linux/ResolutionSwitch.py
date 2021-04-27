@@ -156,9 +156,9 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     # reboot device in event of frame drop/error
                     if retval is False:
                         drop_frame += 1
-                        log_print("Frame #{} dropped!".format(drop_frame))
-                        if time.time() > test_start + 10:
+                        if drop_frame >= 10:
                             log_print("Timeout error")
+                            log_print("# of dropped frames: {}".format(drop_frame))
                             reboot_device()
                             err_code[test_type] = -1
                             return
