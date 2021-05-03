@@ -3,12 +3,11 @@ import subprocess
 import os
 import re
 import time
-from datetime import date
 import datetime
-import pprint as p
 import json
 import argparse
 import subprocess
+import log_print
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
@@ -17,19 +16,8 @@ args = vars(ap.parse_args())
 debug = args["debug"]
 device_name = args["video"]
 
-current = date.today()
+current = datetime.date.today()
 path = os.getcwd()
-
-# print to file (and optionally terminal)
-def log_print(args):
-    msg = args + "\n"
-    try:
-        log_file.write(msg)
-    except Exception as e:
-        print(e)
-
-    if debug is True: 
-        print(args)
 
 cam_props = {'brightness': [0, 128, 255, 110],
              'contrast': [0, 95, 191, 150],
@@ -58,8 +46,8 @@ for prop in cam_props:
     log_file = open(file_path, "a")
 
     timestamp = datetime.datetime.now()
-    log_print("{}\n".format(timestamp))
-    log_print("Panacast device found:  {}\n".format(device_num))
+    # log_print("{}\n".format(timestamp))
+    log_print.send("{}\n\nPanacast device found:  {}\n".format(timestamp, device_num), debug, log_file)
 
     ctrl = cam_props[prop]
     err_code = {}
@@ -71,16 +59,16 @@ for prop in cam_props:
         s = s.decode('UTF-8')
         value = re.match("(.*): (\d+)", s)
         if value.group(2) != str(val):
-            log_print("FAIL: {} get/set not working as intended".format(prop))
+            log_print.send("FAIL: {} get/set not working as intended".format(prop), debug, log_file)
             err_code[val] = -1
         else:
-            log_print("{} set to: {}".format(prop, value.group(2)))
-            log_print("PASS: Successful {} test conducted".format(prop))
+            log_print.send("{} set to: {}".format(prop, value.group(2)), debug, log_file)
+            log_print.send("PASS: Successful {} test conducted".format(prop), debug, log_file)
             err_code[val] = 1
     
-    log_print("\nGenerating report...\n")
+    log_print.send("\nGenerating report...\n", debug, log_file)
     # report = p.pformat(err_code)
     report = json.dumps(err_code, indent=2)
-    log_print("{}\n".format(report))
-    log_print("Exiting {} test now...\n".format(prop))
-    log_print(55*"="+"\n")
+    log_print.send("{}\n".format(report), debug, log_file)
+    log_print.send("Exiting {} test now...\n".format(prop), debug, log_file)
+    log_print.send(55*"="+"\n", debug, log_file)
