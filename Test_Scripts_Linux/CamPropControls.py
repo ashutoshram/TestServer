@@ -2,7 +2,6 @@ import cv2
 import subprocess
 import os
 import re
-import time
 import datetime
 import json
 import argparse
@@ -68,7 +67,8 @@ for prop in cam_props:
         values = frame.saturation(device, cap, ctrl, debug, log_file)
         advanced = proptest.eval_results(ctrl, values, debug, log_file)
     elif prop == "sharpness":
-        pass # TODO: implement sharpness() and sharpness_eval()
+        values = frame.sharpness(device, cap, ctrl, debug, log_file)
+        advanced = proptest.eval_results(ctrl, values, debug, log_file)
     elif prop == "white_balance":
         pass # TODO: implement white_balance() and white_balance_eval()
     
