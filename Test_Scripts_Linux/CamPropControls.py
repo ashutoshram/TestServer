@@ -7,7 +7,9 @@ import datetime
 import json
 import argparse
 import subprocess
-import log_print
+import logprint
+import proptest
+import frame
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
@@ -35,6 +37,7 @@ except subprocess.CalledProcessError as e:
     raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
 
 # iterate thru cam_props dict and test each value of each cam prop
+cap = cv2.VideoCapture(device_num)
 for prop in cam_props:
     # create log file for the current cam prop
     filename = "{}_CamPropControls.log".format(current)
@@ -46,29 +49,35 @@ for prop in cam_props:
     log_file = open(file_path, "a")
 
     timestamp = datetime.datetime.now()
-    # log_print("{}\n".format(timestamp))
-    log_print.send("{}\n\nPanacast device found:  {}\n".format(timestamp, device_num), debug, log_file)
+    logprint.send("{}\n\nPanacast device found:  {}\n".format(timestamp, device_num), debug, log_file)
 
     ctrl = cam_props[prop]
-    err_code = {}
+    basic = {}
 
-    for val in ctrl:
-        # log_print("{}: {}".format(prop, val))
-        subprocess.call(['{} -c {}={}'.format(device, prop, str(val))], shell=True)
-        s = subprocess.check_output(['{} -C {}'.format(device, prop)], shell=True)
-        s = s.decode('UTF-8')
-        value = re.match("(.*): (\d+)", s)
-        if value.group(2) != str(val):
-            log_print.send("FAIL: {} get/set not working as intended".format(prop), debug, log_file)
-            err_code[val] = -1
-        else:
-            log_print.send("{} set to: {}".format(prop, value.group(2)), debug, log_file)
-            log_print.send("PASS: Successful {} test conducted".format(prop), debug, log_file)
-            err_code[val] = 1
+    cap.open(device_num)
+    for c in ctrl:
+        basic[c] = proptest.get_set(device, prop, c, debug, log_file)
+
+    if prop == "brightness":
+        values = frame.brightness(device, cap, ctrl, debug, log_file)
+        advanced = proptest.eval_results(ctrl, values, debug, log_file)
+    elif prop == "contrast":
+        values = frame.contrast(device, cap, ctrl, debug, log_file)
+        advanced = proptest.eval_results(ctrl, values, debug, log_file)
+    elif prop == "saturation":
+        values = frame.saturation(device, cap, ctrl, debug, log_file)
+        advanced = proptest.eval_results(ctrl, values, debug, log_file)
+    elif prop == "sharpness":
+        pass # TODO: implement sharpness() and sharpness_eval()
+    elif prop == "white_balance":
+        pass # TODO: implement white_balance() and white_balance_eval()
     
-    log_print.send("\nGenerating report...\n", debug, log_file)
-    # report = p.pformat(err_code)
-    report = json.dumps(err_code, indent=2)
-    log_print.send("{}\n".format(report), debug, log_file)
-    log_print.send("Exiting {} test now...\n".format(prop), debug, log_file)
-    log_print.send(55*"="+"\n", debug, log_file)
+    logprint.send("\nGenerating report...\n", debug, log_file)
+    report = json.dumps(advanced, indent=2)
+    logprint.send("{}\n".format(report), debug, log_file)
+    logprint.send("Exiting {} test now...\n".format(prop), debug, log_file)
+    logprint.send(55*"="+"\n", debug, log_file)
+    advanced.clear()
+
+cap.release()
+log_file.close()
