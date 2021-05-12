@@ -15,12 +15,43 @@ To run the scripts:
 
 ============================================================================================================================================================================================================================
 
+Required files: CamPropControls.py, proptest.py, frame.py, logprint.py
+CamPropControls will call functions from proptest, frame, and logprint.
 Run with flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
 python3 CamPropControls.py -d True
 
-This will generate folder CamPropControls and save log files that contain results for: brightness, contrast, saturation, sharpness, and white_balance_temperature.
-The script tests to see if the device is able to get and set camera controls. To add/change the values you want to test, edit the cam_props dictionary (line 26).
-A report will be generated at the end of each log file, where 1 denotes a test PASS and a -1 denotes FAIL.
+This will generate folder CamPropControls and save log files under directory CamPropControls that contain results for: brightness, contrast, saturation, sharpness, and white_balance_temperature.
+The script tests to see if the device is able to get and set camera controls, and then analyzes frames to verify. To add/change the values you want to test, edit the cam_props dictionary (line 23-27).
+A report will be generated at the end of each log file, where:
+[1] denotes a test PASS (frames change in value accordingly), 
+[-1] denotes FAIL (unable to set value or frames don't change as expected).
+
+Formatting for CamPropControls.py logs:
+
+[start date/time of test]
+
+Panacast device found:  [device number]
+
+setting [property] to: [value]
+PASS: Successful [property] get/set
+setting [property] to: [value]
+PASS: Successful [property] get/set
+setting [property] to: [value]
+PASS: Successful [property] get/set
+setting [property] to: [value]
+PASS: Successful [property] get/set
+
+[property]:             [value]    
+[result]:               [result value]
+
+[property]:             [value]  
+[result]:               [result value]
+
+[property]:             [value]  
+[result]:               [result value]
+
+[property]:             [value] 
+[result]:               [result value]
 
 ============================================================================================================================================================================================================================
 
