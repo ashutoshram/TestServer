@@ -69,8 +69,9 @@ for prop in cam_props:
     elif prop == "sharpness":
         values = frame.sharpness(device, cap, ctrl, debug, log_file)
         advanced = proptest.eval_results(ctrl, values, debug, log_file)
-    elif prop == "white_balance":
-        pass # TODO: implement white_balance() and white_balance_eval()
+    elif prop == "white_balance_temperature":
+        values = frame.white_balance(device, cap, ctrl, debug, log_file)
+        advanced = proptest.eval_results(ctrl, values, debug, log_file)
     
     logprint.send("\nGenerating report...\n", debug, log_file)
     report = json.dumps(advanced, indent=2)

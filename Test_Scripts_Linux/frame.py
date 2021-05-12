@@ -20,11 +20,6 @@ def brightness(device, cap, ctrl, debug, log_file):
             if time.time() > t_end and ret is True:
                 break
         
-        # check individual channel values
-        # b, g, r = cv2.split(frame)
-        # for channel, label in zip((r, g, b), ("r", "g", "b")):
-        #     logprint.send("{}:                      {:<5}".format(label, np.average(channel)), debug, log_file)
-        
         # convert to grayscale and calculate luma
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         luma = np.average(f)
@@ -102,3 +97,18 @@ def sharpness(device, cap, ctrl, debug, log_file):
         results.append(variance)
     
     return results
+
+def white_balance(device, cap, ctrl, debug, log_file):
+    results = []
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+
+    for c in ctrl:
+        logprint.send("\nwhite_balance_temperature:  {:<5}".format(c), debug, log_file)
+        subprocess.call(['{} -c white_balance_temperature={}'.format(device, str(c))], shell=True)
+        wb = cap.get(cv2.CAP_PROP_TEMPERATURE)
+        logprint.send("White balance:              {}".format(wb), debug, log_file)
+        results.append(wb)
+    
+    return results
+   
