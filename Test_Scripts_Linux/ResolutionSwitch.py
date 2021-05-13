@@ -101,7 +101,13 @@ def reboot_device():
 def check_frame(check_width, check_height):
     while True:
         retval, frame = cap.read()
-        h, w = frame.shape[:2]
+        # check if frame is successfully grabbed
+        if frame is not None:
+            h, w = frame.shape[:2]
+        else:
+            reboot_device()
+            continue
+
         if retval is True and w == check_width and h == check_height:
             # print("Resolution set to:    {} x {}".format(w, h))
             return True
