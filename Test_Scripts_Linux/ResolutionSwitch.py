@@ -106,7 +106,7 @@ def check_frame(check_width, check_height):
             h, w = frame.shape[:2]
         else:
             reboot_device()
-            continue
+            return False
 
         if retval is True and w == check_width and h == check_height:
             # print("Resolution set to:    {} x {}".format(w, h))
@@ -126,10 +126,6 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
                 codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
                 log_print("Video format set to:    {} ({})".format(codec, fourcc))
-                # make sure format is set correctly
-                # if codec != fmt:
-                #     log_print("Unable to set video format correctly.")
-                #     reboot_device()
 
                 # set start res/fps
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -148,6 +144,11 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 # calculate switch time
                 if check_frame(t_res[0], t_res[1]):
                     switch_end = time.time()
+                else:
+                    log_print("Unable to switch resolution")
+                    err_code[test_type] = -1
+                    continue
+
                 switch_time = switch_end - switch_start
 
                 log_print(55*"=")
@@ -167,7 +168,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             log_print("# of dropped frames: {}".format(drop_frame))
                             reboot_device()
                             err_code[test_type] = -1
-                            break
+                            continue
                             
                     else:
                         if live_view is True:
