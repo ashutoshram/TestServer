@@ -167,7 +167,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             log_print("# of dropped frames: {}".format(drop_frame))
                             reboot_device()
                             err_code[test_type] = -1
-                            return
+                            break
                             
                     else:
                         if live_view is True:
