@@ -18,7 +18,7 @@ ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Spe
 args = vars(ap.parse_args())
 debug = args["debug"]
 live_view = args["frame"]
-test_file = args["test"]
+test_file = "config/" + args["test"]
 power_cycle = args["power"]
 device_name = args["video"]
 

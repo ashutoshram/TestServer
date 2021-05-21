@@ -21,8 +21,8 @@ ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when
 ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
 args = vars(ap.parse_args())
 debug = args["debug"]
-test_file = args["test"]
-zoom_file = args["zoom"]
+test_file = "config/" + args["test"]
+zoom_file = "config/" + args["zoom"]
 power_cycle = args["power"]
 device_name = args["video"]
 

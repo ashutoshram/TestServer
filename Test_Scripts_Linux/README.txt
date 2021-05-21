@@ -57,6 +57,7 @@ PASS: Successful [property] get/set
 
 *NOTE: ResolutionFPS_cv2.py will need sudo permissions to reboot device in case of freeze/crash. 
 Please run from root terminal (or using sudo python3) for best results (otherwise you will need to enter your password in case of device failure).
+Store .json test case files in the config/ directory
 
 Flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
 Flag -t filename.json to run the script with test cases outlined in a json file (res_fps.json by default, use that file format to create your own test cases)
@@ -101,6 +102,7 @@ Actual average fps:     [fps after initial 30 seconds]
 
 *NOTE: ResolutionSwitch.py will need sudo permissions to reboot device in case of freeze/crash. 
 Please run from root terminal (or using sudo python3) for best results (otherwise you will need to enter your password in case of device failure).
+Store .json test case files in the config/ directory
 
 Flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
 Flag -f True to enable live video preview (set to False/disabled by default)
