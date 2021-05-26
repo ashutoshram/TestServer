@@ -41,6 +41,21 @@ def log_print(args):
     if debug is True: 
         print(args)
 
+def report_results():
+    log_print("\nGenerating report...")
+    log_print("Number of video crashes/freezes: {}".format(reboots))
+    report = p.pformat(err_code)
+    log_print("{}\n".format(report))
+    log_file.close()
+
+    fail_file.write("""Resolution Switch test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
+    [-1] denotes hard failure (<27 fps, >1200ms switch time, or crash/freeze)
+    [0] denotes soft failure (27-28.99 fps)
+    Number of video crashes/freezes: {}\n\n""".format(reboots))
+    fail_report = p.pformat(failures)
+    fail_file.write("{}\n\n".format(fail_report))
+    fail_file.close()
+
 filename = "{}_resolutionswitch.log".format(current)
 file_path = os.path.join(path+"/resolutionswitch", filename)
 fail = "{}_failed_resolutionswitch.log".format(current)
@@ -56,14 +71,19 @@ log_print(55*"=")
 log_print("\n{}\n".format(timestamp))
 
 def reboot_device():
-    print("Panacast device error")
+    global device_num
+    global reboots
+    # if there have been more than 5 reboots give up, something's wrong lol
+    if reboots > 5:
+        log_print("More than 5 reboots, exiting test. Please check physical device\n")
+        report_results()
+        sys.exit(1)
+
+    log_print("Panacast device error\nRebooting...")
     # reboot by resetting USB if testing P20
     if device_name == "Jabra PanaCast 20":
-        device_info = subprocess.check_output('lsusb | grep "Jabra PanaCast 20"', shell==True)
-        device_info = device_info.decode("utf-8")
-        ids = re.search('Bus (\d+) Device (\d+)', device_info).group()
-        ids = re.findall('(\d+)', ids)
-        subprocess.check_call(['sudo', './usbreset', '/dev/bus/usb/{}/{}'.format(ids[0], ids[1])])
+        subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
+        time.sleep(10)
     else:
         if power_cycle is True:
             subprocess.check_call(['./power_switch.sh', '0', '0'])
@@ -74,10 +94,8 @@ def reboot_device():
             os.system("sudo adb devices")
             os.system("adb reboot")
 
-    print("Rebooting...")
-    time.sleep(55)
-    global device_num
-    global reboots
+        time.sleep(55)
+
     reboots += 1
 
     # grab reenumerated device
@@ -102,7 +120,7 @@ def check_frame(check_width, check_height):
     while True:
         retval, frame = cap.read()
         # check if frame is successfully grabbed
-        if frame is not None:
+        if retval is not False:
             h, w = frame.shape[:2]
         else:
             reboot_device()
@@ -125,7 +143,13 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
                 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
                 codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
-                log_print("Video format set to:    {} ({})".format(codec, fourcc))
+                if codec != fmt:
+                    log_print("Unable to set video format to {}.".format(fmt))
+                    reboot_device()
+                    err_code[test_type] = -1
+                    continue
+                else:
+                    log_print("Video format set to:  {} ({})".format(codec, fourcc))
 
                 # set start res/fps
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -140,6 +164,8 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
                 cap.set(cv2.CAP_PROP_FPS, t_fps)
+                log_print(55*"=")
+                log_print("{}\n".format(test_type))
 
                 # calculate switch time
                 if check_frame(t_res[0], t_res[1]):
@@ -151,8 +177,6 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
 
                 switch_time = switch_end - switch_start
 
-                log_print(55*"=")
-                log_print("{}\n".format(test_type))
                 log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
                 test_start, test_time = (time.time() for x in range(2))
                 
@@ -243,19 +267,6 @@ if __name__ == "__main__":
             height = start[1]
             test_fps(width, height, target_res, start_fps, target_fps, fmt)
     
-    log_print("\nGenerating report...")
-    log_print("Number of video crashes/freezes: {}".format(reboots))
-    report = p.pformat(err_code)
-    log_print("{}\n".format(report))
-    log_file.close()
-
-    fail_file.write("""Test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
-    [-1] denotes hard failure (<27 fps, >1200ms switch time, or crash/freeze)
-    [0] denotes soft failure (27-28.99 fps)
-    Number of video crashes/freezes: {}\n\n""".format(reboots))
-    fail_report = p.pformat(failures)
-    fail_file.write("{}\n\n".format(fail_report))
-    fail_file.close()
-
+    report_results()
     cap.release()
     cv2.destroyAllWindows()
