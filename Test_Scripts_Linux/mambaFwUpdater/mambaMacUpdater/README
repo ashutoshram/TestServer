@@ -1,0 +1,7 @@
+*** This is Mac sample program for Mamba firmware update over UVC XU ***
+Run "make" to build the console sample app. Tested on Catalina 10.15.6.
+
+The following files are copied from CoreCODECRepo\LibAltiaE6Utils\LibAltiaE6Utils
+IOKitUVCMgr.{cpp/h} (with VID and XU_ID modified for mamba)
+
+*** It is best to use these above files directly from their corresponding repo for future code management. ***

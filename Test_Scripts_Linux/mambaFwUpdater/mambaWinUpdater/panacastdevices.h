@@ -1,0 +1,56 @@
+#pragma once
+#define ALTIA_VENDOR_ID			"2b93"
+#define P2_VIDEO_AUDIO_PID	        "0002"
+#define P2_VIDEO_ONLY_PID	        "8002"
+#define P2s_VIDEO_AUDIO_PID	        "c002"
+#define P2s_VIDEO_ONLY_PID	        "d002"
+#define P3_VIDEO_AUDIO_PID	        "0003"
+#define P3_VIDEO_ONLY_PID	        "8003"
+#define P3s_VIDEO_AUDIO_PID	        "4003"
+#define P3s_VIDEO_ONLY_PID	        "6003"
+#define PANACAST_MISSION_PID		"e002"
+
+#define ALTIA_VENDOR_ID_TEXT          		TEXT("VID_2b93")
+#define P2_VIDEO_AUDIO_PID_TEXT  		TEXT("PID_0002")
+#define P2_VIDEO_ONLY_PID_TEXT  		TEXT("PID_8002")
+#define P2s_VIDEO_AUDIO_PID_TEXT  		TEXT("PID_c002")
+#define P2s_VIDEO_ONLY_PID_TEXT  		TEXT("PID_d002")
+#define P3_VIDEO_AUDIO_PID_TEXT  		TEXT("PID_0003")
+#define P3_VIDEO_ONLY_PID_TEXT  		TEXT("PID_8003")
+#define P3s_VIDEO_AUDIO_PID_TEXT  		TEXT("PID_4003")
+#define P3s_VIDEO_ONLY_PID_TEXT  		TEXT("PID_6003")
+#define PANACAST_MISSION_PID_TEXT               TEXT("PID_e002")
+
+
+//Older naming convention keeping for now until all supporting software switches over to the above
+#define ALTIA_VENDOR_ID				"2b93"
+#define PANACAST_VIDEO_ONLY_PID		"0001"
+#define PANACAST_AUDIO_VIDEO_PID	"0002"
+#define PANACAST_CANYON_PID	        "0003"
+#define PANACAST_VIDEO_ONLY_PID_2	"8001"
+#define PANACAST_AUDIO_VIDEO_PID_2	"8002"
+#define PANACAST_P2S_PID			"c002"
+#define PANACAST_VIDEO_ONLY_PID_3	"d001"
+#define PANACAST_VIDEO_ONLY_PID_4	"8003"
+#define PANACAST_AUDIO_VIDEO_PID_3	"d002"
+#define PANACAST_AUDIO_VIDEO_PID_4	"8003"
+#define PANACAST_MISSION_PID		"e002"
+
+#define JABRA_PYTHON_VID            "0b0e"
+#define JABRA_PYTHON_PID_1		    "3013" // Single Camera Python Device
+#define JABRA_PYTHON_PID_2		    "3015" // Dual Camera Python Device
+#define JABRA_MAMBA				    "3020" // Mamba
+
+
+
+#define ALTIA_VENDOR_ID_TEXT          		TEXT("VID_2b93")
+#define PANACAST_VIDEO_ONLY_PID_TEXT  		TEXT("PID_0001")
+#define PANACAST_AUDIO_VIDEO_PID_TEXT 		TEXT("PID_0002")
+#define PANACAST_VIDEO_ONLY_PID_TEXT_2  	TEXT("PID_8001")
+#define PANACAST_AUDIO_VIDEO_PID_TEXT_2 	TEXT("PID_8002")
+#define PANACAST_P2S_PID_TEXT				TEXT("PID_c002")
+#define PANACAST_VIDEO_ONLY_PID_TEXT_3  	TEXT("PID_d001")
+#define PANACAST_VIDEO_ONLY_PID_TEXT_4  	TEXT("PID_8003")
+#define PANACAST_AUDIO_VIDEO_PID_TEXT_3 	TEXT("PID_d002")
+#define PANACAST_MISSION_PID_TEXT			TEXT("PID_e002")
+#define PANACAST_CANYON_PID_TEXT            TEXT("PID_0003")

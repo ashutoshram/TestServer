@@ -1,0 +1,7 @@
+*** This is Linux sample program for Mamba firmware update over UVC XU ***
+Run "make" to build the console sample app.
+
+The following files are copied from CoreCODECRepo\LibAltiaE6Utils\LibAltiaE6Utils
+V4LUVCMgr.{cpp/h}
+
+*** It is best to use these above files directly from their corresponding repo for future code management. ***
