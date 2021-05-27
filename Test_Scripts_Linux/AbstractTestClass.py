@@ -9,7 +9,3 @@ class AbstractTestClass(ABC):
     @abstractmethod
     def run(self, args):
         return None
-
-    @abstractmethod
-    def generate_report(self):
-        return None

@@ -15,14 +15,14 @@ import re
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
-# ap.add_argument("-f","--frame", type=bool, default=False, help="Set to True to enable live view")
+ap.add_argument("-f","--frame", type=bool, default=False, help="Set to True to enable live view")
 ap.add_argument("-t","--test", type=str, default="res_fps_p50.json", help="Specify .json file to load test cases")
 ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
 ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
 ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
 args = vars(ap.parse_args())
 debug = args["debug"]
-# live_view = args["frame"]
+live_view = args["frame"]
 test_file = "config/" + args["test"]
 zoom_file = "config/" + args["zoom"]
 power_cycle = args["power"]
@@ -41,10 +41,26 @@ def log_print(args):
     if debug is True: 
         print(args)
 
+def report_results():
+    log_print("\nGenerating report...")
+    log_print("Number of video crashes/freezes (that required reboots): {}".format(reboots))
+    report = p.pformat(err_code)
+    log_print("{}\n".format(report))
+    log_file.close()
+
+    fail_file.write("""Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
+    [-1] denotes hard failure (<27 fps or crash/freeze)
+    [0] denotes soft failure (27-28.99 fps)
+    Number of video crashes/freezes: {}\n\n""".format(reboots))
+    fail_report = p.pformat(failures)
+    fail_file.write("{}\n\n".format(fail_report))
+    fail_file.close()
+
 current = date.today()
 path = os.getcwd()
 device_num = 0
 reboots = 0
+err_code = {}
 failures = {}
 
 # create directory for log and .png files if it doesn't already exist
@@ -71,11 +87,14 @@ class FPS(ATC.AbstractTestClass):
     def run(self, args):
         return self.FPSTest.test(args)
 
-    def generate_report(self):
-        return self.FPSTest.results()
-
 class FPSTester():
     def reboot_device(self):
+        global device_num
+        global reboots
+        if reboots > 5:
+            log_print("More than 5 reboots, exiting test. Please check physical device\n")
+            report_results()
+            sys.exit(1)
         # reboot by resetting USB if testing P20
         if device_name == "Jabra PanaCast 20":
             subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
@@ -93,8 +112,6 @@ class FPSTester():
             time.sleep(55)
 
         log_print("Rebooting...")
-        global device_num
-        global reboots
         reboots += 1
 
         # grab reenumerated device
@@ -201,6 +218,10 @@ class FPSTester():
                         raise cv2.error("Timeout error")
                     continue
                 else:
+                    if live_view is True:
+                        cv2.imshow('frame', frame)
+                        if cv2.waitKey(1) & 0xFF == ord('q'):
+                            break
                     count += 1
                 # 2/3 frames - 1 to get the first 20 seconds
                 if i == (((frames * 2) / 3) - 1):
@@ -248,11 +269,7 @@ class FPSTester():
             log_print("HARD FAIL\n")
             return -1
 
-    def results(self):
-        return self.err_code
-
     def test(self, args):
-        self.err_code = {}
         global failures
         global device_num
 
@@ -285,29 +302,17 @@ class FPSTester():
                         log_print(55*"=")
                         log_print("Testing:                {} {} {}fps zoom {}\n".format(fmt, resolution, fps, z))
                         test_type = "{} {} {}fps zoom {}".format(fmt, resolution, fps, z)
-                        self.err_code[test_type] = self.test_fps(fmt, resolution, fps, z)
+                        err_code[test_type] = self.test_fps(fmt, resolution, fps, z)
 
-                        if self.err_code[test_type] == 0 or self.err_code[test_type] == -1:
-                            failures[test_type] = self.err_code[test_type] 
+                        if err_code[test_type] == 0 or err_code[test_type] == -1:
+                            failures[test_type] = err_code[test_type] 
 
             self.cam.release()
 
-        return self.err_code
+        return err_code
 
 if __name__ == "__main__":
     t = FPS()
     args = t.get_args()
     t.run(args)
-    log_print("\nGenerating report...")
-    log_print("Number of video crashes/freezes (that required reboots): {}".format(reboots))
-    report = p.pformat(t.generate_report())
-    log_print("{}\n".format(report))
-    log_file.close()
-
-    fail_file.write("""Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
-    [-1] denotes hard failure (<27 fps or crash/freeze)
-    [0] denotes soft failure (27-28.99 fps)
-    Number of video crashes/freezes: {}\n\n""".format(reboots))
-    fail_report = p.pformat(failures)
-    fail_file.write("{}\n\n".format(fail_report))
-    fail_file.close()
+    report_results()
