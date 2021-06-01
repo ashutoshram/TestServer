@@ -71,33 +71,35 @@ timestamp = datetime.now()
 log_print(55*"=")
 log_print("\n{}\n".format(timestamp))
 
-def reboot_device():
+def reboot_device(fmt):
     global device_num
     global reboots
-    # if there have been more than 5 reboots give up, something's wrong lol
-    if reboots > 5:
-        log_print("More than 5 reboots, exiting test. Please check physical device\n")
-        report_results()
-        sys.exit(1)
+    switch = 0
 
-    log_print("Panacast device error\nRebooting...")
+    log_print("Rebooting...")
+    if fmt == "MJPG":
+        switch = 1
     # reboot by resetting USB if testing P20
     if device_name == "Jabra PanaCast 20":
         subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
         time.sleep(10)
     else:
         if power_cycle is True:
-            subprocess.check_call(['./power_switch.sh', '0', '0'])
+            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
             time.sleep(3)
-            subprocess.check_call(['./power_switch.sh', '0', '1'])
+            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
         else:
             os.system("sudo adb kill-server")
             os.system("sudo adb devices")
             os.system("adb reboot")
-
+        
         time.sleep(55)
 
     reboots += 1
+    if reboots > 5:
+        log_print("More than 5 reboots, exiting test. Please check physical device\n")
+        report_results()
+        sys.exit(1)
 
     # grab reenumerated device
     while True:
@@ -117,14 +119,14 @@ def reboot_device():
         else:
             sys.exit(1)
 
-def check_frame(check_width, check_height):
+def check_frame(check_width, check_height, fmt):
     while True:
         retval, frame = cap.read()
         # check if frame is successfully grabbed
         if retval is not False:
             h, w = frame.shape[:2]
         else:
-            reboot_device()
+            reboot_device(fmt)
             return False
 
         if retval is True and w == check_width and h == check_height:
@@ -146,7 +148,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
                 if codec != fmt:
                     log_print("Unable to set video format to {}.".format(fmt))
-                    reboot_device()
+                    reboot_device(fmt)
                     err_code[test_type] = -1
                     continue
                 else:
@@ -169,7 +171,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 log_print("{}\n".format(test_type))
 
                 # calculate switch time
-                if check_frame(t_res[0], t_res[1]):
+                if check_frame(t_res[0], t_res[1], fmt):
                     switch_end = time.time()
                 else:
                     log_print("Unable to switch resolution")
@@ -191,7 +193,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                         if drop_frame >= 10:
                             log_print("Timeout error")
                             log_print("# of dropped frames: {}".format(drop_frame))
-                            reboot_device()
+                            reboot_device(fmt)
                             err_code[test_type] = -1
                             break
                             

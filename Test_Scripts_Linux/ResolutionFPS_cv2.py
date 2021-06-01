@@ -16,10 +16,10 @@ import re
 ap = argparse.ArgumentParser()
 ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
 ap.add_argument("-f","--frame", type=bool, default=False, help="Set to True to enable live view")
-ap.add_argument("-t","--test", type=str, default="res_fps_p50.json", help="Specify .json file to load test cases")
-ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
 ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
+ap.add_argument("-t","--test", type=str, default="res_fps_p50.json", help="Specify .json file to load test cases")
 ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
+ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
 args = vars(ap.parse_args())
 debug = args["debug"]
 live_view = args["frame"]
@@ -88,22 +88,23 @@ class FPS(ATC.AbstractTestClass):
         return self.FPSTest.test(args)
 
 class FPSTester():
-    def reboot_device(self):
+    def reboot_device(self, fmt):
         global device_num
         global reboots
-        if reboots > 5:
-            log_print("More than 5 reboots, exiting test. Please check physical device\n")
-            report_results()
-            sys.exit(1)
+        switch = 0
+
+        log_print("Rebooting...")
+        if fmt == "MJPG":
+            switch = 1
         # reboot by resetting USB if testing P20
         if device_name == "Jabra PanaCast 20":
             subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
             time.sleep(10)
         else:
             if power_cycle is True:
-                subprocess.check_call(['./power_switch.sh', '0', '0'])
+                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
                 time.sleep(3)
-                subprocess.check_call(['./power_switch.sh', '0', '1'])
+                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
             else:
                 os.system("sudo adb kill-server")
                 os.system("sudo adb devices")
@@ -111,8 +112,11 @@ class FPSTester():
             
             time.sleep(55)
 
-        log_print("Rebooting...")
         reboots += 1
+        if reboots > 5:
+            log_print("More than 5 reboots, exiting test. Please check physical device\n")
+            report_results()
+            sys.exit(1)
 
         # grab reenumerated device
         while True:       
@@ -147,7 +151,7 @@ class FPSTester():
         # make sure format is set correctly
         if codec != fmt:
             log_print("Unable to set video format correctly.")
-            self.reboot_device()
+            self.reboot_device(fmt)
             return -1
 
         # set resolution and check if set correctly
@@ -188,7 +192,7 @@ class FPSTester():
         # check if device is responding to get/set commands and try rebooting if it isn't
         if width == 0 and height == 0 and current_fps == 0:
             log_print("Device not responding to get/set commands")
-            self.reboot_device()
+            self.reboot_device(fmt)
 
         # set number of frames to be counted
         frames = framerate*30
@@ -231,7 +235,7 @@ class FPSTester():
 
             except cv2.error as e:
                 log_print("{}".format(e))
-                self.reboot_device()
+                self.reboot_device(fmt)
                 log_print("FREEZE FAIL\n")
                 return -1
         

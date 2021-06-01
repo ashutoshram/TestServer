@@ -60,10 +60,11 @@ Please run from root terminal (or using sudo python3) for best results (otherwis
 Store .json test case files in the config/ directory
 
 Flag -d True to enable writing output messages to terminal as well (set to False/disabled by default)
-Flag -t filename.json to run the script with test cases outlined in a json file (res_fps.json by default, use that file format to create your own test cases)
-Flag -z filename.json to run the script with zoom levels outlined in a json file (zoom.json by default, use that file format to create your own test cases)
+Flag -f True to enable live video preview (set to False/disabled by default)
 Flag -p True if you are running it on the devkit + Jenkins server in order to power cycle using the network power strip (set to False by default)
+Flag -t filename.json to run the script with test cases outlined in a json file (res_fps.json by default, use that file format to create your own test cases)
 Flag -v *device_name* to specify the device you want to test (set to Jabra PanaCast 50 by default)
+Flag -z filename.json to run the script with zoom levels outlined in a json file (zoom.json by default, use that file format to create your own test cases)
 
 python3 ResolutionFPS_cv2.py -d True -f res_fps_p50.json -z zoom.json -v "Jabra PanaCast 50"
 
