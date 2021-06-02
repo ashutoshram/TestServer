@@ -264,7 +264,7 @@ static void checkFW(UVCInterface* uvcMgr)
 {
    unsigned char data[256];
    sendVendorCommand(uvcMgr, true, 0xFE, 0xFF, 0, data, 0, 8);
-   printf("\n\nFW version: %x.%x.%x\n", data[2], data[1], data[0]);
+   printf("\n\nFW version: %x.%x.%x\n\n", data[2], data[1], data[0]);
 }
 
 int main(int argc, char* argv[]) {

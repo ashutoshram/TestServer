@@ -1,9 +1,30 @@
 #!/bin/bash
-startingFW=$(mambaFwUpdater/mambaLinuxUpdater/checkMambaFW)
-echo $startingFW
-mambaFwUpdater/mambaLinuxUpdater/mambaUpdater main ~/MX/newport/mamba_video/mvbuild/ma2085/mamba_video.mvcmd
+
+usage() {
+    echo "Usage:  $0 [path to mamba_video.mvcmd]"
+    exit
+}
+
+if [[ $# < 1 ]]; then
+    usage
+fi
+
+# startingFW=$(mambaFwUpdater/mambaLinuxUpdater/checkMambaFW)
+mambaFwUpdater/mambaLinuxUpdater/checkMambaFW
+# echo $startingFW
+echo
+mambaFwUpdater/mambaLinuxUpdater/mambaUpdater main $1
+echo
+echo "Updating Mamba with new FW..."
+echo
 sleep 3
+
 mambaFwUpdater/mambaLinuxUpdater/rebootMamba
+echo
+echo "Rebooting Mamba..."
+echo
 sleep 10
-updatedFW=$(mambaFwUpdater/mambaLinuxUpdater/checkMambaFW)
-echo $updatedFW
+# updatedFW=$(mambaFwUpdater/mambaLinuxUpdater/checkMambaFW)
+# echo $updatedFW
+mambaFwUpdater/mambaLinuxUpdater/checkMambaFW
+echo
