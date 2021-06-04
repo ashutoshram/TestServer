@@ -1,4 +1,4 @@
-django == 2.2.4
+django == 2.2.21
 numpy == 1.16.2
 opencv_contrib_python == 4.0.0.21
 django-tabler == 0.0.32
