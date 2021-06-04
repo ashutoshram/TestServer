@@ -99,7 +99,7 @@ def reboot_device(fmt):
     if reboots > 5:
         log_print("More than 5 reboots, exiting test. Please check physical device\n")
         report_results()
-        sys.exit(1)
+        sys.exit(0)
 
     # grab reenumerated device
     while True:
@@ -123,15 +123,16 @@ def check_frame(check_width, check_height, fmt):
     while True:
         retval, frame = cap.read()
         # check if frame is successfully grabbed
-        if retval is not False:
+        if retval is not False or frame is not None:
             h, w = frame.shape[:2]
+            if w == check_width and h == check_height:
+                # print("Resolution set to:    {} x {}".format(w, h))
+                return True
+            else:
+                continue
         else:
             reboot_device(fmt)
             return False
-
-        if retval is True and w == check_width and h == check_height:
-            # print("Resolution set to:    {} x {}".format(w, h))
-            return True
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     start_frame, test_frame, total_frame, drop_frame = (0 for x in range(4))
@@ -254,7 +255,7 @@ if __name__ == "__main__":
        
     if device_num is None:
         log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
-        sys.exit(1)
+        sys.exit(0)
     if cap.isOpened():
         log_print("PanaCast device found:  {}\n".format(device_num))
     # cylce through all test cases provided by json file

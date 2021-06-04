@@ -116,7 +116,7 @@ class FPSTester():
         if reboots > 5:
             log_print("More than 5 reboots, exiting test. Please check physical device\n")
             report_results()
-            sys.exit(1)
+            sys.exit(0)
 
         # grab reenumerated device
         while True:       
@@ -288,7 +288,7 @@ class FPSTester():
 
         if device_num is None:
             log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
-            sys.exit(1)
+            sys.exit(0)
         if self.cam.isOpened():
             log_print("PanaCast device found:  {}".format(device_num))
 
