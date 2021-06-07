@@ -27,10 +27,11 @@ input_tests = open(test_file)
 json_str = input_tests.read()
 test_cases = json.loads(json_str)
 
-global cap
-global reboots
+# global cap
+# global reboots
 current = date.today()
 path = os.getcwd()
+cap = None
 device_num = 0
 reboots = 0
 failures = {}
@@ -57,6 +58,11 @@ def report_results():
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
 
+# if device_name == "Jabra PanaCast 20":
+#     log_name = "p20"
+# elif device_name == "Jabra PanaCast 50":
+#     log_name = "p50"
+
 filename = "{}_resolutionswitch.log".format(current)
 file_path = os.path.join(path+"/resolutionswitch", filename)
 fail = "{}_failed_resolutionswitch.log".format(current)
@@ -70,6 +76,25 @@ fail_file = open(fail_path, "a")
 timestamp = datetime.now()
 log_print(55*"=")
 log_print("\n{}\n".format(timestamp))
+
+def get_device():
+    global cap
+    # grab reenumerated device
+    try:
+        cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+        cam = cam.decode("utf-8")
+        device_num = int(re.search(r'\d+', cam).group())
+        device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+        cap = cv2.VideoCapture(device_num)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+
+    if cap.isOpened():
+        log_print("Device back online:  {}\n".format(device_num))
+        cap.open(device_num)
+        return True
+    else:
+        return False
 
 def reboot_device(fmt):
     global device_num
@@ -89,35 +114,19 @@ def reboot_device(fmt):
             time.sleep(3)
             subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
         else:
-            os.system("sudo adb kill-server")
-            os.system("sudo adb devices")
-            os.system("adb reboot")
-        
-        time.sleep(55)
+            os.system("adb shell /usr/bin/resethub")
+            time.sleep(15)
+            if not get_device():
+                os.system("sudo adb kill-server")
+                os.system("sudo adb devices")
+                os.system("adb reboot")
+                time.sleep(55)
 
     reboots += 1
     if reboots > 5:
         log_print("More than 5 reboots, exiting test. Please check physical device\n")
         report_results()
         sys.exit(0)
-
-    # grab reenumerated device
-    while True:
-        try:
-            cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
-            cam = cam.decode("utf-8")
-            device_num = int(re.search(r'\d+', cam).group())
-            device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
-            cap = cv2.VideoCapture(device_num)
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-
-        if cap.isOpened():
-            log_print("Device back online:  {}\n".format(device_num))
-            cap.open(device_num)
-            break
-        else:
-            sys.exit(1)
 
 def check_frame(check_width, check_height, fmt):
     while True:
@@ -131,12 +140,15 @@ def check_frame(check_width, check_height, fmt):
             else:
                 continue
         else:
-            reboot_device(fmt)
-            return False
+            print("HERE HERE HERE")
+            continue
+            # reboot_device(fmt)
+            # return False
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     start_frame, test_frame, total_frame, drop_frame = (0 for x in range(4))
     all_fps = []
+    global cap
     global err_code
     global failures
 
@@ -244,21 +256,12 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 all_fps.clear()
 
 if __name__ == "__main__":
-    # set up camera stream 
-    try:
-        cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
-        cam = cam.decode("utf-8")
-        device_num = int(re.search(r'\d+', cam).group())
-        cap = cv2.VideoCapture(device_num)
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-       
-    if device_num is None:
-        log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
+    # set up camera stream
+    if not get_device():
+        log_print("Device not found, please check if it is attached.")
         sys.exit(0)
-    if cap.isOpened():
-        log_print("PanaCast device found:  {}\n".format(device_num))
-    # cylce through all test cases provided by json file
+
+    # cycle through all test cases provided by json file
     cap.open(device_num)
     for fmt in test_cases:
         codec = test_cases[fmt]
