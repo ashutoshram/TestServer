@@ -140,10 +140,10 @@ def check_frame(check_width, check_height, fmt):
             else:
                 continue
         else:
-            print("HERE HERE HERE")
-            continue
-            # reboot_device(fmt)
-            # return False
+            # print("HERE HERE HERE")
+            # continue
+            reboot_device(fmt)
+            return False
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     start_frame, test_frame, total_frame, drop_frame = (0 for x in range(4))
