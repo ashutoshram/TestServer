@@ -58,16 +58,16 @@ def report_results():
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
 
-# if device_name == "Jabra PanaCast 20":
-#     log_name = "p20"
-# elif device_name == "Jabra PanaCast 50":
-#     log_name = "p50"
-
-filename = "{}_resolutionswitch.log".format(current)
-file_path = os.path.join(path+"/resolutionswitch", filename)
-fail = "{}_failed_resolutionswitch.log".format(current)
-fail_path = os.path.join(path+"/resolutionswitch", fail)
 # create directory for log and .png files if it doesn't already exist
+if device_name == "Jabra PanaCast 20":
+    log_name = "p20"
+elif device_name == "Jabra PanaCast 50":
+    log_name = "p50"
+
+filename = "{}_resolutionswitch_{}.log".format(current, log_name)
+file_path = os.path.join(path+"/resolutionswitch", filename)
+fail = "{}_failed_resolutionswitch_{}.log".format(current, log_name)
+fail_path = os.path.join(path+"/resolutionswitch", fail)
 if not os.path.exists(path+"/resolutionswitch"):
     os.makedirs(path+"/resolutionswitch")
 

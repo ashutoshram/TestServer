@@ -64,14 +64,14 @@ err_code = {}
 failures = {}
 
 # create directory for log and .png files if it doesn't already exist
-# if device_name == "Jabra PanaCast 20":
-#     log_name = "p20"
-# elif device_name == "Jabra PanaCast 50":
-#     log_name = "p50"
+if device_name == "Jabra PanaCast 20":
+    log_name = "p20"
+elif device_name == "Jabra PanaCast 50":
+    log_name = "p50"
 
-filename = "{}_resolutionfps.log".format(current)
+filename = "{}_resolutionfps_{}.log".format(current, log_name)
 log_path = os.path.join(path+"/resolutionfps", filename)
-fail = "{}_failed_resolutionfps.log".format(current)
+fail = "{}_failed_resolutionfps_{}.log".format(current, log_name)
 fail_path = os.path.join(path+"/resolutionfps", fail)
 if not os.path.exists(path+"/resolutionfps"):
     os.makedirs(path+"/resolutionfps")
