@@ -1,3 +1,35 @@
+Instructions for running on Jenkins Server:
+
+PanaCast 50:
+Raw tests:
+python3 ResolutionFPS_cv2.py -d True -p True -t res_fps_p50.json
+python3 ResolutionSwitch.py -d True -p True -t res_switch_p50.json
+
+MJPG tests:
+python3 ResolutionFPS_cv2.py -d True -p True -t res_fps_mjpg.json
+python3 ResolutionSwitch.py -d True -p True -t res_switch_mjpg.json
+
+Test results will be saved in:
+[year-month-date]_failed_resolutionfps_p50.log
+[year-month-date]_resolutionfps_p50.log
+[year-month-date]_failed_resolutionswitch_p50.log
+[year-month-date]_resolutionswitch_p50.log
+
+PanaCast 20:
+To update the device run: ./mambaAutoUpdater.sh [path to mamba_video.mvcmd]
+This script calls the following executables in mambaFwUpdater/mambaLinuxUpdater: checkMambaFW, mambaUpdater, and rebootMamba
+mamba_video.mvcmd should be found in ../newport/mamba_video/mvbuild/ma2085
+
+Raw tests:
+python3 ResolutionFPS_cv2.py -d True -p True -t res_fps_p20.json -v "Jabra PanaCast 20"
+python3 ResolutionSwitch.py -d True -p True -t res_switch_p20.json -v "Jabra PanaCast 20"
+
+Test results will be saved in:
+[year-month-date]_failed_resolutionfps_p20.log
+[year-month-date]_resolutionfps_p20.log
+
+============================================================================================================================================================================================================================
+
 Current working scripts on Linux:
 
 CamPropControls.py
