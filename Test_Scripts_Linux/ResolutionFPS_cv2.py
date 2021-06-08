@@ -31,6 +31,7 @@ device_name = args["video"]
 input_tests = open(test_file)
 json_str = input_tests.read()
 test_cases = json.loads(json_str)
+
 input_zooms = open(zoom_file)
 json_str = input_zooms.read()
 zoom_levels = json.loads(json_str)
@@ -56,8 +57,199 @@ def report_results():
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
 
+def get_device():
+    global cap
+    # grab reenumerated device
+    try:
+        cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+        cam = cam.decode("utf-8")
+        device_num = int(re.search(r'\d+', cam).group())
+        device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+        cap = cv2.VideoCapture(device_num)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+
+    if cap.isOpened():
+        log_print("Device back online:  {}\n".format(device_num))
+        cap.open(device_num)
+        return True
+    else:
+        return False
+
+def reboot_device(fmt):
+    global device_num
+    global reboots
+    switch = 0
+
+    log_print("Rebooting...")
+    if fmt == "MJPG":
+        switch = 1
+    # reboot by resetting USB if testing P20
+    if device_name == "Jabra PanaCast 20":
+        subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
+        time.sleep(10)
+        if not get_device():
+            log_print("Failed to get device after reboot, exiting test :(")
+            sys.exit(0)
+
+    else:
+        if power_cycle is True:
+            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
+            time.sleep(3)
+            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
+        else:
+            os.system("adb shell /usr/bin/resethub")
+            time.sleep(15)
+            if not get_device():
+                os.system("sudo adb kill-server")
+                os.system("sudo adb devices")
+                os.system("adb reboot")
+                time.sleep(55)
+
+    reboots += 1
+    if reboots > 5:
+        log_print("More than 5 reboots, exiting test. Please check physical device\n")
+        report_results()
+        sys.exit(0)
+
+def test_fps(fmt, resolution, framerate, zoom):
+    # check if camera stream exists
+    global device_num
+    
+    # set video format
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
+    # convert video codec number to format and check if set correctly
+    fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
+    codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+    log_print("Video format set to:    {} ({})".format(codec, fourcc))
+    # make sure format is set correctly
+    if codec != fmt:
+        log_print("Unable to set video format correctly.")
+        reboot_device(fmt)
+        return -1
+
+    # set resolution and check if set correctly
+    if resolution == '4k':
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    elif resolution == '1200p':
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 4800)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
+    elif resolution == '1080p':
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    elif resolution == '720p':
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    elif resolution == '540p':
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
+    elif resolution == '360p':
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+    
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    log_print("Resolution set to:      {} x {}".format(width, height))
+
+    # set zoom level
+    device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+    log_print("Setting zoom level to:  {}".format(zoom))
+    subprocess.call(['{} -c zoom_absolute={}'.format(device, str(zoom))], shell=True)
+
+    # open opencv capture device and set the fps
+    log_print("Setting framerate to:   {}".format(framerate))
+    cap.set(cv2.CAP_PROP_FPS, framerate)
+    current_fps = cap.get(cv2.CAP_PROP_FPS)
+    log_print("Current framerate:      {}\n".format(current_fps))
+
+    # check if device is responding to get/set commands and try rebooting if it isn't
+    if width == 0 and height == 0 and current_fps == 0:
+        log_print("Device not responding to get/set commands")
+        reboot_device(fmt)
+
+    # set number of frames to be counted
+    frames = framerate*30
+    prev_frame = 0
+    fps_list, jitters = ([] for x in range(2))
+    drops, count, initial_frames, initial_elapsed = (0 for x in range(4))
+
+    # calculate fps
+    start = time.time()
+    # default initial value
+    initial_elapsed = 30
+    for i in range(0, frames):
+        try:
+            retval, frame = cap.read()
+            current_frame = cap.get(cv2.CAP_PROP_POS_MSEC)
+            if prev_frame == 0:
+                prev_frame = current_frame
+            diff = current_frame - prev_frame
+            prev_frame = current_frame
+            # save jitter between current and previous frame to average later
+            jitters.append(abs(diff - (1000/framerate)))
+
+            if retval is False:
+                drops += 1
+                if drops >= 10:
+                    log_print("# of dropped frames: {}".format(drops))
+                    raise cv2.error("Timeout error")
+                continue
+            else:
+                if live_view is True:
+                    cv2.imshow('frame', frame)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                count += 1
+            # 2/3 frames - 1 to get the first 20 seconds
+            if i == (((frames * 2) / 3) - 1):
+                initial_frames = count
+                initial_end = time.time()
+                initial_elapsed = initial_end - start
+
+        except cv2.error as e:
+            log_print("{}".format(e))
+            reboot_device(fmt)
+            log_print("FREEZE FAIL\n")
+            return -1
+    
+    end = time.time()
+    total_elapsed = end - start
+    elapsed = total_elapsed - initial_elapsed
+    actual_frames = count
+    avg_jitter = sum(jitters) / len(jitters)
+
+    log_print("Test duration (s):      {:<5}".format(total_elapsed))
+    log_print("Total frames grabbed:   {:<5}".format(count))
+    log_print("Total frames dropped:   {:<5}".format(drops))
+    log_print("Average jitter (ms):    {:<5}".format(avg_jitter))
+
+    initial_fps = float(initial_frames / initial_elapsed)
+    fps_list.append(initial_fps)
+    log_print("Initial average fps:    {:<5}".format(initial_fps))
+
+    fps = float((actual_frames-initial_frames) / elapsed)
+    fps_list.append(fps)
+    log_print("Actual average fps:     {:<5}\n".format(fps))
+    
+    diff = abs(float(framerate) - float(fps_list[1]))
+        
+    # success
+    if diff <= 1:
+        log_print("PASS\n")
+        return 1
+    # soft failure
+    elif diff <= 3 and diff > 1:
+        log_print("SOFT FAIL\n")
+        return 0
+    # hard failure
+    else:
+        log_print("HARD FAIL\n")
+        return -1
+
 current = date.today()
 path = os.getcwd()
+cap = None
 device_num = 0
 reboots = 0
 err_code = {}
@@ -82,246 +274,29 @@ timestamp = datetime.now()
 log_print(55*"=")
 log_print("\n{}\n".format(timestamp))
 
-class FPS(ATC.AbstractTestClass):
-    def __init__(self):
-        self.FPSTest = FPSTester()
-
-    def get_args(self):
-        return ['all']
-
-    def run(self, args):
-        return self.FPSTest.test(args)
-
-class FPSTester():
-    def reboot_device(self, fmt):
-        global device_num
-        global reboots
-        switch = 0
-
-        log_print("Rebooting...")
-        if fmt == "MJPG":
-            switch = 1
-        # reboot by resetting USB if testing P20
-        if device_name == "Jabra PanaCast 20":
-            subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
-            time.sleep(10)
-        else:
-            if power_cycle is True:
-                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
-                time.sleep(3)
-                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
-            else:
-                os.system("sudo adb kill-server")
-                os.system("sudo adb devices")
-                os.system("adb reboot")
-            
-            time.sleep(55)
-
-        reboots += 1
-        if reboots > 5:
-            log_print("More than 5 reboots, exiting test. Please check physical device\n")
-            report_results()
-            sys.exit(0)
-
-        # grab reenumerated device
-        while True:       
-            try:
-                cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
-                cam = cam.decode("utf-8")
-                device_num = int(re.search(r'\d+', cam).group())
-                self.cam = cv2.VideoCapture(device_num)
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-
-            if self.cam.isOpened():
-                log_print("Device back online:  {}\n".format(device_num))
-                self.cam.open(device_num)
-                break
-            else:
-                sys.exit(1)
-
-    def test_fps(self, fmt, resolution, framerate, zoom):
-        # check if camera stream exists
-        global device_num
-        if self.cam is None:
-            print('cv2.VideoCapture unsuccessful')
-            sys.exit(1)
-        
-        # set video format
-        self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
-        # convert video codec number to format and check if set correctly
-        fourcc = int(self.cam.get(cv2.CAP_PROP_FOURCC))
-        codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
-        log_print("Video format set to:    {} ({})".format(codec, fourcc))
-        # make sure format is set correctly
-        if codec != fmt:
-            log_print("Unable to set video format correctly.")
-            self.reboot_device(fmt)
-            return -1
-
-        # set resolution and check if set correctly
-        if resolution == '4k':
-            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        elif resolution == '1200p':
-            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 4800)
-            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
-        elif resolution == '1080p':
-            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        elif resolution == '720p':
-            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        elif resolution == '540p':
-            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
-        elif resolution == '360p':
-            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
-        
-        width = int(self.cam.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        log_print("Resolution set to:      {} x {}".format(width, height))
-
-        # set zoom level
-        device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
-        log_print("Setting zoom level to:  {}".format(zoom))
-        subprocess.call(['{} -c zoom_absolute={}'.format(device, str(zoom))], shell=True)
-
-        # open opencv capture device and set the fps
-        log_print("Setting framerate to:   {}".format(framerate))
-        self.cam.set(cv2.CAP_PROP_FPS, framerate)
-        current_fps = self.cam.get(cv2.CAP_PROP_FPS)
-        log_print("Current framerate:      {}\n".format(current_fps))
-
-        # check if device is responding to get/set commands and try rebooting if it isn't
-        if width == 0 and height == 0 and current_fps == 0:
-            log_print("Device not responding to get/set commands")
-            self.reboot_device(fmt)
-
-        # set number of frames to be counted
-        frames = framerate*30
-        prev_frame = 0
-        fps_list, jitters = ([] for x in range(2))
-        drops, count, initial_frames, initial_elapsed = (0 for x in range(4))
-
-        # calculate fps
-        start = time.time()
-        # default initial value
-        initial_elapsed = 30
-        for i in range(0, frames):
-            try:
-                retval, frame = self.cam.read()
-                current_frame = self.cam.get(cv2.CAP_PROP_POS_MSEC)
-                if prev_frame == 0:
-                    prev_frame = current_frame
-                diff = current_frame - prev_frame
-                prev_frame = current_frame
-                # save jitter between current and previous frame to average later
-                jitters.append(abs(diff - (1000/framerate)))
-
-                if retval is False:
-                    drops += 1
-                    if drops >= 10:
-                        log_print("# of dropped frames: {}".format(drops))
-                        raise cv2.error("Timeout error")
-                    continue
-                else:
-                    if live_view is True:
-                        cv2.imshow('frame', frame)
-                        if cv2.waitKey(1) & 0xFF == ord('q'):
-                            break
-                    count += 1
-                # 2/3 frames - 1 to get the first 20 seconds
-                if i == (((frames * 2) / 3) - 1):
-                    initial_frames = count
-                    initial_end = time.time()
-                    initial_elapsed = initial_end - start
-
-            except cv2.error as e:
-                log_print("{}".format(e))
-                self.reboot_device(fmt)
-                log_print("FREEZE FAIL\n")
-                return -1
-        
-        end = time.time()
-        total_elapsed = end - start
-        elapsed = total_elapsed - initial_elapsed
-        actual_frames = count
-        avg_jitter = sum(jitters) / len(jitters)
-
-        log_print("Test duration (s):      {:<5}".format(total_elapsed))
-        log_print("Total frames grabbed:   {:<5}".format(count))
-        log_print("Total frames dropped:   {:<5}".format(drops))
-        log_print("Average jitter (ms):    {:<5}".format(avg_jitter))
-
-        initial_fps = float(initial_frames / initial_elapsed)
-        fps_list.append(initial_fps)
-        log_print("Initial average fps:    {:<5}".format(initial_fps))
-
-        fps = float((actual_frames-initial_frames) / elapsed)
-        fps_list.append(fps)
-        log_print("Actual average fps:     {:<5}\n".format(fps))
-        
-        diff = abs(float(framerate) - float(fps_list[1]))
-         
-        # success
-        if diff <= 1:
-            log_print("PASS\n")
-            return 1
-        # soft failure
-        elif diff <= 3 and diff > 1:
-            log_print("SOFT FAIL\n")
-            return 0
-        # hard failure
-        else:
-            log_print("HARD FAIL\n")
-            return -1
-
-    def test(self, args):
-        global failures
-        global device_num
-
-        # set up camera stream        
-        try:
-            cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
-            cam = cam.decode("utf-8")
-            device_num = int(re.search(r'\d+', cam).group())
-            self.cam = cv2.VideoCapture(device_num)
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError("Command '{}' returned with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-
-        if device_num is None:
-            log_print("PanaCast device not found. Please make sure the device is properly connected and try again")
-            sys.exit(0)
-        if self.cam.isOpened():
-            log_print("PanaCast device found:  {}".format(device_num))
-
-        # iterate through the dictionary and test each format, resolution, and framerate
-        self.cam.open(device_num)
-        for fmt in test_cases:
-            res_dict = test_cases[fmt]
-            for resolution in res_dict:
-                framerate = res_dict[resolution]
-                log_print(55*"=")
-                log_print("Parameters:             {} {} {}".format(fmt, resolution, framerate))
-
-                for fps in framerate:
-                    for z in zoom_levels["ZOOM"]:
-                        log_print(55*"=")
-                        log_print("Testing:                {} {} {}fps zoom {}\n".format(fmt, resolution, fps, z))
-                        test_type = "{} {} {}fps zoom {}".format(fmt, resolution, fps, z)
-                        err_code[test_type] = self.test_fps(fmt, resolution, fps, z)
-
-                        if err_code[test_type] == 0 or err_code[test_type] == -1:
-                            failures[test_type] = err_code[test_type] 
-
-            self.cam.release()
-
-        return err_code
-
 if __name__ == "__main__":
-    t = FPS()
-    args = t.get_args()
-    t.run(args)
+    # set up camera stream
+    if not get_device():
+        log_print("Device not found, please check if it is attached")
+        sys.exit(0)
+    
+    cap.open(device_num)
+    for fmt in test_cases:
+        res_dict = test_cases[fmt]
+        for resolution in res_dict:
+            framerate = res_dict[resolution]
+            log_print(55*"=")
+            log_print("Parameters:             {} {} {}".format(fmt, resolution, framerate))
+            for fps in framerate:
+                for z in zoom_levels["ZOOM"]:
+                    log_print(55*"=")
+                    log_print("Testing:                {} {} {}fps zoom {}\n".format(fmt, resolution, fps, z))
+                    test_type = "{} {} {}fps zoom {}".format(fmt, resolution, fps, z)
+                    err_code[test_type] = test_fps(fmt, resolution, fps, z)
+
+                    if err_code[test_type] == 0 or err_code[test_type] == -1:
+                        failures[test_type] = err_code[test_type] 
+
     report_results()
+    cap.release()
+    cv2.destroyAllWindows()
