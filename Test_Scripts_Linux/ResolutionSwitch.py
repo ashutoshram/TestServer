@@ -27,15 +27,13 @@ input_tests = open(test_file)
 json_str = input_tests.read()
 test_cases = json.loads(json_str)
 
-# global cap
-# global reboots
 current = date.today()
 path = os.getcwd()
 cap = None
 device_num = 0
 reboots = 0
-failures = {}
 err_code = {}
+failures = {}
 
 def log_print(args):
     msg = args + "\n"
@@ -57,25 +55,6 @@ def report_results():
     fail_report = p.pformat(failures)
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
-
-# create directory for log and .png files if it doesn't already exist
-if device_name == "Jabra PanaCast 20":
-    log_name = "p20"
-elif device_name == "Jabra PanaCast 50":
-    log_name = "p50"
-
-filename = "{}_resolutionswitch_{}.log".format(current, log_name)
-file_path = os.path.join(path+"/resolutionswitch", filename)
-fail = "{}_failed_resolutionswitch_{}.log".format(current, log_name)
-fail_path = os.path.join(path+"/resolutionswitch", fail)
-if not os.path.exists(path+"/resolutionswitch"):
-    os.makedirs(path+"/resolutionswitch")
-
-log_file = open(file_path, "a")
-fail_file = open(fail_path, "a")
-timestamp = datetime.now()
-log_print(55*"=")
-log_print("\n{}\n".format(timestamp))
 
 def get_device():
     global cap
@@ -108,6 +87,9 @@ def reboot_device(fmt):
     if device_name == "Jabra PanaCast 20":
         subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
         time.sleep(10)
+        if not get_device():
+            log_print("Failed to get device after reboot, exiting test :(")
+            sys.exit(0)
     else:
         if power_cycle is True:
             subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
@@ -254,6 +236,25 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     failures[test_type] = err_code[test_type]
 
                 all_fps.clear()
+
+# create directory for log and .png files if it doesn't already exist
+if device_name == "Jabra PanaCast 20":
+    log_name = "p20"
+elif device_name == "Jabra PanaCast 50":
+    log_name = "p50"
+
+filename = "{}_resolutionswitch_{}.log".format(current, log_name)
+file_path = os.path.join(path+"/resolutionswitch", filename)
+fail = "{}_failed_resolutionswitch_{}.log".format(current, log_name)
+fail_path = os.path.join(path+"/resolutionswitch", fail)
+if not os.path.exists(path+"/resolutionswitch"):
+    os.makedirs(path+"/resolutionswitch")
+
+log_file = open(file_path, "a")
+fail_file = open(fail_path, "a")
+timestamp = datetime.now()
+log_print(55*"=")
+log_print("\n{}\n".format(timestamp))
 
 if __name__ == "__main__":
     # set up camera stream
