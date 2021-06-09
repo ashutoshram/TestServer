@@ -122,9 +122,6 @@ def check_frame(check_width, check_height, fmt):
             else:
                 continue
         else:
-            # print("HERE HERE HERE")
-            # continue
-            reboot_device(fmt)
             return False
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
@@ -171,6 +168,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 else:
                     log_print("Unable to switch resolution")
                     err_code[test_type] = -1
+                    reboot_device(fmt)
                     continue
 
                 switch_time = switch_end - switch_start
