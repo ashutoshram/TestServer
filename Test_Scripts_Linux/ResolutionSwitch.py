@@ -134,10 +134,13 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     for t_res in target_res:
         for s_fps in start_fps:
             for t_fps in target_fps:
+                # label test case
+                test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, width, height, s_fps, t_res[0], t_res[1], t_fps)
                 # convert video codec number to format and check if set correctly
                 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
                 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
                 codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
+
                 if codec != fmt:
                     log_print("Unable to set video format to {}.".format(fmt))
                     reboot_device(fmt)
@@ -154,7 +157,6 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 # set target res/fps
                 if t_res[0] == width and t_res[1] == height:
                     continue
-                test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, width, height, s_fps, t_res[0], t_res[1], t_fps)
                 switch_start = time.time()
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
