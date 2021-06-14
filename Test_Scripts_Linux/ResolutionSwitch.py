@@ -90,15 +90,16 @@ def reboot_device(fmt):
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
             sys.exit(0)
+    # reboot P50 by resetting USB, adb reboot, or network power
     else:
-        if power_cycle is True:
-            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
-            time.sleep(3)
-            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
-        else:
-            os.system("adb shell /usr/bin/resethub")
-            time.sleep(15)
-            if not get_device():
+        os.system("adb shell /usr/bin/resethub")
+        time.sleep(15)
+        if not get_device():
+            if power_cycle is True:
+                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
+                time.sleep(3)
+                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
+            else:
                 os.system("sudo adb kill-server")
                 os.system("sudo adb devices")
                 os.system("adb reboot")
@@ -117,7 +118,6 @@ def check_frame(check_width, check_height, fmt):
         if retval is not False or frame is not None:
             h, w = frame.shape[:2]
             if w == check_width and h == check_height:
-                # print("Resolution set to:    {} x {}".format(w, h))
                 return True
             else:
                 continue
@@ -147,13 +147,13 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
                 codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
 
-                if codec != fmt:
-                    log_print("Unable to set video format to {}.".format(fmt))
-                    reboot_device(fmt)
-                    err_code[test_type] = -1
-                    continue
-                else:
-                    log_print("Video format set to:  {} ({})".format(codec, fourcc))
+                # if codec != fmt:
+                #     log_print("Unable to set video format to {}.".format(fmt))
+                #     reboot_device(fmt)
+                #     err_code[test_type] = -1
+                #     continue
+                # else:
+                log_print("Video format set to:  {} ({})".format(codec, fourcc))
 
                 # set start res/fps
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)

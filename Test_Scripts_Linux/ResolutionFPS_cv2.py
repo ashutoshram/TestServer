@@ -91,16 +91,16 @@ def reboot_device(fmt):
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
             sys.exit(0)
-
+    # reboot P50 by resetting USB, adb reboot, or network power
     else:
-        if power_cycle is True:
-            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
-            time.sleep(3)
-            subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
-        else:
-            os.system("adb shell /usr/bin/resethub")
-            time.sleep(15)
-            if not get_device():
+        os.system("adb shell /usr/bin/resethub")
+        time.sleep(15)
+        if not get_device():
+            if power_cycle is True:
+                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
+                time.sleep(3)
+                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
+            else:
                 os.system("sudo adb kill-server")
                 os.system("sudo adb devices")
                 os.system("adb reboot")
