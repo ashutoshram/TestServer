@@ -147,13 +147,13 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
                 codec = "".join([chr((fourcc >> 8 * i) & 0xFF) for i in range(4)])
 
-                # if codec != fmt:
-                #     log_print("Unable to set video format to {}.".format(fmt))
-                #     reboot_device(fmt)
-                #     err_code[test_type] = -1
-                #     continue
-                # else:
-                log_print("Video format set to:  {} ({})".format(codec, fourcc))
+                if codec != fmt:
+                    log_print("Unable to set video format to {}.".format(fmt))
+                    reboot_device(fmt)
+                    err_code[test_type] = -1
+                    continue
+                else:
+                    log_print("Video format set to:  {} ({})".format(codec, fourcc))
 
                 # set start res/fps
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
