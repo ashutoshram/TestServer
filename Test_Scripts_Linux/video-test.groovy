@@ -547,7 +547,7 @@ pipeline {
                     }
                     TEST_REPORT = """${sh (
                         returnStdout: true,
-                        script: 'find . -name "*failed_resolutionfps.log" -o -name "*failed_resolutionswitch.log" | xargs cat').trim()}"""
+                        script: 'find . -name "*failed_resolutionfps_p50.log" -o -name "*failed_resolutionfps_p20.log" -o -name "*failed_resolutionswitch_p50.log" -o -name "*failed_resolutionswitch_p20.log" | xargs cat').trim()}"""
                     if ( TEST_REPORT != "" ) {
                         TEST_REPORT = "Failed tests:\n ${TEST_REPORT}"
                     }
