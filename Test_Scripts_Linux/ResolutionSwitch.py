@@ -135,7 +135,13 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
         for s_fps in start_fps:
             for t_fps in target_fps:
                 # label test case
+                if t_res[0] == width and t_res[1] == height:
+                    continue
+
                 test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, width, height, s_fps, t_res[0], t_res[1], t_fps)
+                log_print(55*"=")
+                log_print("{}\n".format(test_type))
+
                 # convert video codec number to format and check if set correctly
                 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
                 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
@@ -155,14 +161,10 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 cap.set(cv2.CAP_PROP_FPS, s_fps)
                 
                 # set target res/fps
-                if t_res[0] == width and t_res[1] == height:
-                    continue
                 switch_start = time.time()
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
                 cap.set(cv2.CAP_PROP_FPS, t_fps)
-                log_print(55*"=")
-                log_print("{}\n".format(test_type))
 
                 # calculate switch time
                 if check_frame(t_res[0], t_res[1], fmt):
