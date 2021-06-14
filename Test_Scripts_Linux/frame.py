@@ -107,7 +107,7 @@ def white_balance(device, cap, ctrl, debug, log_file):
         logprint.send("\nwhite_balance_temperature:  {:<5}".format(c), debug, log_file)
         subprocess.call(['{} -c white_balance_temperature={}'.format(device, str(c))], shell=True)
         wb = cap.get(cv2.CAP_PROP_TEMPERATURE)
-        logprint.send("White balance temperature:    {}".format(wb), debug, log_file)
+        logprint.send("White balance temperature:  {}".format(wb), debug, log_file)
         results.append(wb)
     
     return results
