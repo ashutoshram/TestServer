@@ -59,6 +59,7 @@ def report_results():
 
 def get_device():
     global cap
+    global device_num
     # grab reenumerated device
     try:
         cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
