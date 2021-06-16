@@ -167,7 +167,7 @@ def test_fps(fmt, resolution, framerate, zoom):
         reboot_device(fmt)
 
     # set number of frames to be counted
-    frames = framerate*30
+    frames = framerate*20
     prev_frame = 0
     fps_list, jitters = ([] for x in range(2))
     drops, count, initial_frames, initial_elapsed = (0 for x in range(4))
