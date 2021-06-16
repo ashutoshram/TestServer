@@ -95,7 +95,7 @@ def reboot_device(fmt):
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
         os.system("adb shell /usr/bin/resethub")
-        time.sleep(15)
+        time.sleep(20)
         if not get_device():
             if power_cycle is True:
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
