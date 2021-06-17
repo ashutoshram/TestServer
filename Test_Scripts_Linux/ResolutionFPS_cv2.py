@@ -112,7 +112,7 @@ def reboot_device(fmt):
                 if not get_device():
                     log_print("Unable to recover device, exiting test. Please check physical device\n")
                     report_results()
-                    sys.exit()
+                    sys.exit(0)
 
     reboots += 1
     if reboots > 5:
