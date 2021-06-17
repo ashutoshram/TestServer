@@ -61,18 +61,24 @@ def get_device():
     global cap
     global device_num
     # grab reenumerated device
-    cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
-    cam = cam.decode("utf-8")
-    device_num = int(re.search(r'\d+', cam).group())
-    device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
-    cap = cv2.VideoCapture(device_num)
+    while True:
+        try:
+            cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+            log_print("Camera found")
+        except:
+            log_print("Camera not enumerated yet...")
+            continue
+        cam = cam.decode("utf-8")
+        device_num = int(re.search(r'\d+', cam).group())
+        device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+        cap = cv2.VideoCapture(device_num)
 
-    if cap.isOpened():
-        log_print("Device back online:  {}\n".format(device_num))
-        cap.open(device_num)
-        return True
-    else:
-        return False
+        if cap.isOpened():
+            log_print("Device online:  {}\n".format(device_num))
+            cap.open(device_num)
+            return True
+        else:
+            return False
 
 def reboot_device(fmt):
     global device_num
@@ -103,6 +109,10 @@ def reboot_device(fmt):
                 os.system("sudo adb devices")
                 os.system("adb reboot")
                 time.sleep(55)
+                if not get_device():
+                    log_print("Unable to recover device, exiting test. Please check physical device\n")
+                    report_results()
+                    sys.exit()
 
     reboots += 1
     if reboots > 5:
