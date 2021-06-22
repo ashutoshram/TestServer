@@ -44,7 +44,7 @@ def log_print(args):
 def report_results():
     log_print("\nGenerating report...")
     log_print("Number of video crashes/freezes: {}".format(reboots))
-    report = p.pformat(err_code)
+    report = p.pformat(err_code, width=20)
     log_print("{}\n".format(report))
     log_file.close()
 
@@ -52,7 +52,7 @@ def report_results():
     [-1] denotes hard failure (<27 fps, >1200ms switch time, or crash/freeze)
     [0] denotes soft failure (27-28.99 fps)
     Number of video crashes/freezes: {}\n\n""".format(reboots))
-    fail_report = p.pformat(failures)
+    fail_report = p.pformat(failures, width=20)
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
 
@@ -153,15 +153,15 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     log_print("Video format set to:  {} ({})".format(codec, fourcc))
 
                 # set start res/fps
+                cap.set(cv2.CAP_PROP_FPS, s_fps)
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-                cap.set(cv2.CAP_PROP_FPS, s_fps)
                 
                 # set target res/fps
+                cap.set(cv2.CAP_PROP_FPS, t_fps)
                 switch_start = time.time()
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
-                cap.set(cv2.CAP_PROP_FPS, t_fps)
 
                 # calculate switch time
                 if check_frame(t_res[0], t_res[1], fmt):
@@ -184,11 +184,12 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     # reboot device in event of frame drop/error
                     if retval is False:
                         drop_frame += 1
-                        if drop_frame >= 10:
+                        if drop_frame >= 5:
                             log_print("Timeout error")
                             log_print("# of dropped frames: {}".format(drop_frame))
                             reboot_device(fmt)
                             err_code[test_type] = -1
+                            drop_frame = 0
                             break
                             
                     else:
