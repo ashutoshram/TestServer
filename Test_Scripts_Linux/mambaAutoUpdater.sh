@@ -17,7 +17,7 @@ mambaFwUpdater/mambaLinuxUpdater/mambaUpdater main $1
 echo
 echo "Updating Mamba with new FW..."
 echo
-sleep 3
+sleep 5
 
 mambaFwUpdater/mambaLinuxUpdater/rebootMamba
 echo
