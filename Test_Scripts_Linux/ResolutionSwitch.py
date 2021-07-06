@@ -59,7 +59,10 @@ def report_results():
 def get_device():
     global cap
     # grab reenumerated device
-    cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+    try:
+        cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+    except:
+        return False
     cam = cam.decode("utf-8")
     device_num = int(re.search(r'\d+', cam).group())
     device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
@@ -156,12 +159,14 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 cap.set(cv2.CAP_PROP_FPS, s_fps)
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                # print("set start")
                 
                 # set target res/fps
                 cap.set(cv2.CAP_PROP_FPS, t_fps)
                 switch_start = time.time()
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
+                # print("set target")
 
                 # calculate switch time
                 if check_frame(t_res[0], t_res[1], fmt):
@@ -178,6 +183,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 test_start, test_time = (time.time() for x in range(2))
                 
                 # grab frames for 30 seconds
+                # frame_count = 3
                 frame_count = t_fps * 30
                 for i in range(0, frame_count):
                     retval, frame = cap.read()
@@ -198,6 +204,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             if cv2.waitKey(1) & 0xFF == ord('q'):
                                 break
                         test_frame += 1
+                        # print("Frame grabbed")
             
                     # check framerate every five seconds
                     if test_frame % (frame_count / 6) == 0:
@@ -236,6 +243,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     failures[test_type] = err_code[test_type]
 
                 all_fps.clear()
+                # time.sleep(1)
 
 # create directory for log and .png files if it doesn't already exist
 if device_name == "Jabra PanaCast 20":
