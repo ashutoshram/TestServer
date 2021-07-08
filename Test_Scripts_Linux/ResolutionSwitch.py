@@ -179,7 +179,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
 
                 switch_time = switch_end - switch_start
 
-                log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
+                # log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
                 test_start, test_time = (time.time() for x in range(2))
                 
                 # grab frames for 30 seconds
@@ -225,19 +225,19 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     avg_fps = sum(all_fps) / len(all_fps)
                 except:
                     avg_fps = 0
-                if switch_time * 1000 < 1500:
-                    if avg_fps >= t_fps - 1:
-                        err_code[test_type] = 1
-                        log_print("PASS\n")
-                    elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
-                        err_code[test_type] = 0
-                        log_print("SOFT FAIL\n")
-                    else:
-                        err_code[test_type] = -1
-                        log_print("HARD FAIL\n")
+                # if switch_time * 1000 < 1500:
+                if avg_fps >= t_fps - 1:
+                    err_code[test_type] = 1
+                    log_print("PASS\n")
+                elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
+                    err_code[test_type] = 0
+                    log_print("SOFT FAIL\n")
                 else:
                     err_code[test_type] = -1
                     log_print("HARD FAIL\n")
+                # else:
+                #     err_code[test_type] = -1
+                #     log_print("HARD FAIL\n")
                 # save copy of failed test cases
                 if err_code[test_type] == 0 or err_code[test_type] == -1:
                     failures[test_type] = err_code[test_type]
