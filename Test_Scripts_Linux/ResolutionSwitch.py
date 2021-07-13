@@ -113,19 +113,6 @@ def reboot_device(fmt):
 
 def check_frame(check_width, check_height, fmt):
     while True:
-<<<<<<< HEAD
-        retval, frame = cap.read()
-        # check if frame is successfully grabbed
-        if retval is not False or frame is not None:
-            h, w = frame.shape[:2]
-            if w == check_width and h == check_height:
-                return True
-            else:
-                continue
-        else:
-            # in case watchdog was triggered
-            time.sleep(15)
-=======
         try:
             retval, frame = cap.read()
             # check if frame is successfully grabbed
@@ -136,7 +123,8 @@ def check_frame(check_width, check_height, fmt):
                 else:
                     continue
         except:
->>>>>>> 8c3b5344e0d2607d903fa17d463a8d53c540da97
+            # in case watchdog was triggered
+            time.sleep(15)
             return False
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
