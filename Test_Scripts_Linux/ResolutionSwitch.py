@@ -119,6 +119,8 @@ def check_frame(check_width, check_height, fmt):
             else:
                 continue
         else:
+            # in case watchdog was triggered
+            time.sleep(15)
             return False
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
@@ -187,6 +189,9 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                         if drop_frame >= 5:
                             log_print("Timeout error")
                             log_print("# of dropped frames: {}".format(drop_frame))
+                            # in case watchdog was triggered
+                            time.sleep(15)
+
                             reboot_device(fmt)
                             err_code[test_type] = -1
                             drop_frame = 0
