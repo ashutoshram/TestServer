@@ -59,7 +59,10 @@ def report_results():
 def get_device():
     global cap
     # grab reenumerated device
-    cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+    try:
+        cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
+    except:
+        return False
     cam = cam.decode("utf-8")
     device_num = int(re.search(r'\d+', cam).group())
     device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
@@ -110,6 +113,7 @@ def reboot_device(fmt):
 
 def check_frame(check_width, check_height, fmt):
     while True:
+<<<<<<< HEAD
         retval, frame = cap.read()
         # check if frame is successfully grabbed
         if retval is not False or frame is not None:
@@ -121,6 +125,18 @@ def check_frame(check_width, check_height, fmt):
         else:
             # in case watchdog was triggered
             time.sleep(15)
+=======
+        try:
+            retval, frame = cap.read()
+            # check if frame is successfully grabbed
+            if retval is not False or frame is not None:
+                h, w = frame.shape[:2]
+                if w == check_width and h == check_height:
+                    return True
+                else:
+                    continue
+        except:
+>>>>>>> 8c3b5344e0d2607d903fa17d463a8d53c540da97
             return False
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
@@ -158,12 +174,14 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 cap.set(cv2.CAP_PROP_FPS, s_fps)
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                # print("set start")
                 
                 # set target res/fps
                 cap.set(cv2.CAP_PROP_FPS, t_fps)
                 switch_start = time.time()
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, t_res[0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, t_res[1])
+                # print("set target")
 
                 # calculate switch time
                 if check_frame(t_res[0], t_res[1], fmt):
@@ -176,10 +194,11 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
 
                 switch_time = switch_end - switch_start
 
-                log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
+                # log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
                 test_start, test_time = (time.time() for x in range(2))
                 
                 # grab frames for 30 seconds
+                # frame_count = 3
                 frame_count = t_fps * 30
                 for i in range(0, frame_count):
                     retval, frame = cap.read()
@@ -203,6 +222,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             if cv2.waitKey(1) & 0xFF == ord('q'):
                                 break
                         test_frame += 1
+                        # print("Frame grabbed")
             
                     # check framerate every five seconds
                     if test_frame % (frame_count / 6) == 0:
@@ -223,24 +243,25 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     avg_fps = sum(all_fps) / len(all_fps)
                 except:
                     avg_fps = 0
-                if switch_time * 1000 < 1500:
-                    if avg_fps >= t_fps - 1:
-                        err_code[test_type] = 1
-                        log_print("PASS\n")
-                    elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
-                        err_code[test_type] = 0
-                        log_print("SOFT FAIL\n")
-                    else:
-                        err_code[test_type] = -1
-                        log_print("HARD FAIL\n")
+                # if switch_time * 1000 < 1500:
+                if avg_fps >= t_fps - 1:
+                    err_code[test_type] = 1
+                    log_print("PASS\n")
+                elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
+                    err_code[test_type] = 0
+                    log_print("SOFT FAIL\n")
                 else:
                     err_code[test_type] = -1
                     log_print("HARD FAIL\n")
+                # else:
+                #     err_code[test_type] = -1
+                #     log_print("HARD FAIL\n")
                 # save copy of failed test cases
                 if err_code[test_type] == 0 or err_code[test_type] == -1:
                     failures[test_type] = err_code[test_type]
 
                 all_fps.clear()
+                # time.sleep(1)
 
 # create directory for log and .png files if it doesn't already exist
 if device_name == "Jabra PanaCast 20":
