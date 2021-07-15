@@ -99,6 +99,7 @@ def reboot_device(fmt):
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
                 time.sleep(3)
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
+                time.sleep(55)
             else:
                 os.system("sudo adb kill-server")
                 os.system("sudo adb devices")
