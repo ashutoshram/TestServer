@@ -100,16 +100,16 @@ def reboot_device(fmt):
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
                 time.sleep(3)
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
-                time.sleep(55)
             else:
                 os.system("sudo adb kill-server")
                 os.system("sudo adb devices")
                 os.system("adb reboot")
-                time.sleep(55)
-                if not get_device():
-                    log_print("Unable to recover device, exiting test. Please check physical device\n")
-                    report_results()
-                    sys.exit(0)
+            
+            time.sleep(55)
+            if not get_device():
+                log_print("Unable to recover device, exiting test. Please check physical device\n")
+                report_results()
+                sys.exit(0)
 
     reboots += 1
     if reboots > 5:
