@@ -31,7 +31,8 @@ current = date.today()
 path = os.getcwd()
 cap = None
 device_num = 0
-reboots = 0
+reboots_hard = 0
+reboots_soft = 0
 err_code = {}
 failures = {}
 
@@ -43,21 +44,23 @@ def log_print(args):
 
 def report_results():
     log_print("\nGenerating report...")
-    log_print("Number of video crashes/freezes: {}".format(reboots))
+    log_print("Number of soft video freezes: {}".format(reboots_soft))
+    log_print("Number of hard video freezes: {}".format(reboots_hard))
     report = p.pformat(err_code, width=20)
     log_print("{}\n".format(report))
     log_file.close()
 
     fail_file.write("""Resolution Switch test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
-    [-1] denotes hard failure (<27 fps, >1200ms switch time, or crash/freeze)
-    [0] denotes soft failure (27-28.99 fps)
-    Number of video crashes/freezes: {}\n\n""".format(reboots))
+    [-1] denotes hard failure (large fps dip, >1500ms switch time, or freeze)
+    [0] denotes soft failure (small fps dip)
+    Number of video crashes/freezes: {}\n\n""".format(reboots_hard))
     fail_report = p.pformat(failures, width=20)
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
 
 def get_device():
     global cap
+    global device_num
     # grab reenumerated device
     try:
         cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
@@ -77,7 +80,8 @@ def get_device():
 
 def reboot_device(fmt):
     global device_num
-    global reboots
+    global reboots_hard
+    global reboots_soft
     switch = 0
 
     log_print("Rebooting...")
@@ -94,6 +98,7 @@ def reboot_device(fmt):
     else:
         os.system("adb shell /usr/bin/resethub")
         time.sleep(15)
+        reboots_soft += 1
         if not get_device():
             if power_cycle is True:
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
@@ -104,33 +109,44 @@ def reboot_device(fmt):
                 os.system("sudo adb devices")
                 os.system("adb reboot")
             
-            time.sleep(55)
+            time.sleep(50)
+            reboots_hard += 1
+            log_print("Soft reboot count: {}".format(reboots_soft))
+            log_print("Hard reboot count: {}".format(reboots_hard))
             if not get_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
                 report_results()
                 sys.exit(0)
 
-    reboots += 1
-    if reboots > 5:
-        log_print("More than 5 reboots, exiting test. Please check physical device\n")
+    if reboots_hard > 5:
+        log_print("More than 5 reboots_hard, exiting test. Please check physical device\n")
         report_results()
         sys.exit(0)
 
 def check_frame(check_width, check_height, fmt):
+    check_start = time.time()
+    retval = False
+    frame = None
     while True:
         try:
             retval, frame = cap.read()
-            # check if frame is successfully grabbed
-            if retval is not False or frame is not None:
-                h, w = frame.shape[:2]
-                if w == check_width and h == check_height:
-                    return True
-                else:
-                    continue
         except:
-            # in case watchdog was triggered
-            time.sleep(15)
-            return False
+            log_print("failed to grab frames")
+            reboot_device(fmt)
+            continue
+        
+        # check if frame is successfully grabbed
+        if retval is not False or frame is not None:
+            h, w = frame.shape[:2]
+            if w == check_width and h == check_height:
+                return True
+        else:
+            # if device isn't sending frames, try rebooting
+            check_current = time.time()
+            if check_current - check_start > 5:
+                return False
+            continue
+
 
 def test_fps(width, height, target_res, start_fps, target_fps, fmt):
     start_frame, test_frame, total_frame, drop_frame = (0 for x in range(4))
@@ -161,7 +177,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     err_code[test_type] = -1
                     continue
                 else:
-                    log_print("Video format set to:  {} ({})".format(codec, fourcc))
+                    log_print("Video format set to:   {} ({})".format(codec, fourcc))
 
                 # set start res/fps
                 cap.set(cv2.CAP_PROP_FPS, s_fps)
@@ -203,7 +219,6 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             log_print("# of dropped frames: {}".format(drop_frame))
                             # in case watchdog was triggered
                             time.sleep(15)
-
                             reboot_device(fmt)
                             err_code[test_type] = -1
                             drop_frame = 0

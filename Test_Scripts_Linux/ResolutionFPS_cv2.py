@@ -44,21 +44,23 @@ def log_print(args):
 
 def report_results():
     log_print("\nGenerating report...")
-    log_print("Number of video crashes/freezes (that required reboots): {}".format(reboots))
-    report = p.pformat(err_code)
+    log_print("Number of soft video freezes: {}".format(reboots_soft))
+    log_print("Number of hard video freezes: {}".format(reboots_hard))
+    report = p.pformat(err_code, width=20)
     log_print("{}\n".format(report))
     log_file.close()
 
-    fail_file.write("""Test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
-    [-1] denotes hard failure (<27 fps or crash/freeze)
-    [0] denotes soft failure (27-28.99 fps)
-    Number of video crashes/freezes: {}\n\n""".format(reboots))
-    fail_report = p.pformat(failures)
+    fail_file.write("""Resolution Switch test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
+    [-1] denotes hard failure (large fps dip, >1500ms switch time, or freeze)
+    [0] denotes soft failure (small fps dip)
+    Number of video crashes/freezes: {}\n\n""".format(reboots_hard))
+    fail_report = p.pformat(failures, width=20)
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
 
 def get_device():
     global cap
+    global device_num
     # grab reenumerated device
     try:
         cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
@@ -78,7 +80,8 @@ def get_device():
 
 def reboot_device(fmt):
     global device_num
-    global reboots
+    global reboots_hard
+    global reboots_soft
     switch = 0
 
     log_print("Rebooting...")
@@ -94,6 +97,7 @@ def reboot_device(fmt):
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
         os.system("adb shell /usr/bin/resethub")
+        reboots_soft += 1
         time.sleep(20)
         if not get_device():
             if power_cycle is True:
@@ -111,9 +115,11 @@ def reboot_device(fmt):
                 report_results()
                 sys.exit(0)
 
-    reboots += 1
-    if reboots > 5:
-        log_print("More than 5 reboots, exiting test. Please check physical device\n")
+    reboots_hard += 1
+    log_print("Soft reboot count: {}".format(reboots_soft))
+    log_print("Hard reboot count: {}".format(reboots_hard))
+    if reboots_hard > 5:
+        log_print("More than 5 reboots_hard, exiting test. Please check physical device\n")
         report_results()
         sys.exit(0)
 
@@ -196,7 +202,7 @@ def test_fps(fmt, resolution, framerate, zoom):
 
             if retval is False:
                 drops += 1
-                if drops >= 10:
+                if drops >= 5:
                     log_print("# of dropped frames: {}".format(drops))
                     raise cv2.error("Timeout error")
                 continue
@@ -256,7 +262,8 @@ current = date.today()
 path = os.getcwd()
 cap = None
 device_num = 0
-reboots = 0
+reboots_hard = 0
+reboots_soft = 0
 err_code = {}
 failures = {}
 
