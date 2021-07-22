@@ -53,7 +53,8 @@ def report_results():
     fail_file.write("""Resolution Switch test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
     [-1] denotes hard failure (large fps dip, >1500ms switch time, or freeze)
     [0] denotes soft failure (small fps dip)
-    Number of video crashes/freezes: {}\n\n""".format(reboots_hard))
+    Number of soft video freezes: {}
+    Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))
     fail_report = p.pformat(failures, width=20)
     fail_file.write("{}\n\n".format(fail_report))
     fail_file.close()
@@ -226,6 +227,8 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             
                     else:
                         if live_view is True:
+                            # switch channels for correct color output
+                            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                             cv2.imshow('frame', frame)
                             if cv2.waitKey(1) & 0xFF == ord('q'):
                                 break
