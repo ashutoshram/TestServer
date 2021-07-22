@@ -20,12 +20,12 @@ device_name = args["video"]
 current = datetime.date.today()
 path = os.getcwd()
 
-# cam_props = {'brightness': [0, 128, 255, 110],
-#              'contrast': [0, 95, 191, 150],
-#              'saturation': [128, 136, 160, 176, 155, 143],
-#              'sharpness': [0, 110, 128, 255, 193, 121],
-#              'white_balance_temperature': [0, 6500, 5000]}
-cam_props = {'white_balance_temperature': [0, 6500, 5000]}
+cam_props = {'brightness': [0, 128, 255, 110],
+             'contrast': [0, 95, 191, 150],
+             'saturation': [128, 136, 160, 176, 155, 143],
+             'sharpness': [0, 110, 128, 255, 193, 121],
+             'white_balance_temperature': [0, 6500, 5000]}
+# cam_props = {'white_balance_temperature': [0, 6500, 5000]}
 
 # set up camera stream
 try:
