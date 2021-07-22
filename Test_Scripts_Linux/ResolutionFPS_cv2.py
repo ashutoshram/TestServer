@@ -110,12 +110,13 @@ def reboot_device(fmt):
                 os.system("adb reboot")
             
             time.sleep(55)
+            reboots_hard += 1
             if not get_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
                 report_results()
                 sys.exit(0)
 
-    reboots_hard += 1
+    
     log_print("Soft reboot count: {}".format(reboots_soft))
     log_print("Hard reboot count: {}".format(reboots_hard))
     if reboots_hard > 5:
