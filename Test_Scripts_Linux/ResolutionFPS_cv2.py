@@ -51,7 +51,7 @@ def report_results():
     log_file.close()
 
     fail_file.write("""ResolutionFPS test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
-    [-1] denotes hard failure (large fps dip, >1500ms switch time, or freeze)
+    [-1] denotes hard failure (large fps dip or freeze)
     [0] denotes soft failure (small fps dip)
     Number of soft video freezes: {}
     Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))
