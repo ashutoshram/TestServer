@@ -92,6 +92,7 @@ def reboot_device(fmt):
     if device_name == "Jabra PanaCast 20":
         subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
         time.sleep(10)
+        reboots_hard += 1
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
             sys.exit(0)
@@ -274,26 +275,26 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 all_fps.clear()
                 # time.sleep(1)
 
-# create directory for log and .png files if it doesn't already exist
-if device_name == "Jabra PanaCast 20":
-    log_name = "p20"
-elif device_name == "Jabra PanaCast 50":
-    log_name = "p50"
-
-filename = "{}_resolutionswitch_{}.log".format(current, log_name)
-file_path = os.path.join(path+"/resolutionswitch", filename)
-fail = "{}_failed_resolutionswitch_{}.log".format(current, log_name)
-fail_path = os.path.join(path+"/resolutionswitch", fail)
-if not os.path.exists(path+"/resolutionswitch"):
-    os.makedirs(path+"/resolutionswitch")
-
-log_file = open(file_path, "a")
-fail_file = open(fail_path, "a")
-timestamp = datetime.now()
-log_print(55*"=")
-log_print("\n{}\n".format(timestamp))
-
 if __name__ == "__main__":
+    # create directory for log and .png files if it doesn't already exist
+    if device_name == "Jabra PanaCast 20":
+        log_name = "p20"
+    elif device_name == "Jabra PanaCast 50":
+        log_name = "p50"
+
+    filename = "{}_resolutionswitch_{}.log".format(current, log_name)
+    file_path = os.path.join(path+"/resolutionswitch", filename)
+    fail = "{}_failed_resolutionswitch_{}.log".format(current, log_name)
+    fail_path = os.path.join(path+"/resolutionswitch", fail)
+    if not os.path.exists(path+"/resolutionswitch"):
+        os.makedirs(path+"/resolutionswitch")
+
+    log_file = open(file_path, "a")
+    fail_file = open(fail_path, "a")
+    timestamp = datetime.now()
+    log_print(55*"=")
+    log_print("\n{}\n".format(timestamp))
+
     # set up camera stream
     if not get_device():
         log_print("Device not found, please check if it is attached.")
