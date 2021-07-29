@@ -224,7 +224,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             reboot_device(fmt)
                             err_code[test_type] = -1
                             drop_frame = 0
-                            break
+                            return
                             
                     else:
                         if live_view is True:
