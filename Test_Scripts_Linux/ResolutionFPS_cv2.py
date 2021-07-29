@@ -50,7 +50,7 @@ def report_results():
     log_print("{}\n".format(report))
     log_file.close()
 
-    fail_file.write("""Resolution Switch test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
+    fail_file.write("""Resolution Switch test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
     [-1] denotes hard failure (large fps dip, >1500ms switch time, or freeze)
     [0] denotes soft failure (small fps dip)
     Number of soft video freezes: {}
@@ -92,6 +92,7 @@ def reboot_device(fmt):
     if device_name == "Jabra PanaCast 20":
         subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
         time.sleep(10)
+        reboots_hard += 1
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
             sys.exit(0)
