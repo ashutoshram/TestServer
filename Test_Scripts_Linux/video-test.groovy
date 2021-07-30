@@ -13,18 +13,18 @@ pipeline {
         TEST_REPORT = "---"
         CHECK_PATH = "newport"
         NEW_GERRIT_COMMIT_MSG = "---"
-        NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com"
+        NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
+        //NOTIFICATION_EMAILS = "khtran@jabra.com"
     }
 
     parameters {
         choice(name: 'BRANCH', choices: ['master', 'PYTHON_FCS_BRANCH', 'MAMBA_FCS_BRANCH'])
         booleanParam(defaultValue: true, name: 'DO_PYTHON', description: 'Build Python')
         booleanParam(defaultValue: false, name: 'DO_MAMBA', description: 'Build Mamba')
-        booleanParam(defaultValue: true, name: 'RUN_ALL_TESTS')
+        booleanParam(defaultValue: false, name: 'RUN_ALL_TESTS')
         booleanParam(defaultValue: false, name: 'CAM_PROP_RAW')
         booleanParam(defaultValue: false, name: 'RES_SWITCH_RAW')
         booleanParam(defaultValue: false, name: 'RES_FPS_RAW')
-        // booleanParam(defaultValue: false, name: 'CAM_PROP_MJPG')
         booleanParam(defaultValue: false, name: 'RES_SWITCH_MJPG')
         booleanParam(defaultValue: false, name: 'RES_FPS_MJPG')
     }
