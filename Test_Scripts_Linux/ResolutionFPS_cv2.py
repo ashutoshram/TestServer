@@ -6,7 +6,6 @@ import sys
 import cv2
 from queue import Queue
 from datetime import date, datetime
-import AbstractTestClass as ATC
 import pprint as p
 import json
 import subprocess
@@ -50,8 +49,8 @@ def report_results():
     log_print("{}\n".format(report))
     log_file.close()
 
-    fail_file.write("""Resolution Switch test cases that resulted in soft failures or hard failures. Please refer to resolutionswitch.log for more details on each case.
-    [-1] denotes hard failure (large fps dip, >1500ms switch time, or freeze)
+    fail_file.write("""ResolutionFPS test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
+    [-1] denotes hard failure (large fps dip or freeze)
     [0] denotes soft failure (small fps dip)
     Number of soft video freezes: {}
     Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))
@@ -73,7 +72,7 @@ def get_device():
     cap = cv2.VideoCapture(device_num)
 
     if cap.isOpened():
-        log_print("Device back online:  {}\n".format(device_num))
+        log_print("Device number:  {}\n".format(device_num))
         cap.open(device_num)
         return True
     else:
@@ -92,6 +91,7 @@ def reboot_device(fmt):
     if device_name == "Jabra PanaCast 20":
         subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
         time.sleep(10)
+        reboots_hard += 1
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
             sys.exit(0)
