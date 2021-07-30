@@ -6,7 +6,6 @@ import sys
 import cv2
 from queue import Queue
 from datetime import date, datetime
-import AbstractTestClass as ATC
 import pprint as p
 import json
 import subprocess
@@ -73,7 +72,7 @@ def get_device():
     cap = cv2.VideoCapture(device_num)
 
     if cap.isOpened():
-        log_print("Device back online:  {}\n".format(device_num))
+        log_print("Device number:  {}\n".format(device_num))
         cap.open(device_num)
         return True
     else:
