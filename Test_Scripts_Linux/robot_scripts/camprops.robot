@@ -10,27 +10,22 @@ Documentation     Example test cases using the data-driven testing approach.
 ...
 ...               Notice that one of these tests fails on purpose to show how
 ...               failures look like.
-Test Template     Calculate
-Library           CalculatorLibrary.py
+Test Template     Evaluate
+Library           camPropRobot.py
 
-*** Test Cases ***  Expression                                      Expected
-brightness          {'brightness': [0, 128, 255, 110]}              1
+*** Test Cases ***      Expression                      Expected
+brightness              brightness                      1
 
-contrast            {'contrast': [0, 95, 191, 150]}                 1
+contrast                contrast                        1
 
-saturation          {'saturation': [128, 136, 160, 176, 155, 143]}  1
+saturation              saturation                      1
 
-sharpness           {'sharpness': [0, 110, 128, 255, 193, 121]}     1
+sharpness               sharpness                       1
 
-white balance       {'white_balance_temperature': [0, 6500, 5000]}  1
+white balance           white_balance_temperature       1
 
 *** Keywords ***
-Calculate
+Evaluate
     [Arguments]    ${expression}    ${expected}
-    Push buttons    C${expression}=
+    Eval cam       ${expression}
     Result should be    ${expected}
-
-Calculation should fail
-    [Arguments]    ${expression}    ${expected}
-    ${error} =    Should cause error    C${expression}=
-    Should be equal    ${expected}    ${error}    # Using `BuiltIn` keyword

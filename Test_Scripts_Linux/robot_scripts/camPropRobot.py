@@ -6,22 +6,27 @@ import numpy as np
 import time
 from datetime import date, datetime
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
-ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
-ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
-args = vars(ap.parse_args())
-debug = args["debug"]
-device_name = args["video"]
-power_cycle = args["power"]
+# ap = argparse.ArgumentParser()
+# ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
+# ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
+# ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
+# args = vars(ap.parse_args())
+# debug = args["debug"]
+# device_name = args["video"]
+# power_cycle = args["power"]
 
 current = date.today()
 path = os.getcwd()
 cap = None
+debug = True
 device = None
+device_name = "Jabra PanaCast 50"
 device_num = 0
+log_file = None
+power_cycle = True
 reboots_hard = 0
 reboots_soft = 0
+result = -1
 err_code = {}
 failures = {}
 
@@ -30,7 +35,6 @@ cam_props = {'brightness': [0, 128, 255, 110],
              'saturation': [128, 136, 160, 176, 155, 143],
              'sharpness': [0, 110, 128, 255, 193, 121],
              'white_balance_temperature': [0, 6500, 5000]}
-# cam_props = {'white_balance_temperature': [0, 6500, 5000]}
 
 def log_print(args):
     msg = args + "\n"
@@ -127,23 +131,16 @@ def eval_results(ctrl, values):
             results[ctrl[c]] = -1
             results[ctrl[c + 1]] = -1
 
-    return results
+    fail = -1
+    if fail in results.values():
+        return -1
+    else:
+        return 1
 
 # evaluate the luma for each specified brightness value, return list of results
-def brightness(device, cap, ctrl):
+def brightness(raw_frames):
     results = []
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
-    for c in ctrl:
-        log_print("\nBrightness:  {:<5}".format(c))
-        subprocess.call(['{} -c brightness={}'.format(device, str(c))], shell=True)
-        t_end = time.time() + 3
-        while True:
-            ret, frame = cap.read()
-            if time.time() > t_end and ret is True:
-                break
-        
+    for frame in raw_frames:      
         # convert to grayscale and calculate luma
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         luma = np.average(f)
@@ -153,20 +150,9 @@ def brightness(device, cap, ctrl):
     return results
 
 # evaluate otsu threshold for each contrast value, return list of results
-def contrast(device, cap, ctrl):
+def contrast(raw_frames):
     results = []
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
-    for c in ctrl:
-        log_print("\nContrast:        {:<5}".format(c))
-        subprocess.call(['{} -c contrast={}'.format(device, str(c))], shell=True)
-        t_end = time.time() + 3
-        while True:
-            ret, frame = cap.read()
-            if time.time() > t_end and ret is True:
-                break
-        
+    for frame in raw_frames: 
         # convert to grayscale and calculate otsu
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(f, 0, 255, cv2.THRESH_OTSU)
@@ -177,20 +163,9 @@ def contrast(device, cap, ctrl):
     return results
 
 # evaluate hsv for each saturation value, return list of results
-def saturation(device, cap, ctrl):
+def saturation(raw_frames):
     results = []
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
-    for c in ctrl:
-        log_print("\nsaturation:            {:<5}".format(c))
-        subprocess.call(['{} -c saturation={}'.format(device, str(c))], shell=True)
-        t_end = time.time() + 3
-        while True:
-            ret, frame = cap.read()
-            if time.time() > t_end and ret is True:
-                break
-        
+    for frame in raw_frames:      
         # convert to HSV and calculate saturation average
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         h, s, v = cv2.split(hsv)
@@ -200,20 +175,9 @@ def saturation(device, cap, ctrl):
     
     return results
 
-def sharpness(device, cap, ctrl):
+def sharpness(raw_frames):
     results = []
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
-    for c in ctrl:
-        log_print("\nsharpness:           {:<5}".format(c))
-        subprocess.call(['{} -c sharpness={}'.format(device, str(c))], shell=True)
-        t_end = time.time() + 3
-        while True:
-            ret, frame = cap.read()
-            if time.time() > t_end and ret is True:
-                break
-        
+    for frame in raw_frames: 
         # convert to grayscale and calculate lapacian variance
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         variance = cv2.Laplacian(f, cv2.CV_64F).var()
@@ -222,21 +186,35 @@ def sharpness(device, cap, ctrl):
     
     return results
 
-def white_balance(device, cap, ctrl):
-    results = []
+# didn't finish yet lol
+def white_balance(raw_frames):
+    return raw_frames
+
+def get_frames(device, cap, prop, ctrl):
+    frames = []
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
     for c in ctrl:
-        log_print("\nwhite_balance_temperature:  {:<5}".format(c))
-        subprocess.call(['{} -c white_balance_temperature={}'.format(device, str(c))], shell=True)
-        wb = cap.get(cv2.CAP_PROP_TEMPERATURE)
-        log_print("White balance temperature:  {}".format(wb))
-        results.append(wb)
-    
-    return results
+        log_print("{}:            {:<5}".format(prop, str(c)))
+        subprocess.call(['{} -c {}={}'.format(device, prop, str(c))], shell=True)
+        t_end = time.time() + 3
+        while True:
+            ret, frame = cap.read()
+            if time.time() > t_end and ret is True:
+                # white balance still in progress
+                if prop == "white_balance_temperature":
+                    frames.append(c)
+                else:
+                    frames.append(frame)
+                break
 
-if __name__ == "__main__":
+    log_print("\n")
+    return frames
+
+def eval_cam(prop):
+    global log_file
+    global result
 
     # create directory for log and .png files if it doesn't already exist
     if device_name == "Jabra PanaCast 20":
@@ -245,7 +223,7 @@ if __name__ == "__main__":
         log_name = "p50"
 
     # create log file for the current cam prop
-    filename = "{}_CamPropControls_{}.log".format(current, log_name)
+    filename = "{}_{}_{}.log".format(current, prop, log_name)
     file_path = os.path.join(path+"/CamPropControls", filename)
     # create directory for log files if it doesn't already exist
     if not os.path.exists(path+"/CamPropControls"):
@@ -258,41 +236,64 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # iterate thru cam_props dict and test each value of each cam prop
-    for prop in cam_props:
-        timestamp = datetime.now()
-        log_print(55*"=")
-        log_print("\n{}\n".format(timestamp))
+    timestamp = datetime.now()
+    log_print(55*"=")
+    log_print("\n{}\n".format(timestamp))
 
-        ctrl = cam_props[prop]
-        basic = {}
+    log_print("READY")
+    
+    ctrl = cam_props[prop]
+    
+    log_print("ctrl set")
 
-        cap.open(device_num)
-        # set auto wb off before starting
+    basic = {}
+    cap.open(device_num)
+
+    log_print("camera acquired")
+
+    # set auto wb off before starting
+    if prop == "white_balance_temperature":
         subprocess.call(['{} -c white_balance_temperature_auto=0'.format(device)], shell=True)
-        for c in ctrl:
-            basic[c] = get_set(device, prop, c)
 
-        if prop == "brightness":
-            values = brightness(device, cap, ctrl)
-            advanced = eval_results(ctrl, values)
-        elif prop == "contrast":
-            values = contrast(device, cap, ctrl)
-            advanced = eval_results(ctrl, values)
-        elif prop == "saturation":
-            values = saturation(device, cap, ctrl)
-            advanced = eval_results(ctrl, values)
-        elif prop == "sharpness":
-            values = sharpness(device, cap, ctrl)
-            advanced = eval_results(ctrl, values)
-        elif prop == "white_balance_temperature":
-            values = white_balance(device, cap, ctrl)
-            advanced = eval_results(ctrl, values)
-        
-        log_print("\nGenerating report...\n")
-        report = json.dumps(advanced, indent=2)
-        log_print("{}\n".format(report))
-        log_print("Exiting {} test now...\n".format(prop))
-        advanced.clear()
+    log_print("first auto wb subprocess call")
+
+    for c in ctrl:
+        basic[c] = get_set(device, prop, c)
+    log_print("\n")
+
+    log_print("basic get_set tests done")
+    
+    raw_frames = get_frames(device, cap, prop, ctrl)
+    if prop == "brightness":
+        values = brightness(raw_frames)
+        result = eval_results(ctrl, values)
+    elif prop == "contrast":
+        values = contrast(raw_frames)
+        result = eval_results(ctrl, values)
+    elif prop == "saturation":
+        values = saturation(raw_frames)
+        result = eval_results(ctrl, values)
+    elif prop == "sharpness":
+        values = sharpness(raw_frames)
+        result = eval_results(ctrl, values)
+    elif prop == "white_balance_temperature":
+        values = white_balance(raw_frames)
+        result = eval_results(ctrl, values)
+
+    log_print("eval frame test done")
+    log_print("result set to: {}".format(result))
+
+    log_print("\nGenerating report...\n")
+    # report = json.dumps(advanced, indent=2)
+    # log_print("{}\n".format(report))
+    log_print("Exiting {} test now...\n".format(prop))
+    # advanced.clear()
 
     cap.release()
+
+def result_should_be(expected):
+    log_print("result is: {}".format(result))
     log_file.close()
+
+    if result != int(expected):
+        raise AssertionError("{} != {}".format(result, expected))
