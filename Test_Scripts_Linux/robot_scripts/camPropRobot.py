@@ -3,17 +3,9 @@ import os, sys, subprocess
 import json, re
 import argparse
 import numpy as np
+import pprint as p
 import time
 from datetime import date, datetime
-
-# ap = argparse.ArgumentParser()
-# ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
-# ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
-# ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
-# args = vars(ap.parse_args())
-# debug = args["debug"]
-# device_name = args["video"]
-# power_cycle = args["power"]
 
 current = date.today()
 path = os.getcwd()
@@ -46,11 +38,13 @@ def get_device():
     global cap
     global device
     global device_num
+
     # grab reenumerated device
     try:
         cam = subprocess.check_output('v4l2-ctl --list-devices 2>/dev/null | grep "{}" -A 1 | grep video'.format(device_name), shell=True, stderr=subprocess.STDOUT)
     except:
         return False
+
     cam = cam.decode("utf-8")
     device_num = int(re.search(r'\d+', cam).group())
     device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
@@ -77,6 +71,7 @@ def reboot_device():
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
             sys.exit(0)
+
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
         os.system("adb shell /usr/bin/resethub")
@@ -111,6 +106,7 @@ def get_set(device, prop, val):
     s = s.decode('UTF-8')
     value = re.match("(.*): (\d+)", s)
     log_print("setting {} to: {}".format(prop, value.group(2)))
+
     if value.group(2) != str(val):
         log_print("FAIL: {} get/set not working as intended".format(prop))
         return -1
@@ -130,7 +126,9 @@ def eval_results(ctrl, values):
         else:
             results[ctrl[c]] = -1
             results[ctrl[c + 1]] = -1
-
+    
+    report = p.pformat(results, width=20)
+    log_print(report+"\n")
     fail = -1
     if fail in results.values():
         return -1
@@ -144,7 +142,7 @@ def brightness(raw_frames):
         # convert to grayscale and calculate luma
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         luma = np.average(f)
-        log_print("luma:        {:<5}".format(luma))
+        log_print("Luma:        {:<5}".format(luma))
         results.append(luma)
 
     return results
@@ -155,10 +153,9 @@ def contrast(raw_frames):
     for frame in raw_frames: 
         # convert to grayscale and calculate otsu
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        ret, thresh = cv2.threshold(f, 0, 255, cv2.THRESH_OTSU)
-        otsu = np.average(thresh)
-        log_print("Otsu threshold:  {}".format(otsu))
-        results.append(otsu)
+        cont = f.std()
+        log_print("Contrast:  {}".format(cont))
+        results.append(cont)
     
     return results
 
@@ -239,29 +236,18 @@ def eval_cam(prop):
     timestamp = datetime.now()
     log_print(55*"=")
     log_print("\n{}\n".format(timestamp))
-
-    log_print("READY")
     
     ctrl = cam_props[prop]
-    
-    log_print("ctrl set")
-
     basic = {}
     cap.open(device_num)
-
-    log_print("camera acquired")
 
     # set auto wb off before starting
     if prop == "white_balance_temperature":
         subprocess.call(['{} -c white_balance_temperature_auto=0'.format(device)], shell=True)
 
-    log_print("first auto wb subprocess call")
-
     for c in ctrl:
         basic[c] = get_set(device, prop, c)
     log_print("\n")
-
-    log_print("basic get_set tests done")
     
     raw_frames = get_frames(device, cap, prop, ctrl)
     if prop == "brightness":
@@ -280,20 +266,12 @@ def eval_cam(prop):
         values = white_balance(raw_frames)
         result = eval_results(ctrl, values)
 
-    log_print("eval frame test done")
-    log_print("result set to: {}".format(result))
-
     log_print("\nGenerating report...\n")
-    # report = json.dumps(advanced, indent=2)
-    # log_print("{}\n".format(report))
     log_print("Exiting {} test now...\n".format(prop))
-    # advanced.clear()
-
+ 
+    log_file.close()
     cap.release()
 
 def result_should_be(expected):
-    log_print("result is: {}".format(result))
-    log_file.close()
-
     if result != int(expected):
         raise AssertionError("{} != {}".format(result, expected))
