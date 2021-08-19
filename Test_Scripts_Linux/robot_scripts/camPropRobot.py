@@ -15,7 +15,7 @@ device = None
 device_name = "Jabra PanaCast 50"
 device_num = 0
 log_file = None
-power_cycle = True
+power_cycle = False
 reboots_hard = 0
 reboots_soft = 0
 result = -1
@@ -272,6 +272,4 @@ def eval_cam(prop):
     log_file.close()
     cap.release()
 
-def result_should_be(expected):
-    if result != int(expected):
-        raise AssertionError("{} != {}".format(result, expected))
+ 

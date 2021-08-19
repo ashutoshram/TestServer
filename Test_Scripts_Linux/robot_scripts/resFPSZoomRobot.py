@@ -12,24 +12,19 @@ import subprocess
 import argparse
 import re
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-d","--debug", type=bool, default=False, help="Set to True to disable msgs to terminal")
-ap.add_argument("-f","--frame", type=bool, default=False, help="Set to True to enable live view")
-ap.add_argument("-p","--power", type=bool, default=False, help="Set to true when running on the Jenkins server")
-ap.add_argument("-t","--test", type=str, default="res_fps_p50.json", help="Specify .json file to load test cases")
-ap.add_argument("-v","--video", type=str, default="Jabra PanaCast 50", help="Specify which camera to test")
-ap.add_argument("-z","--zoom", type=str, default="zoom.json", help="Specify .json file to load zoom values")
-args = vars(ap.parse_args())
-debug = args["debug"]
-live_view = args["frame"]
-test_file = "config/" + args["test"]
-zoom_file = "config/" + args["zoom"]
-power_cycle = args["power"]
-device_name = args["video"]
-
-input_tests = open(test_file)
-json_str = input_tests.read()
-test_cases = json.loads(json_str)
+current = date.today()
+path = os.getcwd()
+cap = None
+debug = True
+device = None
+device_name = "Jabra PanaCast 50"
+device_num = 0
+log_file = None
+power_cycle = False
+reboots_hard = 0
+reboots_soft = 0
+result = -1
+zoom_file = os.path.dirname(path) + "/config/zoom.json"
 
 input_zooms = open(zoom_file)
 json_str = input_zooms.read()
@@ -38,28 +33,27 @@ zoom_levels = json.loads(json_str)
 def log_print(args):
     msg = args + "\n"
     log_file.write(msg)
-    if debug is True: 
+    if debug is True:
         print(args)
 
-def report_results():
+def report_results(results):
     log_print("\nGenerating report...")
     log_print("Number of soft video freezes: {}".format(reboots_soft))
     log_print("Number of hard video freezes: {}".format(reboots_hard))
-    report = p.pformat(err_code, width=20)
+    report = p.pformat(results, width=20)
     log_print("{}\n".format(report))
     log_file.close()
+    
+    fail = -1
+    if fail in results.values():
+        return -1
+    else:
+        return 1
 
-    fail_file.write("""ResolutionFPS test cases that resulted in soft failures or hard failures. Please refer to resolutionfps.log for more details on each case.
-    [-1] denotes hard failure (large fps dip or freeze)
-    [0] denotes soft failure (small fps dip)
-    Number of soft video freezes: {}
-    Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))
-    fail_report = p.pformat(failures, width=20)
-    fail_file.write("{}\n\n".format(fail_report))
-    fail_file.close()
 
 def get_device():
     global cap
+    global device
     global device_num
     # grab reenumerated device
     try:
@@ -117,7 +111,6 @@ def reboot_device(fmt):
                 report_results()
                 sys.exit(0)
 
-    
     log_print("Soft reboot count: {}".format(reboots_soft))
     log_print("Hard reboot count: {}".format(reboots_hard))
     if reboots_hard > 5:
@@ -125,8 +118,7 @@ def reboot_device(fmt):
         report_results()
         sys.exit(0)
 
-def test_fps(fmt, resolution, framerate, zoom):
-    # check if camera stream exists
+def test_fps(fmt, x, y, framerate, zoom):
     global device_num
     
     # set video format
@@ -142,35 +134,18 @@ def test_fps(fmt, resolution, framerate, zoom):
         return -1
 
     # set resolution and check if set correctly
-    if resolution == '4k':
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    elif resolution == '1200p':
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 4800)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
-    elif resolution == '1080p':
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    elif resolution == '720p':
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    elif resolution == '540p':
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
-    elif resolution == '360p':
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
-    
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, x)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, y)    
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     log_print("Resolution set to:      {} x {}".format(width, height))
 
     # set zoom level
-    device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
+    # device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
     log_print("Setting zoom level to:  {}".format(zoom))
     subprocess.call(['{} -c zoom_absolute={}'.format(device, str(zoom))], shell=True)
 
-    # open opencv capture device and set the fps
+    # set the fps
     log_print("Setting framerate to:   {}".format(framerate))
     cap.set(cv2.CAP_PROP_FPS, framerate)
     current_fps = cap.get(cv2.CAP_PROP_FPS)
@@ -209,12 +184,6 @@ def test_fps(fmt, resolution, framerate, zoom):
                     raise cv2.error("Timeout error")
                 continue
             else:
-                if live_view is True:
-                    # switch channels for correct color output
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)                                          
-                    cv2.imshow('frame', frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
                 count += 1
             # 2/3 frames - 1 to get the first 20 seconds
             if i == (((frames * 2) / 3) - 1):
@@ -262,57 +231,53 @@ def test_fps(fmt, resolution, framerate, zoom):
         log_print("HARD FAIL\n")
         return -1
 
-current = date.today()
-path = os.getcwd()
-cap = None
-device_num = 0
-reboots_hard = 0
-reboots_soft = 0
-err_code = {}
-failures = {}
+def eval_res(prop):
+    global log_file
+    global result
+    err_code = {}
+    vals = prop.split()
+    fmt = vals[0]
+    x = int(vals[1])
+    y = int(vals[2])
+    fps = int(vals[3])
 
-# create directory for log and .png files if it doesn't already exist
-if device_name == "Jabra PanaCast 20":
-    log_name = "p20"
-elif device_name == "Jabra PanaCast 50":
-    log_name = "p50"
+    # create directory for log and .png files if it doesn't already exist
+    if device_name == "Jabra PanaCast 20":
+        log_name = "p20"
+    elif device_name == "Jabra PanaCast 50":
+        log_name = "p50"
 
-filename = "{}_resolutionfps_{}.log".format(current, log_name)
-log_path = os.path.join(path+"/resolutionfps", filename)
-fail = "{}_failed_resolutionfps_{}.log".format(current, log_name)
-fail_path = os.path.join(path+"/resolutionfps", fail)
-if not os.path.exists(path+"/resolutionfps"):
-    os.makedirs(path+"/resolutionfps")
+    # create log file for current res fps zoom
+    filename = "{}_{}p_{}.log".format(current, y, log_name)
+    log_path = os.path.join(path+"/resolutionfps", filename)
 
-log_file = open(log_path, "a")
-fail_file = open(fail_path, "a")
-timestamp = datetime.now()
-log_print(55*"=")
-log_print("\n{}\n".format(timestamp))
+    # create directory for log files if it already doesn't exist
+    if not os.path.exists(path+"/resolutionfps"):
+        os.makedirs(path+"/resolutionfps")
+    log_file = open(log_path, "a")
 
-if __name__ == "__main__":
     # set up camera stream
     if not get_device():
         log_print("Device not found, please check if it is attached")
         sys.exit(0)
     
+    timestamp = datetime.now()
+    log_print(55*"=")
+    log_print("\n{}\n".format(timestamp))
+
     cap.open(device_num)
-    for fmt in test_cases:
-        res_dict = test_cases[fmt]
-        for resolution in res_dict:
-            framerate = res_dict[resolution]
-            log_print(55*"=")
-            log_print("Parameters:             {} {} {}".format(fmt, resolution, framerate))
-            for fps in framerate:
-                for z in zoom_levels["ZOOM"]:
-                    log_print(55*"=")
-                    log_print("Testing:                {} {} {}fps zoom {}\n".format(fmt, resolution, fps, z))
-                    test_type = "{} {} {}fps zoom {}".format(fmt, resolution, fps, z)
-                    err_code[test_type] = test_fps(fmt, resolution, fps, z)
+    log_print(55*"=")
+    log_print("Parameters: {} {}p {}fps".format(fmt, y, fps))
+    
+    for z in zoom_levels["ZOOM"]:
+        log_print(55*"=")
+        log_print("Testing: {} {}p {}fps zoom {}\n".format(fmt, y, fps, z))
+        test_type = "{} {}p {}fps zoom {}".format(fmt, y, fps, z)
+        err_code[test_type] = test_fps(fmt, x, y, fps, z)
 
-                    if err_code[test_type] == 0 or err_code[test_type] == -1:
-                        failures[test_type] = err_code[test_type] 
-
-    report_results()
+    result = report_results(err_code)
     cap.release()
-    cv2.destroyAllWindows()
+
+def result_should_be(expected):
+    if result != int(expected):
+        raise AssertionError("{} != {}".format(result, expected))
