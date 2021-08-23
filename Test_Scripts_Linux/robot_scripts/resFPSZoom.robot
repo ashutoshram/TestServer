@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation     Test cases for camera property controls.
+Documentation     Test cases for fps at different resolutions and zoom levels.
 ...
 Test Template     Evaluate
 Library           resFPSZoomRobot.py
