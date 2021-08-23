@@ -20,7 +20,6 @@ log_file = None
 power_cycle = False
 reboots_hard = 0
 reboots_soft = 0
-err_code = {}
 result = -1
 
 def log_print(args):
@@ -29,11 +28,11 @@ def log_print(args):
     if debug is True: 
         print(args)
 
-def report_results():
+def report_results(results):
     log_print("\nGenerating report...")
     log_print("Number of soft video freezes: {}".format(reboots_soft))
     log_print("Number of hard video freezes: {}".format(reboots_hard))
-    report = p.pformat(err_code, width=20)
+    report = p.pformat(results, width=20)
     log_print("{}\n".format(report))
     log_file.close()
 
@@ -141,10 +140,6 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
     global err_code
     global failures
 
-    test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps)
-    log_print(55*"=")
-    log_print("{}\n".format(test_type))
-
     # convert video codec number to format and check if set correctly
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
     fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
@@ -153,8 +148,7 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
     if codec != fmt:
         log_print("Unable to set video format to {}.".format(fmt))
         reboot_device(fmt)
-        err_code[test_type] = -1
-        continue
+        return -1
     else:
         log_print("Video format set to:   {} ({})".format(codec, fourcc))
 
@@ -176,9 +170,8 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
         switch_end = time.time()
     else:
         log_print("Unable to switch resolution")
-        err_code[test_type] = -1
         reboot_device(fmt)
-        continue
+        return -1
 
     switch_time = switch_end - switch_start
 
@@ -199,9 +192,8 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
                 # in case watchdog was triggered
                 time.sleep(15)
                 reboot_device(fmt)
-                err_code[test_type] = -1
                 drop_frame = 0
-                return     
+                return -1   
         else:
             test_frame += 1
 
@@ -226,14 +218,14 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
         avg_fps = 0
     # if switch_time * 1000 < 1500:
     if avg_fps >= t_fps - 1:
-        err_code[test_type] = 1
         log_print("PASS\n")
+        return 1
     elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
-        err_code[test_type] = 0
         log_print("SOFT FAIL\n")
+        return 0
     else:
-        err_code[test_type] = -1
         log_print("HARD FAIL\n")
+        return -1
     # else:
     #     err_code[test_type] = -1
     #     log_print("HARD FAIL\n")
@@ -244,6 +236,7 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
 def eval_switch(prop):
     global log_file
     global result
+    err_code = {}
     vals = prop.split()
     fmt = vals[0]
     start_res = vals[1].split('x')
@@ -280,8 +273,15 @@ def eval_switch(prop):
     start_h = int(start_res[1])
     target_w = int(target_res[0])
     target_h = int(target_res[1])
-    test_fps(fmt, start_w, start_h, target_w, target_h, start_fps, target_fps)
     
-    report_results()
+    test_type = "{} {}x{} [{} fps] -> {}x{} [{} fps]".format(fmt, start_w, start_h, start_fps, target_w, target_h, target_fps)
+    log_print(55*"=")
+    log_print("{}\n".format(test_type))
+    err_code[test_type] = test_fps(fmt, start_w, start_h, target_w, target_h, start_fps, target_fps)
+    
+    result = report_results(err_code)
     cap.release()
-    cv2.destroyAllWindows()
+
+def result_should_be(expected):
+    if result != int(expected):
+        raise AssertionError("{} != {}".format(result, expected))

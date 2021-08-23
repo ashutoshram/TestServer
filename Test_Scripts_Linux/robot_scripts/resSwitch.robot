@@ -26,10 +26,10 @@ Library           resSwitchRobot.py
                         NV12 1280x720 960x540 30 15       1
                         NV12 1280x720 960x540 15 15       1
                         NV12 1280x720 960x540 15 30       1
-                        NV12 1280x720 640x360 30 30      1
-                        NV12 1280x720 640x360 30 15      1
-                        NV12 1280x720 640x360 15 15      1
-                        NV12 1280x720 640x360 15 30      1
+                        NV12 1280x720 640x360 30 30       1
+                        NV12 1280x720 640x360 30 15       1
+                        NV12 1280x720 640x360 15 15       1
+                        NV12 1280x720 640x360 15 30       1
 
 540p                    NV12 960x540 1920x1080 30 30      1
                         NV12 960x540 1920x1080 30 15      1
@@ -60,5 +60,5 @@ Library           resSwitchRobot.py
 *** Keywords ***
 Evaluate
     [Arguments]    ${expression}    ${expected}
-    Eval res       ${expression}
+    Eval switch       ${expression}
     Result should be    ${expected}
