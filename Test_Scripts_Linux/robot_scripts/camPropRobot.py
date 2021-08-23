@@ -272,4 +272,6 @@ def eval_cam(prop):
     log_file.close()
     cap.release()
 
- 
+def result_should_be(expected):
+    if result != int(expected):
+        raise AssertionError("{} != {}".format(result, expected))
