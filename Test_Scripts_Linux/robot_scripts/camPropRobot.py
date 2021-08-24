@@ -189,8 +189,10 @@ def white_balance(raw_frames):
 
 def get_frames(device, cap, prop, ctrl):
     frames = []
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"NV12"))
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    drop_frame = 0
 
     for c in ctrl:
         log_print("{}:            {:<5}".format(prop, str(c)))
@@ -198,6 +200,18 @@ def get_frames(device, cap, prop, ctrl):
         t_end = time.time() + 3
         while True:
             ret, frame = cap.read()
+            if ret is False:
+                drop_frame += 1
+                if drop_frame >= 5:
+                    log_print("Timeout error")
+                    log_print("# of dropped frames: {}".format(drop_frame))
+                    # in case watchdog was triggered
+                    time.sleep(15)
+                    reboot_device()
+                    frames.append(None)
+                    drop_frame = 0
+                    break
+
             if time.time() > t_end and ret is True:
                 # white balance still in progress
                 if prop == "white_balance_temperature":
@@ -206,7 +220,7 @@ def get_frames(device, cap, prop, ctrl):
                     frames.append(frame)
                 break
 
-    log_print("\n")
+    log_print("")
     return frames
 
 def eval_cam(prop):
@@ -247,7 +261,7 @@ def eval_cam(prop):
 
     for c in ctrl:
         basic[c] = get_set(device, prop, c)
-    log_print("\n")
+    log_print("")
     
     raw_frames = get_frames(device, cap, prop, ctrl)
     if prop == "brightness":
