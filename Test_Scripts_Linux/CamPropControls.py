@@ -136,7 +136,7 @@ def brightness(raw_frames):
         # convert to grayscale and calculate luma
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         luma = np.average(f)
-        log_print("luma:        {:<5}".format(luma))
+        log_print("luma:  {:<5}".format(luma))
         results.append(luma)
 
     return results
@@ -189,7 +189,7 @@ def get_frames(device, cap, prop, ctrl):
     drop_frame = 0
 
     for c in ctrl:
-        log_print("{}:            {:<5}".format(prop, str(c)))
+        log_print("{}:  {:<5}".format(prop, str(c)))
         subprocess.call(['{} -c {}={}'.format(device, prop, str(c))], shell=True)
         t_end = time.time() + 3
         while True:
@@ -198,7 +198,7 @@ def get_frames(device, cap, prop, ctrl):
                 drop_frame += 1
                 if drop_frame >= 5:
                     log_print("Timeout error")
-                    log_print("# of dropped frames: {}".format(drop_frame))
+                    log_print("# of dropped frames:  {}".format(drop_frame))
                     # in case watchdog was triggered
                     time.sleep(15)
                     reboot_device()
