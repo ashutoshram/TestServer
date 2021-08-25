@@ -234,21 +234,23 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
     # time.sleep(1)
 
 def eval_switch(prop):
+    global device_name
     global log_file
     global result
     err_code = {}
     vals = prop.split()
-    fmt = vals[0]
-    start_res = vals[1].split('x')
-    target_res = vals[2].split('x')
-    start_fps = int(vals[3])
-    target_fps = int(vals[4])
+    log_name = vals[0]
+    fmt = vals[1]
+    start_res = vals[2].split('x')
+    target_res = vals[3].split('x')
+    start_fps = int(vals[4])
+    target_fps = int(vals[5])
     
     # create directory for log and .png files if it doesn't already exist
-    if device_name == "Jabra PanaCast 20":
-        log_name = "p20"
-    elif device_name == "Jabra PanaCast 50":
-        log_name = "p50"
+    if log_name == "p20":
+        device_name = "Jabra PanaCast 20"
+    elif log_name == "p50":
+        device_name = "Jabra PanaCast 50"
 
     # create log file for current res switch test
     filename = "{}_{}p-{}p_{}.log".format(current, start_res[1], target_res[1], log_name)
