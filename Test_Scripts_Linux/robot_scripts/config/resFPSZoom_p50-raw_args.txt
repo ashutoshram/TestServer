@@ -1,0 +1,9 @@
+--variable cam:p50
+--variable format:NV12
+--outputdir resolutionfps
+--timestampoutput
+--console verbose
+--loglevel TRACE:INFO
+--output resFPSZoom_p50-raw_output.xml
+--report resFPSZoom_p50-raw_report.html
+--log resFPSZoom_p50-raw_log.html

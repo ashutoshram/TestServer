@@ -1,0 +1,9 @@
+--variable cam:p20
+--variable format:YUYV
+--outputdir resolutionfps
+--timestampoutput
+--console verbose
+--loglevel TRACE:INFO
+--output resFPSZoom_p20-raw_output.xml
+--report resFPSZoom_p20-raw_report.html
+--log resFPSZoom_p20-raw_log.html
