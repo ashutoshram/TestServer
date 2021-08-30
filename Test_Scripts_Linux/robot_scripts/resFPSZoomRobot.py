@@ -232,20 +232,22 @@ def test_fps(fmt, x, y, framerate, zoom):
         return -1
 
 def eval_res(prop):
+    global device_name
     global log_file
     global result
     err_code = {}
     vals = prop.split()
-    fmt = vals[0]
-    x = int(vals[1])
-    y = int(vals[2])
-    fps = int(vals[3])
+    log_name = vals[0]
+    fmt = vals[1]
+    x = int(vals[2])
+    y = int(vals[3])
+    fps = int(vals[4])
 
     # create directory for log and .png files if it doesn't already exist
-    if device_name == "Jabra PanaCast 20":
-        log_name = "p20"
-    elif device_name == "Jabra PanaCast 50":
-        log_name = "p50"
+    if log_name == "p20":
+        device_name = "Jabra PanaCast 20"
+    elif log_name == "p50":
+        device_name = "Jabra PanaCast 50"
 
     # create log file for current res fps zoom
     filename = "{}_{}p_{}.log".format(current, y, log_name)
