@@ -143,7 +143,7 @@ pipeline {
                                 cd ${MAMBA_VIDEO_PATH}
                                 make -f mvMakefile.mk prepare-kconfig
                                 make cleanall
-                                make -j \$(nproc)
+                                make -j \$(nproc) UNSIGNED=y
                             """
                         }
                         dir("platform${BRANCH}/${MAMBA_VIDEO_PATH}/mvbuild/ma2085") {

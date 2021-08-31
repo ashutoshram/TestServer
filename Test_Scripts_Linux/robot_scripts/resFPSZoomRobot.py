@@ -242,15 +242,21 @@ def eval_res(prop):
     x = int(vals[2])
     y = int(vals[3])
     fps = int(vals[4])
+    type = "raw"
 
     # create directory for log and .png files if it doesn't already exist
     if log_name == "p20":
         device_name = "Jabra PanaCast 20"
     elif log_name == "p50":
         device_name = "Jabra PanaCast 50"
+    
+    if fmt == "NV12" or fmt == "YUYV":
+        type = "raw"
+    elif fmt == "MJPG":
+        type = "mjpg"
 
     # create log file for current res fps zoom
-    filename = "{}_{}p_{}.log".format(current, y, log_name)
+    filename = "{}_{}p_{}-{}.log".format(current, y, log_name, type)
     log_path = os.path.join(path+"/resolutionfps", filename)
 
     # create directory for log files if it already doesn't exist

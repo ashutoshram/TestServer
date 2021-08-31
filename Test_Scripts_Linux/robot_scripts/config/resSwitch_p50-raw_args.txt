@@ -1,0 +1,9 @@
+--variable cam:p50
+--variable format:NV12
+--outputdir resolutionswitch
+--timestampoutput
+--console verbose
+--loglevel TRACE:INFO
+--output resSwitch_p50-raw_output.xml
+--report resSwitch_p50-raw_report.html
+--log resSwitch_p50-raw_log.html

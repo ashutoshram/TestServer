@@ -178,9 +178,9 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
     # log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
     test_start, test_time = (time.time() for x in range(2))
     
-    # grab frames for 30 seconds
+    # grab frames for 25 seconds
     # frame_count = 3
-    frame_count = t_fps * 30
+    frame_count = t_fps * 25
     for i in range(0, frame_count):
         retval, frame = cap.read()
         # reboot device in event of frame drop/error
@@ -198,7 +198,7 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
             test_frame += 1
 
         # check framerate every five seconds
-        if test_frame % (frame_count / 6) == 0:
+        if test_frame % (frame_count / 5) == 0:
             test_end = time.time()
             current = test_end - test_time
             time_elapsed = test_end - test_start
@@ -253,7 +253,7 @@ def eval_switch(prop):
         device_name = "Jabra PanaCast 50"
 
     # create log file for current res switch test
-    filename = "{}_{}p-{}p_{}.log".format(current, start_res[1], target_res[1], log_name)
+    filename = "{}_{}p_{}.log".format(current, start_res[1], log_name)
     file_path = os.path.join(path+"/resolutionswitch", filename)
 
     if not os.path.exists(path+"/resolutionswitch"):
