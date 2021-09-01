@@ -1,9 +1,8 @@
 --variable cam:p20
 --variable format:YUYV
 --outputdir resolutionswitch
---timestampoutput
 --console verbose
 --loglevel TRACE:INFO
---output resSwitch_p20-YUYV_output.xml
---report resSwitch_p20-YUYV_report.html
---log resSwitch_p20-YUYV_log.html
+--output resSwitch_p20-raw_output.xml
+--report resSwitch_p20-raw_report.html
+--log resSwitch_p20-raw_log.html

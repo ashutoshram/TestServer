@@ -13,8 +13,8 @@ pipeline {
         TEST_REPORT = "---"
         CHECK_PATH = "newport"
         NEW_GERRIT_COMMIT_MSG = "---"
-        NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
-        //NOTIFICATION_EMAILS = "khtran@jabra.com"
+        //NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
+        NOTIFICATION_EMAILS = "khtran@jabra.com"
     }
 
     parameters {
@@ -106,7 +106,7 @@ pipeline {
 
         stage('python build') {
             when {
-                expression {
+                expression {                                                                                                                                
                     params.DO_PYTHON == true
                 }
             }

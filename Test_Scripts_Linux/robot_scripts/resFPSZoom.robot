@@ -4,8 +4,8 @@ Test Template     Evaluate
 Library           resFPSZoomRobot.py
 
 *** Variables ***
-${cam}          p20
-${format}       MJPG
+${cam}          p50
+${format}       NV12
 
 *** Test Cases ***      Expression                          Expected
 1080p                   ${cam} ${format} 1920 1080 30       1

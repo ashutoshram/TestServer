@@ -17,14 +17,14 @@ path = os.getcwd()
 cap = None
 debug = True
 device = None
-device_name = "Jabra PanaCast 50"
+device_name = None
 device_num = 0
 log_file = None
 power_cycle = False
 reboots_hard = 0
 reboots_soft = 0
 result = -1
-zoom_file = os.path.dirname(path) + "/config/zoom.json"
+zoom_file = "config/zoom.json"
 
 input_zooms = open(zoom_file)
 json_str = input_zooms.read()

@@ -12,7 +12,7 @@ path = os.getcwd()
 cap = None
 debug = True
 device = None
-device_name = "Jabra PanaCast 50"
+device_name = None
 device_num = 0
 log_file = None
 power_cycle = False
@@ -20,13 +20,12 @@ reboots_hard = 0
 reboots_soft = 0
 result = -1
 err_code = {}
-failures = {}
 
-cam_props = {'brightness': [0, 128, 255, 110],
-             'contrast': [0, 95, 191, 150],
-             'saturation': [128, 136, 160, 176, 155, 143],
-             'sharpness': [0, 110, 128, 255, 193, 121],
-             'white_balance_temperature': [0, 6500, 5000]}
+cam_props = {'brightness': [0, 110, 128, 255],
+             'contrast': [0, 95, 150, 191],
+             'saturation': [128, 136, 145, 155, 160, 176],
+             'sharpness': [0, 110, 121, 128, 193, 255],
+             'white_balance_temperature': [0, 5000, 6500]}
 
 def log_print(args):
     msg = args + "\n"
@@ -120,7 +119,7 @@ def eval_results(ctrl, values):
     for c, v in zip(range(len(ctrl)), range(len(values))):
         if c == len(ctrl) - 1 or v == len(values) - 1:
             break 
-        if (ctrl[c] < ctrl[c + 1] and values[v] < values[v + 1]) or (ctrl[c] > ctrl[c + 1] and values[v] > values[v + 1]):
+        if ctrl[c] < ctrl[c + 1] and values[v] < values[v + 1]:
             results[ctrl[c]] = 1
             results[ctrl[c + 1]] = 1
         else:
@@ -226,19 +225,23 @@ def get_frames(device, cap, prop, ctrl):
 def eval_cam(prop):
     global log_file
     global result
+    global device_name
+    vals = prop.split()
+    log_name = vals[0]
+    control = vals[1]
 
     # create directory for log and .png files if it doesn't already exist
-    if device_name == "Jabra PanaCast 20":
-        log_name = "p20"
-    elif device_name == "Jabra PanaCast 50":
-        log_name = "p50"
+    if log_name == "p20":
+        device_name = "Jabra PanaCast 20"
+    elif log_name == "p50":
+        device_name = "Jabra PanaCast 50"
 
     # create log file for the current cam prop
-    filename = "{}_{}_{}.log".format(current, prop, log_name)
-    file_path = os.path.join(path+"/CamPropControls", filename)
+    filename = "{}_{}_{}.log".format(current, control, log_name)
+    file_path = os.path.join(path+"/campropcontrols", filename)
     # create directory for log files if it doesn't already exist
-    if not os.path.exists(path+"/CamPropControls"):
-        os.makedirs(path+"/CamPropControls")
+    if not os.path.exists(path+"/campropcontrols"):
+        os.makedirs(path+"/campropcontrols")
     log_file = open(file_path, "a")
 
     # set up camera stream
@@ -251,37 +254,37 @@ def eval_cam(prop):
     log_print(55*"=")
     log_print("\n{}\n".format(timestamp))
     
-    ctrl = cam_props[prop]
+    ctrl = cam_props[control]
     basic = {}
     cap.open(device_num)
 
     # set auto wb off before starting
-    if prop == "white_balance_temperature":
+    if control == "white_balance_temperature":
         subprocess.call(['{} -c white_balance_temperature_auto=0'.format(device)], shell=True)
 
     for c in ctrl:
-        basic[c] = get_set(device, prop, c)
+        basic[c] = get_set(device, control, c)
     log_print("")
     
-    raw_frames = get_frames(device, cap, prop, ctrl)
-    if prop == "brightness":
+    raw_frames = get_frames(device, cap, control, ctrl)
+    if control == "brightness":
         values = brightness(raw_frames)
         result = eval_results(ctrl, values)
-    elif prop == "contrast":
+    elif control == "contrast":
         values = contrast(raw_frames)
         result = eval_results(ctrl, values)
-    elif prop == "saturation":
+    elif control == "saturation":
         values = saturation(raw_frames)
         result = eval_results(ctrl, values)
-    elif prop == "sharpness":
+    elif control == "sharpness":
         values = sharpness(raw_frames)
         result = eval_results(ctrl, values)
-    elif prop == "white_balance_temperature":
+    elif control == "white_balance_temperature":
         values = white_balance(raw_frames)
         result = eval_results(ctrl, values)
 
     log_print("\nGenerating report...\n")
-    log_print("Exiting {} test now...\n".format(prop))
+    log_print("Exiting {} test now...\n".format(control))
  
     log_file.close()
     cap.release()

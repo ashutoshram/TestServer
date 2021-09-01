@@ -4,16 +4,19 @@ Documentation     Test cases for camera property controls.
 Test Template     Evaluate
 Library           camPropRobot.py
 
-*** Test Cases ***      Expression                      Expected
-brightness              brightness                      1
+*** Variables ***
+${cam}          p50
 
-contrast                contrast                        1
+*** Test Cases ***      Expression                             Expected
+brightness              ${cam} brightness                      1
 
-saturation              saturation                      1
+contrast                ${cam} contrast                        1
 
-sharpness               sharpness                       1
+saturation              ${cam} saturation                      1
 
-white balance           white_balance_temperature       1
+sharpness               ${cam} sharpness                       1
+
+white balance           ${cam} white_balance_temperature       1
 
 *** Keywords ***
 Evaluate

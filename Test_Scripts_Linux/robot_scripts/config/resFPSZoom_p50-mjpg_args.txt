@@ -1,7 +1,6 @@
 --variable cam:p50
 --variable format:MJPG
 --outputdir resolutionfps
---timestampoutput
 --console verbose
 --loglevel TRACE:INFO
 --output resFPSZoom_p50-mjpg_output.xml

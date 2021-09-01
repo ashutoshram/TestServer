@@ -30,7 +30,10 @@ pipeline {
                                     string(name: 'BRANCH', value: 'MAMBA_FCS_BRANCH'),
                                     booleanParam(name: 'DO_PYTHON', value: false),
                                     booleanParam(name: 'DO_MAMBA', value: true),
-                                    booleanParam(name: 'RUN_ALL_TESTS', value: true)
+                                    booleanParam(name: 'RUN_ALL_TESTS', value: false),
+                                    booleanParam(name: 'CAM_PROP_RAW', value: false),
+                                    booleanParam(name: 'RES_SWITCH_RAW', value: true),
+                                    booleanParam(name: 'RES_FPS_RAW', value: true)
                                 ], wait: true
                             }
                         }
