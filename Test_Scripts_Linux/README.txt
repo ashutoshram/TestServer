@@ -1,3 +1,31 @@
+Instructions for running robot scripts:
+
+Make sure Robot Framework packages are installed:
+    python3 -m pip3 install robot
+    python3 -m pip3 install robotframework
+
+from Test_Scripts_Linux/robot_scripts:
+=== Mamba tests ===
+robot -A config/camProp_p20_args.txt camProp.robot
+robot -A config/resSwitch_p20-raw_args.txt resSwitch.robot
+robot -A config/resFPSZoom_p20-raw_args.txt resFPSZoom.robot
+
+=== Python tests ===
+robot -A config/camProp_p50_args.txt camProp.robot
+robot -A config/resSwitch_p50-raw_args.txt resSwitch.robot
+robot -A config/resSwitch_p50-mjpg_args.txt resSwitch.robot
+robot -A config/resFPSZoom_p50-raw_args.txt resFPSZoom.robot
+robot -A config/resFPSZoom_p50-mjpg_args.txt resFPSZoom.robot
+
+You can also run robot with python using:
+    python3 -m robot.run -A {config file} {robot script}
+
+To run individual test cases:
+    robot -A {config file} -t {test case} {robot script}
+
+For example, the test cases defined in resSwitch.robot are: 1080p, 720p, 540p, and 360p. The command to run just 1080p would look like this:
+robot -A config/resSwitch_p50-raw_args.txt -t 1080p resSwitch.robot
+
 Instructions for running on Jenkins Server:
 
 PanaCast 50:
