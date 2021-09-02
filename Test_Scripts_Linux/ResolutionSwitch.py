@@ -210,7 +210,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 
                 # grab frames for 30 seconds
                 # frame_count = 3
-                frame_count = t_fps * 30
+                frame_count = t_fps * 25
                 for i in range(0, frame_count):
                     retval, frame = cap.read()
                     # reboot device in event of frame drop/error
@@ -237,7 +237,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                         # print("Frame grabbed")
             
                     # check framerate every five seconds
-                    if test_frame % (frame_count / 6) == 0:
+                    if test_frame % (frame_count / 5) == 0:
                         test_end = time.time()
                         current = test_end - test_time
                         time_elapsed = test_end - test_start
