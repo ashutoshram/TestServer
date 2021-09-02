@@ -186,16 +186,16 @@ def sharpness(raw_frames):
 def white_balance(raw_frames):
     return raw_frames
 
-def get_frames(device, cap, prop, ctrl):
+def get_frames(device, cap, fmt, control, ctrl):
     frames = []
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"NV12"))
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     drop_frame = 0
 
     for c in ctrl:
-        log_print("{}:  {:<5}".format(prop, str(c)))
-        subprocess.call(['{} -c {}={}'.format(device, prop, str(c))], shell=True)
+        log_print("{}:  {:<5}".format(control, str(c)))
+        subprocess.call(['{} -c {}={}'.format(device, control, str(c))], shell=True)
         t_end = time.time() + 3
         while True:
             ret, frame = cap.read()
@@ -213,7 +213,7 @@ def get_frames(device, cap, prop, ctrl):
 
             if time.time() > t_end and ret is True:
                 # white balance still in progress
-                if prop == "white_balance_temperature":
+                if control == "white_balance_temperature":
                     frames.append(c)
                 else:
                     frames.append(frame)
@@ -228,7 +228,8 @@ def eval_cam(prop):
     global device_name
     vals = prop.split()
     log_name = vals[0]
-    control = vals[1]
+    fmt = vals[1]
+    control = vals[2]
 
     # create directory for log and .png files if it doesn't already exist
     if log_name == "p20":
@@ -266,7 +267,7 @@ def eval_cam(prop):
         basic[c] = get_set(device, control, c)
     log_print("")
     
-    raw_frames = get_frames(device, cap, control, ctrl)
+    raw_frames = get_frames(device, cap, fmt, control, ctrl)
     if control == "brightness":
         values = brightness(raw_frames)
         result = eval_results(ctrl, values)

@@ -6,17 +6,18 @@ Library           camPropRobot.py
 
 *** Variables ***
 ${cam}          p50
+${format}       NV12
 
-*** Test Cases ***      Expression                             Expected
-brightness              ${cam} brightness                      1
+*** Test Cases ***      Expression                                       Expected
+brightness              ${cam} ${format} brightness                      1
 
-contrast                ${cam} contrast                        1
+contrast                ${cam} ${format} contrast                        1
 
-saturation              ${cam} saturation                      1
+saturation              ${cam} ${format} saturation                      1
 
-sharpness               ${cam} sharpness                       1
+sharpness               ${cam} ${format} sharpness                       1
 
-white balance           ${cam} white_balance_temperature       1
+white balance           ${cam} ${format} white_balance_temperature       1
 
 *** Keywords ***
 Evaluate

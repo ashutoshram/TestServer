@@ -1,5 +1,5 @@
---variable cam:p50
---variable format:NV12
+--variable cam:p20
+--variable format:YUYV
 --outputdir campropcontrols
 --console verbose
 --loglevel TRACE:INFO
