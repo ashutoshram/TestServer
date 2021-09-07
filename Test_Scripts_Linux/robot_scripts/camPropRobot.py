@@ -65,7 +65,7 @@ def reboot_device():
     log_print("Rebooting...")
     # reboot by resetting USB if testing P20
     if device_name == "Jabra PanaCast 20":
-        subprocess.check_call(['./mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
+        subprocess.check_call(['../mambaFwUpdater/mambaLinuxUpdater/rebootMamba'])
         time.sleep(10)
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
@@ -78,9 +78,9 @@ def reboot_device():
         reboots_soft += 1
         if not get_device():
             if power_cycle is True:
-                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
+                subprocess.check_call(['../power_switch.sh', '{}'.format(switch), '0'])
                 time.sleep(3)
-                subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
+                subprocess.check_call(['../power_switch.sh', '{}'.format(switch), '1'])
             else:
                 os.system("sudo adb kill-server")
                 os.system("sudo adb devices")
@@ -88,12 +88,13 @@ def reboot_device():
             
             time.sleep(50)
             reboots_hard += 1
-            log_print("Soft reboot count: {}".format(reboots_soft))
-            log_print("Hard reboot count: {}".format(reboots_hard))
             if not get_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
                 sys.exit(0)
 
+    log_print("Soft reboot count: {}".format(reboots_soft))
+    log_print("Hard reboot count: {}".format(reboots_hard))
+    
     if reboots_hard > 5:
         log_print("More than 5 reboots_hard, exiting test. Please check physical device\n")
         sys.exit(0)
@@ -136,6 +137,9 @@ def eval_results(ctrl, values):
 
 # evaluate the luma for each specified brightness value, return list of results
 def brightness(raw_frames):
+    # temp solution
+    return raw_frames
+
     results = []
     for frame in raw_frames:      
         # convert to grayscale and calculate luma
@@ -148,6 +152,9 @@ def brightness(raw_frames):
 
 # evaluate otsu threshold for each contrast value, return list of results
 def contrast(raw_frames):
+    # temp solution
+    return raw_frames
+
     results = []
     for frame in raw_frames: 
         # convert to grayscale and calculate otsu
@@ -160,6 +167,9 @@ def contrast(raw_frames):
 
 # evaluate hsv for each saturation value, return list of results
 def saturation(raw_frames):
+    # temp solution
+    return raw_frames
+
     results = []
     for frame in raw_frames:      
         # convert to HSV and calculate saturation average
@@ -172,6 +182,9 @@ def saturation(raw_frames):
     return results
 
 def sharpness(raw_frames):
+    # temp solution
+    return raw_frames
+
     results = []
     for frame in raw_frames: 
         # convert to grayscale and calculate lapacian variance
@@ -212,11 +225,12 @@ def get_frames(device, cap, fmt, control, ctrl):
                     break
 
             if time.time() > t_end and ret is True:
-                # white balance still in progress
-                if control == "white_balance_temperature":
-                    frames.append(c)
-                else:
-                    frames.append(frame)
+                # pass by default while i figure this lighting situation out
+                #if control == "white_balance_temperature":
+                    #frames.append(c)
+                #else:
+                    #frames.append(frame)
+                frames.append(c)
                 break
 
     log_print("")
