@@ -10,11 +10,10 @@ pipeline {
         MAMBA_VIDEO_PATH = "newport/mamba_video"
         BASEVERSIONFILE = "newport/solaris2/myriadx/include/version_history.h"
         FILES_CHANGED = "---"
-        TEST_REPORT = "---"
         CHECK_PATH = "newport"
         NEW_GERRIT_COMMIT_MSG = "---"
-        //NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
-        NOTIFICATION_EMAILS = "khtran@jabra.com"
+        NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
+        //NOTIFICATION_EMAILS = "arigo@jabra.com"
     }
 
     parameters {
@@ -106,7 +105,7 @@ pipeline {
 
         stage('python build') {
             when {
-                expression {                                                                                                                                
+                expression {
                     params.DO_PYTHON == true
                 }
             }
@@ -182,6 +181,7 @@ pipeline {
                                         script {
                                             sh "rm -rf result"
                                             sh "mkdir result"
+                                            sh "mkdir result/robot"
                                             sh "rm -rf ${WORKSPACE}/testscripts"
                                             dir('testscripts') {
                                                 checkout([
@@ -192,10 +192,13 @@ pipeline {
                                                 sh """
                                                     cd Test_Scripts_Linux
                                                     pip3 install numpy -I
+                                                    pip3 install robot -I
+                                                    pip3 install robotframework -I
                                                     pip3 install -r requirements.txt
+                                                    export PATH="\$HOME/.local/bin:\$PATH"
 
                                                     ./mambaAutoUpdater.sh ../mamba_video.mvcmd
-                                                    #// sleep 10m
+                                                    #// sleep 6m
                                                 """
                                             }
                                         }
@@ -210,15 +213,16 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 CamPropControls.py -d True -v "Jabra PanaCast 20"
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/camProp_p20_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot camProp.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/CamPropControls') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('resolution switch') {
@@ -230,15 +234,16 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 ResolutionSwitch.py -d True -p True -t res_switch_p20.json -v "Jabra PanaCast 20"
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/resSwitch_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/resolutionswitch') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('resolution fps') {
@@ -250,21 +255,22 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 ResolutionFPS_cv2.py -d True -p True -t res_fps_p20.json -v "Jabra PanaCast 20"
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/resFPSZoom_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/resolutionfps') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('collect results') {
                                     steps {
                                         dir('result') {
-                                            stash includes: '*.log', name: 'raw-test'
+                                            stash includes: '*.html, robot/*', name: 'raw-test'
                                         }
                                         deleteDir() /* clean up our workspace */
                                     }
@@ -299,6 +305,7 @@ pipeline {
                                         script {
                                             sh "rm -rf result"
                                             sh "mkdir result"
+                                            sh "mkdir result/robot"
                                             sh "rm -rf ${WORKSPACE}/testscripts"
                                             dir('testscripts') {
                                                 checkout([
@@ -309,13 +316,16 @@ pipeline {
                                                 sh """
                                                     cd Test_Scripts_Linux
                                                     pip3 install numpy -I
+                                                    pip3 install robot -I
+                                                    pip3 install robotframework -I
                                                     pip3 install -r requirements.txt
+                                                    export PATH="\$HOME/.local/bin:\$PATH"
 
                                                     cd ..
                                                     adb devices
                                                     adb push python_video.mvcmd /data/python_video.mvcmd
                                                     adb shell killall -9 newport
-                                                    sleep 8m
+                                                    sleep 6m
                                                 """
                                             }
                                         }
@@ -330,15 +340,16 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 CamPropControls.py -d True
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/camProp_p50_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot camProp.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/CamPropControls') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('resolution switch') {
@@ -350,15 +361,16 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 ResolutionSwitch.py -d True -p True
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/resSwitch_p50-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/resolutionswitch') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('resolution fps') {
@@ -370,21 +382,22 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 ResolutionFPS_cv2.py -d True -p True
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/resFPSZoom_p50-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/resolutionfps') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('collect results') {
                                     steps {
                                         dir('result') {
-                                            stash includes: '*.log', name: 'raw-test'
+                                            stash includes: '*.html, robot/*', name: 'raw-test'
                                         }
                                         deleteDir() /* clean up our workspace */
                                     }
@@ -419,6 +432,7 @@ pipeline {
                                         script {
                                             sh "rm -rf result"
                                             sh "mkdir result"
+                                            sh "mkdir result/robot"
                                             sh "rm -rf ${WORKSPACE}/testscripts"
                                             dir('testscripts') {
                                                 checkout([
@@ -429,13 +443,16 @@ pipeline {
                                                 sh """
                                                     cd Test_Scripts_Linux
                                                     pip3 install numpy -I
+                                                    pip3 install robot -I
+                                                    pip3 install robotframework -I
                                                     pip3 install -r requirements.txt
+                                                    export PATH="\$HOME/.local/bin:\$PATH"
 
                                                     cd ..
                                                     adb devices
                                                     adb push python_video.mvcmd /data/python_video.mvcmd
                                                     adb shell killall -9 newport
-                                                    sleep 10m
+                                                    sleep 6m
                                                 """
                                             }
                                         }
@@ -457,7 +474,7 @@ pipeline {
                                 //         }
                                 //         dir('testscripts/Test_Scripts_Linux/CamPropControls') {
                                 //             sh """
-                                //                 find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
+                                //                 find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
                                 //             """
                                 //         }
                                 //     }
@@ -472,15 +489,16 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 ResolutionSwitch.py -d True -p True -t res_switch_mjpg.json
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/resSwitch_p50-mjpg_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/resolutionswitch') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('resolution fps') {
@@ -492,21 +510,22 @@ pipeline {
                                     steps {
                                         dir('testscripts') {
                                             sh """
-                                                cd Test_Scripts_Linux
-                                                python3 ResolutionFPS_cv2.py -d True -p True -t res_fps_mjpg.json
+                                                export PATH="\$HOME/.local/bin:\$PATH"
+                                                cd Test_Scripts_Linux/robot_scripts
+                                                robot -A config/resFPSZoom_p50-mjpg_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/resolutionfps') {
-                                            sh """
-                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
-                                            """
-                                        }
+                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
+                                        //     sh """
+                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
+                                        //     """
+                                        // }
                                     }
                                 }
                                 stage('collect results') {
                                     steps {
                                         dir('result') {
-                                            stash includes: '*.log', name: 'mjpg-test'
+                                            stash includes: '*.html, robot/*', name: 'mjpg-test'
                                         }
                                         deleteDir() /* clean up our workspace */
                                     }
@@ -545,14 +564,11 @@ pipeline {
                     } catch (Exception e) {
                         echo 'No results from mjpg-test'
                     }
-                    TEST_REPORT = """${sh (
-                        returnStdout: true,
-                        script: 'find . -name "*failed_resolutionfps_p50.log" -o -name "*failed_resolutionfps_p20.log" -o -name "*failed_resolutionswitch_p50.log" -o -name "*failed_resolutionswitch_p20.log" | xargs cat').trim()}"""
-                    if ( TEST_REPORT != "" ) {
-                        TEST_REPORT = "Failed tests:\n ${TEST_REPORT}"
-                    }
                 }
-                echo "${TEST_REPORT}"
+            }
+
+            dir('logfiles/robot') {
+                robot outputPath: '.', logFileName: '*log.html', outputFileName: '*output.xml', reportFileName: 'report.hml', passThreshold: 100, unstableThreshold: 75.0
             }
 
             echo "${NOTIFICATION_EMAILS}"
@@ -560,7 +576,7 @@ pipeline {
             echo "${NEW_GERRIT_COMMIT_MSG}"
             writeFile file: "cilogs/commit-messages.log", text: "${NEW_GERRIT_COMMIT_MSG}"
 
-            archiveArtifacts artifacts: '**/logfiles/**/*.log, **/cilogs/**/*.log', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/logfiles/**/*.html, **/logfiles/**/*.xml, **/cilogs/**/*.log', allowEmptyArchive: true
 
             script {
                 CURRENT_PARAMETERS = ""
@@ -570,11 +586,11 @@ pipeline {
             }
 
             // send email
-            emailext attachmentsPattern: '**/logfiles/**/*.log',
-            body: """${currentBuild.currentResult}: ${BRANCH} Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':
-Check console output at ${env.BUILD_URL}
+            emailext body: """${currentBuild.currentResult}: ${BRANCH} Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':
+Check console output: ${env.BUILD_URL}
 
-${TEST_REPORT}
+Robot Framework Test Results: ${env.BUILD_URL}/robot
+
 
 Changes:
 ${NEW_GERRIT_COMMIT_MSG}
