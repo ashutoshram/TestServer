@@ -13,7 +13,7 @@ pipeline {
         CHECK_PATH = "newport"
         NEW_GERRIT_COMMIT_MSG = "---"
         NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
-        //NOTIFICATION_EMAILS = "arigo@jabra.com"
+        // NOTIFICATION_EMAILS = "khtran@jabra.com"
     }
 
     parameters {
@@ -236,7 +236,7 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resSwitch_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
+                                                robot -A config/resSwitch_p20-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
                                         // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
@@ -257,7 +257,7 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resFPSZoom_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
+                                                robot -A config/resFPSZoom_p20-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
                                         // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
@@ -363,7 +363,7 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resSwitch_p50-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
+                                                robot -A config/resSwitch_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
                                         // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
@@ -384,7 +384,7 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resFPSZoom_p50-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
+                                                robot -A config/resFPSZoom_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
                                         // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
@@ -491,7 +491,7 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resSwitch_p50-mjpg_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
+                                                robot -A config/resSwitch_p50-mjpg_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
                                         // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
@@ -512,7 +512,7 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resFPSZoom_p50-mjpg_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
+                                                robot -A config/resFPSZoom_p50-mjpg_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
                                         // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
@@ -586,7 +586,8 @@ pipeline {
             }
 
             // send email
-            emailext body: """${currentBuild.currentResult}: ${BRANCH} Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':
+            emailext attachmentsPattern: '**/logfiles/**/*_log.html',
+            body: """${currentBuild.currentResult}: ${BRANCH} Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':
 Check console output: ${env.BUILD_URL}
 
 Robot Framework Test Results: ${env.BUILD_URL}/robot

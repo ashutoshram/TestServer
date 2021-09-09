@@ -9,17 +9,17 @@ ${format}       NV12
 
 *** Test Cases ***      Expression                                    Expected
 1080p                   ${cam} ${format} 1920x1080 1280x720 30 30     1
-                        # ${cam} ${format} 1920x1080 1280x720 30 15     1
-                        # ${cam} ${format} 1920x1080 1280x720 15 15     1
-                        # ${cam} ${format} 1920x1080 1280x720 15 30     1
-                        # ${cam} ${format} 1920x1080 960x540 30 30      1
-                        # ${cam} ${format} 1920x1080 960x540 30 15      1
-                        # ${cam} ${format} 1920x1080 960x540 15 15      1
-                        # ${cam} ${format} 1920x1080 960x540 15 30      1
-                        # ${cam} ${format} 1920x1080 640x360 30 30      1
-                        # ${cam} ${format} 1920x1080 640x360 30 15      1
-                        # ${cam} ${format} 1920x1080 640x360 15 15      1
-                        # ${cam} ${format} 1920x1080 640x360 15 30      1
+                        ${cam} ${format} 1920x1080 1280x720 30 15     1
+                        ${cam} ${format} 1920x1080 1280x720 15 15     1
+                        ${cam} ${format} 1920x1080 1280x720 15 30     1
+                        ${cam} ${format} 1920x1080 960x540 30 30      1
+                        ${cam} ${format} 1920x1080 960x540 30 15      1
+                        ${cam} ${format} 1920x1080 960x540 15 15      1
+                        ${cam} ${format} 1920x1080 960x540 15 30      1
+                        ${cam} ${format} 1920x1080 640x360 30 30      1
+                        ${cam} ${format} 1920x1080 640x360 30 15      1
+                        ${cam} ${format} 1920x1080 640x360 15 15      1
+                        ${cam} ${format} 1920x1080 640x360 15 30      1
 
 720p                    ${cam} ${format} 1280x720 1920x1080 30 30     1
                         ${cam} ${format} 1280x720 1920x1080 30 15     1
