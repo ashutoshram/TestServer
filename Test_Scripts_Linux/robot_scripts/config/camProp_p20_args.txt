@@ -3,6 +3,6 @@
 --outputdir campropcontrols
 --console verbose
 --loglevel TRACE:INFO
---output camProp_p50_output.xml
---report camProp_p50_report.html
---log camProp_p50_log.html
+--output camProp_p20_output.xml
+--report camProp_p20_report.html
+--log camProp_p20_log.html
