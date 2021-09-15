@@ -78,7 +78,7 @@ def get_device():
     else:
         return False
 
-def reboot_device(fmt):
+def reboot_device(fmt, codec):
     global device_num
     global reboots_hard
     global reboots_soft
@@ -97,9 +97,10 @@ def reboot_device(fmt):
             sys.exit(0)
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
-        os.system("adb shell /usr/bin/resethub")
-        reboots_soft += 1
-        time.sleep(20)
+        if fmt == codec:
+            os.system("adb shell /usr/bin/resethub")
+            reboots_soft += 1
+            time.sleep(20)
         if not get_device():
             if power_cycle is True:
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
@@ -138,7 +139,7 @@ def test_fps(fmt, resolution, framerate, zoom):
     # make sure format is set correctly
     if codec != fmt:
         log_print("Unable to set video format correctly.")
-        reboot_device(fmt)
+        reboot_device(fmt, codec)
         return -1
 
     # set resolution and check if set correctly
@@ -179,7 +180,7 @@ def test_fps(fmt, resolution, framerate, zoom):
     # check if device is responding to get/set commands and try rebooting if it isn't
     if width == 0 and height == 0 and current_fps == 0:
         log_print("Device not responding to get/set commands")
-        reboot_device(fmt)
+        reboot_device(fmt, codec)
 
     # set number of frames to be counted
     frames = framerate*20
@@ -224,7 +225,7 @@ def test_fps(fmt, resolution, framerate, zoom):
 
         except cv2.error as e:
             log_print("{}".format(e))
-            reboot_device(fmt)
+            reboot_device(fmt, codec)
             log_print("FREEZE FAIL\n")
             return -1
     

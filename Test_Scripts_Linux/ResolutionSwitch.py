@@ -79,7 +79,7 @@ def get_device():
     else:
         return False
 
-def reboot_device(fmt):
+def reboot_device(fmt, codec):
     global device_num
     global reboots_hard
     global reboots_soft
@@ -98,9 +98,10 @@ def reboot_device(fmt):
             sys.exit(0)
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
-        os.system("adb shell /usr/bin/resethub")
-        time.sleep(15)
-        reboots_soft += 1
+        if fmt == codec:
+            os.system("adb shell /usr/bin/resethub")
+            time.sleep(15)
+            reboots_soft += 1
         if not get_device():
             if power_cycle is True:
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
@@ -125,7 +126,7 @@ def reboot_device(fmt):
         report_results()
         sys.exit(0)
 
-def check_frame(check_width, check_height, fmt):
+def check_frame(check_width, check_height, fmt, codec):
     check_start = time.time()
     retval = False
     frame = None
@@ -134,7 +135,7 @@ def check_frame(check_width, check_height, fmt):
             retval, frame = cap.read()
         except:
             log_print("failed to grab frames")
-            reboot_device(fmt)
+            reboot_device(fmt, codec)
             continue
         
         # check if frame is successfully grabbed
@@ -175,7 +176,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
 
                 if codec != fmt:
                     log_print("Unable to set video format to {}.".format(fmt))
-                    reboot_device(fmt)
+                    reboot_device(fmt, codec)
                     err_code[test_type] = -1
                     continue
                 else:
@@ -195,12 +196,12 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 # print("set target")
 
                 # calculate switch time
-                if check_frame(t_res[0], t_res[1], fmt):
+                if check_frame(t_res[0], t_res[1], fmt, codec):
                     switch_end = time.time()
                 else:
                     log_print("Unable to switch resolution")
                     err_code[test_type] = -1
-                    reboot_device(fmt)
+                    reboot_device(fmt, codec)
                     continue
 
                 switch_time = switch_end - switch_start
@@ -221,7 +222,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                             log_print("# of dropped frames: {}".format(drop_frame))
                             # in case watchdog was triggered
                             time.sleep(15)
-                            reboot_device(fmt)
+                            reboot_device(fmt, codec)
                             err_code[test_type] = -1
                             drop_frame = 0
                             return
