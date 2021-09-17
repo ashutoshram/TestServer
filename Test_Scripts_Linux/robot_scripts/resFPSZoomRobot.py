@@ -110,7 +110,7 @@ def reboot_device(fmt, codec):
             if not get_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
                 report_results()
-                sys.exit(0)
+                return
 
     log_print("Soft reboot count: {}".format(reboots_soft))
     log_print("Hard reboot count: {}".format(reboots_hard))
@@ -269,7 +269,8 @@ def eval_res(prop):
     # set up camera stream
     if not get_device():
         log_print("Device not found, please check if it is attached")
-        sys.exit(0)
+        result = -1
+        return
     
     timestamp = datetime.now()
     log_print(55*"=")

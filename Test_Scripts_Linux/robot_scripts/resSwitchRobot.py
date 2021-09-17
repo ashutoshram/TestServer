@@ -100,7 +100,7 @@ def reboot_device(fmt, codec):
             if not get_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
                 report_results()
-                sys.exit(0)
+                return
                 
     log_print("Soft reboot count: {}".format(reboots_soft))
     log_print("Hard reboot count: {}".format(reboots_hard))
@@ -168,7 +168,7 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
     # print("set target")
 
     # calculate switch time
-    if check_frame(t_w, t_h, fmt):
+    if check_frame(t_w, t_h, fmt, codec):
         switch_end = time.time()
     else:
         log_print("Unable to switch resolution")
@@ -222,7 +222,7 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
     if avg_fps >= t_fps - 1:
         log_print("PASS\n")
         return 1
-    elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
+    elif avg_fps < t_fps - 2 and avg_fps >= t_fps - 3:
         log_print("SOFT FAIL\n")
         return 0
     else:
@@ -269,7 +269,8 @@ def eval_switch(prop):
     # set up camera stream
     if not get_device():
         log_print("Device not found, please check if it is attached.")
-        sys.exit(0)
+        result = -1
+        return
 
     # cycle through all test cases provided by json file
     cap.open(device_num)

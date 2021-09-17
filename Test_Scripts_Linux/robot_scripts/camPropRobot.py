@@ -69,7 +69,7 @@ def reboot_device():
         time.sleep(10)
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
-            sys.exit(0)
+            sys.exit(-1)
 
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
@@ -90,14 +90,14 @@ def reboot_device():
             reboots_hard += 1
             if not get_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
-                sys.exit(0)
+                return
 
     log_print("Soft reboot count: {}".format(reboots_soft))
     log_print("Hard reboot count: {}".format(reboots_hard))
     
     if reboots_hard > 5:
         log_print("More than 5 reboots_hard, exiting test. Please check physical device\n")
-        sys.exit(0)
+        sys.exit(-1)
 
 # basic get/set test using v4l2
 def get_set(device, prop, val):
@@ -262,7 +262,8 @@ def eval_cam(prop):
     # set up camera stream
     if not get_device():
         log_print("Device not found, please check if it is attached.")
-        sys.exit(0)
+        result = -1
+        return
 
     # iterate thru cam_props dict and test each value of each cam prop
     timestamp = datetime.now()
