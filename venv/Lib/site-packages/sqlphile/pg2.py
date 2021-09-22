@@ -1,0 +1,50 @@
+from . import db3
+from .dbtypes import DB_PGSQL, DB_SQLITE3
+import sqlphile
+
+try:
+    import psycopg2
+
+except ImportError:
+    class open:
+        def __init__ (self, *args, **kargs):
+            raise ImportError ('psycopg2 not installed')
+    open3 = open2 = open
+
+else:
+    class open (db3.open):
+        def __init__ (self, dbname, user, password, host = '127.0.0.1', port = 5432, dir = None, auto_reload = False, auto_closing = True):
+            self.closed = False
+            self.auto_closing = auto_closing
+
+            self.conn = None
+            if ":" in host:
+                host, port = host.split (":")
+                port = int (port)
+            self.conn = psycopg2.connect (host=host, dbname=dbname, user=user, password=password, port = port)
+            self._init (dir, auto_reload, DB_PGSQL)
+
+        def field_names (self):
+            return [x.name for x in self.description]
+
+        def set_autocommit (self, flag = True):
+            self.conn.autocommit = flag
+
+
+    # -----------------------------------------------------------------
+
+    class open2 (open, db3.open2):
+        def __init__ (self, conn, dir = None, auto_reload = False, auto_closing = True):
+            self.closed = False
+            self.conn = conn
+            self.auto_closing = auto_closing
+            self._init (dir, auto_reload, DB_PGSQL)
+
+    # -----------------------------------------------------------------
+
+    class open3 (db3.open3):
+        def __init__ (self, conn, dir = None, auto_reload = False, auto_closing = True):
+            self.closed = False
+            self.conn = conn
+            self.auto_closing = False
+            self._init (dir, auto_reload, DB_PGSQL)

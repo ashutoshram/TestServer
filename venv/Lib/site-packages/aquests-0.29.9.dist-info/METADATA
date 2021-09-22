@@ -1,0 +1,36 @@
+Metadata-Version: 2.0
+Name: aquests
+Version: 0.29.9
+Summary: Asynchronous Multiplexing HTTP2/DBO Requests
+Home-page: https://gitlab.com/hansroh/aquests
+Author: Hans Roh
+Author-email: hansroh@gmail.com
+License: MIT
+Download-URL: https://pypi.python.org/pypi/aquests
+Platform: posix
+Platform: nt
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Development Status :: 4 - Beta
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Database :: Front-Ends
+Classifier: Environment :: Console
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Dist: h2 (>=4.0.0)
+Requires-Dist: rs4 (>=0.2.6)
+
+
+Asynchronous Corequest Library
+====================================
+
+This is the base library for `Skitai App Engine`_'s corequests.
+
+
+.. _`Skitai App Engine`: https://pypi.python.org/pypi/Skitai
+
+
+

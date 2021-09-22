@@ -1,0 +1,56 @@
+Metadata-Version: 2.0
+Name: plum-py
+Version: 0.3.1
+Summary: Pack/Unpack Memory.
+Home-page: https://plum-py.readthedocs.io/en/latest/index.html
+Author: Dan Gass
+Author-email: dan.gass@gmail.com
+Maintainer: Dan Gass
+Maintainer-email: dan.gass@gmail.com
+License: MIT License; http://opensource.org/licenses/MIT
+Download-URL: https://plum-py.readthedocs.io/en/latest/index.html
+Keywords: docstring
+Platform: any
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 4 - Beta
+Requires-Python: >=3.6
+Provides-Extra: doc
+Provides-Extra: test
+Requires-Dist: setuptools (>=39.0.1)
+Provides-Extra: doc
+Requires-Dist: Sphinx (>=1.6.7); extra == 'doc'
+Requires-Dist: sphinx-rtd-theme; extra == 'doc'
+Requires-Dist: sphinxcontrib-programoutput; extra == 'doc'
+Provides-Extra: test
+Requires-Dist: baseline; extra == 'test'
+Requires-Dist: pytest; extra == 'test'
+Requires-Dist: pytest-cov; extra == 'test'
+Requires-Dist: pytest-html; extra == 'test'
+
+
+#########################
+[plum] Pack/Unpack Memory
+#########################
+
+.. image:: https://readthedocs.org/projects/plum-py/badge/?version=latest
+    :target: https://plum-py.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+
+The ``plum-py`` Python package provides classes and utility functions to
+efficiently pack and unpack bytes similar to what the standard library
+``struct`` module offers. This package expands significantly on that 
+capability with much more powerful and convenient access and control of 
+bytes within a buffer (including handling variable size/type 
+relationships within the buffer data).
+
+The package provides a large number of fundamental types (e.g. numbers, 
+structures, arrays, etc.) for specifying buffer data structure. Each 
+type conforms to a "plug-and-play" architecture facilitating the ability 
+to be combined in any way, including deeply nested structures of arbitrary 
+type. You may also write your own custom types that conform to the 
+"plug-and-play" architecture API and use them in combination with any of 
+the fundamental types provided.
+

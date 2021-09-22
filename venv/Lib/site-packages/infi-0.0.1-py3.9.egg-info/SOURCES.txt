@@ -1,0 +1,8 @@
+setup.cfg
+setup.py
+infi/__init__.py
+infi/__version__.py
+infi.egg-info/PKG-INFO
+infi.egg-info/SOURCES.txt
+infi.egg-info/dependency_links.txt
+infi.egg-info/top_level.txt

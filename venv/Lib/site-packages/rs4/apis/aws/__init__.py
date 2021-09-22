@@ -1,0 +1,37 @@
+# pip3 install awscli --upgrade --user
+# aws configure
+
+import boto3
+import time
+from datetime import datetime, timedelta
+
+ec2 = boto3.resource ('ec2')
+ec2cli = boto3.client ('ec2')
+elb = boto3.client('elb')
+cw = boto3.client('cloudwatch')
+elb2 = boto3.client('elbv2')
+autoscaling = boto3.client('autoscaling')
+rt53 = boto3.client('route53')
+ce = boto3.client ('ce')
+
+def get_cost ():
+    '''
+    {
+        "Version": "2012-10-17",
+        "Statement": [{
+            "Effect": "Allow",
+            "Action": ["ce:*"],
+            "Resource": ["*"]
+        }]
+    }
+    '''
+    now = datetime.now () - timedelta (days = 1)
+    r = ce.get_cost_and_usage (
+        TimePeriod = {
+            'Start': time.strftime ('%Y-%m-%d', time.localtime (time.mktime ((now.year, now.month, 1, 0, 0, 0, 0, 0, 0)))),
+            'End':   time.strftime ('%Y-%m-%d', time.localtime (time.mktime ((now.year, now.month, 31, 0, 0, 0, 0, 0, 0))))
+        },
+        Granularity='MONTHLY',
+        Metrics = ['BlendedCost']
+    )
+    return r ['ResultsByTime'][0]['Total']['BlendedCost']
