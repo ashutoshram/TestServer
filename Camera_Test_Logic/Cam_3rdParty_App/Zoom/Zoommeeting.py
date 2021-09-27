@@ -18,19 +18,19 @@ try:
     usrnm = zoom_meet.locateCenterOnScreen("ZMailAddress.PNG")
     zoom_meet.moveTo(usrnm)
     zoom_meet.click()
-    zoom_meet.write('prahul3699@gmail.com')
+    zoom_meet.write('prasad.andhugula@altiasystems.com')
     time.sleep(2)
     pwd = zoom_meet.locateCenterOnScreen("Zpassword.PNG")
     zoom_meet.moveTo(pwd)
     zoom_meet.click()
-    zoom_meet.write('R@hul@0438')
+    zoom_meet.write('Test123$')
     time.sleep(2)
     sign = zoom_meet.locateCenterOnScreen("Z_sign.PNG")
     zoom_meet.moveTo(sign)
     zoom_meet.click()
     time.sleep(10)
     # settings
-    usr = zoom_meet.locateCenterOnScreen("zuser.PNG")
+    usr = zoom_meet.locateCenterOnScreen("Z_TestUserP.PNG")
     zoom_meet.moveTo(usr)
     zoom_meet.click()
     time.sleep(2)
@@ -125,4 +125,4 @@ time.sleep(2)
 os.system("taskkill /f /im Zoom.exe")
 #for process in (process for process in psutil.process_iter() if process.name() == "Zoom.exe"):
     #process.kill()
-import zjoin_meet
+#import zjoin_meet
