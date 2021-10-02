@@ -12,8 +12,8 @@ pipeline {
         FILES_CHANGED = "---"
         CHECK_PATH = "newport"
         NEW_GERRIT_COMMIT_MSG = "---"
-        NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
-        // NOTIFICATION_EMAILS = "khtran@jabra.com"
+        // NOTIFICATION_EMAILS = "arigo@jabra.com, tthai@jabra.com, johzhang@jabra.com, khtran@jabra.com, aram@jabra.com, nalam@jabra.com"
+        NOTIFICATION_EMAILS = "khtran@jabra.com"
     }
 
     parameters {
@@ -198,7 +198,7 @@ pipeline {
                                                     export PATH="\$HOME/.local/bin:\$PATH"
 
                                                     ./mambaAutoUpdater.sh ../mamba_video.mvcmd
-                                                    #// sleep 6m
+                                                    sleep 1m
                                                 """
                                             }
                                         }
@@ -218,11 +218,6 @@ pipeline {
                                                 robot -A config/camProp_p20_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot camProp.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('resolution switch') {
@@ -236,14 +231,9 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resSwitch_p20-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
+                                                robot -A config/resSwitch_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('resolution fps') {
@@ -257,14 +247,9 @@ pipeline {
                                             sh """
                                                 export PATH="\$HOME/.local/bin:\$PATH"
                                                 cd Test_Scripts_Linux/robot_scripts
-                                                robot -A config/resFPSZoom_p20-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
+                                                robot -A config/resFPSZoom_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('collect results') {
@@ -325,7 +310,7 @@ pipeline {
                                                     adb devices
                                                     adb push python_video.mvcmd /data/python_video.mvcmd
                                                     adb shell killall -9 newport
-                                                    sleep 6m
+                                                    sleep 4m
                                                 """
                                             }
                                         }
@@ -345,11 +330,6 @@ pipeline {
                                                 robot -A config/camProp_p50_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot camProp.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('resolution switch') {
@@ -366,11 +346,6 @@ pipeline {
                                                 robot -A config/resSwitch_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('resolution fps') {
@@ -387,11 +362,6 @@ pipeline {
                                                 robot -A config/resFPSZoom_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/raw-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('collect results') {
@@ -452,33 +422,12 @@ pipeline {
                                                     adb devices
                                                     adb push python_video.mvcmd /data/python_video.mvcmd
                                                     adb shell killall -9 newport
-                                                    sleep 6m
+                                                    sleep 4m
                                                 """
                                             }
                                         }
                                     }
                                 }
-
-                                // stage('cam prop controls') {
-                                //     when {
-                                //         expression {
-                                //             params.RUN_ALL_TESTS == true || params.CAM_PROP_MJPG == true
-                                //         }
-                                //     }
-                                //     steps {
-                                //         dir('testscripts') {
-                                //             sh """
-                                //                 cd Test_Scripts_Linux
-                                //                 python3 CamPropControls.py -d True -p True
-                                //             """
-                                //         }
-                                //         dir('testscripts/Test_Scripts_Linux/CamPropControls') {
-                                //             sh """
-                                //                 find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
-                                //             """
-                                //         }
-                                //     }
-                                // }
 
                                 stage('resolution switch') {
                                     when {
@@ -494,11 +443,6 @@ pipeline {
                                                 robot -A config/resSwitch_p50-mjpg_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('resolution fps') {
@@ -515,11 +459,6 @@ pipeline {
                                                 robot -A config/resFPSZoom_p50-mjpg_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        // dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
-                                        //     sh """
-                                        //         find . -name "*.html" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/mjpg-f
-                                        //     """
-                                        // }
                                     }
                                 }
                                 stage('collect results') {
@@ -568,7 +507,7 @@ pipeline {
             }
 
             dir('logfiles/robot') {
-                robot outputPath: '.', logFileName: '*log.html', outputFileName: '*output.xml', reportFileName: 'report.hml', passThreshold: 100, unstableThreshold: 75.0
+                robot outputPath: '.', logFileName: '*log.html', outputFileName: '*output.xml', reportFileName: '*report.html', passThreshold: 100, unstableThreshold: 75.0
             }
 
             echo "${NOTIFICATION_EMAILS}"
@@ -591,7 +530,6 @@ pipeline {
 Check console output: ${env.BUILD_URL}
 
 Robot Framework Test Results: ${env.BUILD_URL}/robot
-
 
 Changes:
 ${NEW_GERRIT_COMMIT_MSG}
