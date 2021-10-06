@@ -526,19 +526,19 @@ pipeline {
 
             // send email
             emailext attachmentsPattern: '**/logfiles/**/*_log.html',
-            body: """${currentBuild.currentResult}: ${BRANCH} Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':
-Check console output: ${env.BUILD_URL}
+            body: """${currentBuild.currentResult}: ${BRANCH} Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':<br/>
+Check console output: ${env.BUILD_URL}<br/>
 
-Robot Framework Test Results: ${env.BUILD_URL}/robot
+Robot Framework Test Results: ${env.BUILD_URL}/robot<br/>
 
-Changes:
-${NEW_GERRIT_COMMIT_MSG}
+Changes:<br/>
+${NEW_GERRIT_COMMIT_MSG}<br/>
 
-Changed files:
-${FILES_CHANGED}
+Changed files:<br/>
+${FILES_CHANGED}<br/>
 
----
----
+---<br/>
+---<br/>
 
 ${CURRENT_PARAMETERS}
 
