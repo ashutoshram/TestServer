@@ -297,7 +297,8 @@ if __name__ == "__main__":
         log_print("Device not found, please check if it is attached")
         sys.exit(0)
     
-    cap.open(device_num)
+    if not cap.isOpened():
+        cap.open(device_num)
     for fmt in test_cases:
         res_dict = test_cases[fmt]
         for resolution in res_dict:

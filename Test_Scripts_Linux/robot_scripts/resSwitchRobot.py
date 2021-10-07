@@ -55,9 +55,9 @@ def get_device():
     device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
     cap = cv2.VideoCapture(device_num)
 
+    cap.open(device_num)
     if cap.isOpened():
-        log_print("Device back online:  {}\n".format(device_num))
-        cap.open(device_num)
+        log_print("Device online:  {}\n".format(device_num))
         return True
     else:
         return False
@@ -273,7 +273,8 @@ def eval_switch(prop):
         return
 
     # cycle through all test cases provided by json file
-    cap.open(device_num)
+    if not cap.isOpened():
+        cap.open(device_num)
     start_w = int(start_res[0])
     start_h = int(start_res[1])
     target_w = int(target_res[0])
@@ -285,8 +286,8 @@ def eval_switch(prop):
     err_code[test_type] = test_fps(fmt, start_w, start_h, target_w, target_h, start_fps, target_fps)
     
     result = report_results(err_code)
-    cap.release()
 
 def result_should_be(expected):
+    cap.release()
     if result != int(expected):
         raise AssertionError("{} != {}".format(result, expected))

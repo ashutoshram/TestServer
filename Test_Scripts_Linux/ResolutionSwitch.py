@@ -303,7 +303,8 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # cycle through all test cases provided by json file
-    cap.open(device_num)
+    if not cap.isOpened():
+        cap.open(device_num)
     for fmt in test_cases:
         codec = test_cases[fmt]
         start_res = codec['start res']
