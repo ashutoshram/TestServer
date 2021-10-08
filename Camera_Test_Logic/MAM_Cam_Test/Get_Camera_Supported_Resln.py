@@ -8,7 +8,7 @@ table.columns = table.columns.droplevel()
 
 
 def cam_res():
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(2)
     resolutions = {}
     for index, row in table[["W", "H"]].iterrows():
 
@@ -24,4 +24,5 @@ def cam_res():
     print(resolutions)
     return json.dumps(resolutions)
 
-
+"""resln=cam_res()
+print(resln)"""

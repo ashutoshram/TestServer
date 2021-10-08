@@ -5,6 +5,7 @@ import sys
 
 
 def jdo_run():
+    global iz
     if sys.platform == "win32":
         print('host machine is:-',sys.platform)
         os.startfile("C:/Program Files (x86)/Jabra/Direct4/jabra-direct.exe")

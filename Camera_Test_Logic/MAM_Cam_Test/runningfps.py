@@ -68,9 +68,8 @@ def run_fps(fps1):
         if elapsed_time >= duration or key == ord('q'):
             break
     cap.release()
+    cv2.destroyAllWindows()
     return fps2
     # When everything done, release the capture
 
-
-cv2.destroyAllWindows()
-fp=run_fps('30')
+#fp=run_fps('30')

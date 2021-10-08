@@ -2,13 +2,13 @@ import cv2
 import time
 
 
-def fps_latency():
-    video = cv2.VideoCapture(0)
+def fps_latency(t_fps):
+    video = cv2.VideoCapture(1)
     # set resolution to the capture frame
     video.set(3, 1920)
     video.set(4, 1080)
 
-    video.set(5, 15)
+    video.set(5, t_fps)
 
     fps = video.get(cv2.CAP_PROP_FPS)
     print("Frames per second using video.get(cv2.CV_CAP_PROP_FPS): {0}".format(fps))
@@ -46,10 +46,11 @@ def fps_latency():
     print("Estimated frames per second : {:.2f}".format(fps))
     print("Estimated latency : {:.2f}".format(latency))
     # Release Capture Video and Return the Trace Val
+
     video.release()
     return fps, latency
 
 
 # destroy all windowq
 cv2.destroyAllWindows()
-fps_latency()
+#fps_latency()

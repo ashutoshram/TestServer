@@ -89,4 +89,4 @@ def cameraiz_vd():
 # destroy opencv window on exit
 cv2.destroyAllWindows()
 
-cameraiz_vd()
+#cameraiz_vd()

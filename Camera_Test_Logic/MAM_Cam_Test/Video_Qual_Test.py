@@ -37,10 +37,15 @@ def image_colorfulness(image):
 
 
 def detect_sharpness(grayscale_image, frame):
+    global text, color
     fm = cv2.Laplacian(grayscale_image, cv2.CV_64F).var()
-    text = "Sharp"
-    color = (0, 255, 255)
-    if fm < 100:
+    if fm >= 600:
+        text = "Sharp"
+        color = (0, 255, 255)
+    elif 600 > fm >= 300:
+        text = "Not So Sharp"
+        color = (0, 255, 0)
+    else:
         text = "Not Sharp"
         color = (0, 0, 255)
     cv2.putText(frame, "{}: {:.2f}".format(text, fm), (10, 20),
@@ -187,6 +192,7 @@ def get_contrastval(frame):
 
 # grab a pointer to the input video stream
 def main(fps, latency):
+    global Sharpness, PixelBrightness, Noise, NaturalBrightness, Saturation, Contrast, Contract_val
     print("[INFO] accessing video stream...")
     webcam = cv2.VideoCapture(1)
     # webcam = VideoStream(src=2,framerate=30).start()
@@ -245,6 +251,7 @@ def main(fps, latency):
         if elapsed_time >= duration or key == ord("q"):
             break
     webcam.release()
+    cv2.destroyAllWindows()
     return {"resolution": resolution, "Sharpness": Sharpness, "Noise": Noise, "PixelBrightness": PixelBrightness,
             "NaturalBrightness": NaturalBrightness, "Contrast": Contrast, "Contrast_Val": Contract_val,
             "Saturation": Saturation}
