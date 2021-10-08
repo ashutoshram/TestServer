@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Report</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <h2 class="text-capitalize">Test Report</h2>
+                <p class='attribute'><strong>Start Time: </strong>2021-07-08 02:38:07</p>
+                <p class='attribute'><strong>Duration: </strong>416.85 s</p>
+                <p class='attribute'><strong>Summary: </strong>Total: 6, Pass: 5, Fail: 1</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-10 col-md-10">
+                <table class='table table-hover table-responsive'>
+                    <thead>
+                        <tr>
+                            <th>test_pyt_src.Test_Pytcam</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_Camera_supported_resolution</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>{'640.0x360.0': 'Supported', '960.0x540.0': 'Supported', '1280.0x720.0': 'Supported', '1920.0x1080.0': 'Supported', '3840.0x1080.0': 'Supported', '4800.0x1200.0': 'Supported'}
+</p>
+                            </td>
+                        </tr>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_Video_Qual_Test</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>Frames per second using video.get(cv2.CV_CAP_PROP_FPS): 15.0
+Capturing 360 frames
+Time taken : 26.170578718185425 seconds
+Estimated frames per second : 13.76
+Estimated latency : 0.09
+[INFO] accessing video stream...
+(640.0, 360.0)
+{'resolution': '1280X720', 'Sharpness': ('Not Sharp', '21.64'), 'Noise': ('Noise', '0.99'), 'PixelBrightness': ('low', '0.17'), 'NaturalBrightness': ('LOW', '40.49'), 'Contrast': 'High', 'Contrast_Val': '94.51', 'Saturation': ('Default', '36.81')}
+13
+</p>
+                            </td>
+                        </tr>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_camera_piz</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>[INFO] switching
+1
+[INFO] switching
+2
+[INFO] switching
+3
+[INFO] switching
+4
+[INFO] switching
+5
+[INFO] switching
+6
+[INFO] switching
+7
+</p>
+                            </td>
+                        </tr>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_cameraiz_vd</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>host machine is:- win32
+C:\Users\Rahul\PycharmProjects\pythonProject\TestSuite
+iz-ON
+closing the process jdo
+iz-ON
+1
+[INFO] switching
+2
+[INFO] switching
+3
+[INFO] switching
+4
+</p>
+                            </td>
+                        </tr>
+                        <tr class='danger'>
+                            <td class="col-xs-10">test_jpc50_ptz</td>
+                            <td class="col-xs-1">
+                                <span class="label label-danger" style="display:block;width:40px;">Fail</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>C:\Users\Rahul\PycharmProjects\pythonProject\TestSuite
+[INFO] switching
+1
+[INFO] switching
+2
+closing the process jdo
+[INFO] switching
+3
+Result 3
+Done!
+</p><p style="color:maroon;">AssertionError: 3 not greater than or equal to 5</p><p style="color:maroon;">Traceback (most recent call last):
+  File "C:\Users\Rahul\PycharmProjects\pythonProject\TestSuite\test_pyt_src.py", line 62, in test_jpc50_ptz
+    self.assertGreaterEqual(ptz, 5)
+AssertionError: 3 not greater than or equal to 5
+</p>
+                            </td>
+                        </tr>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_ppl_count</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>No Of person Detected 1
+</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                Total: 6, Pass: 5, Fail: 1 -- Duration: 416.85 s
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('td').on('click', '.btn', function(e){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                var $this = $(this);
+                var $nextRow = $this.closest('tr').next('tr');
+                $nextRow.slideToggle("fast");
+                $this.text(function(i, text){
+                    if (text === 'View') {
+                        return 'Hide';
+                    } else {
+                        return 'View';
+                    };
+                });
+            });
+        });
+    </script>
+</body>
+</html

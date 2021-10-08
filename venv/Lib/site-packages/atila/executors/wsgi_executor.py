@@ -1,0 +1,314 @@
+from aquests.protocols.http import http_util
+from rs4.reraise import reraise
+import sys
+import json
+from aquests.athreads import trigger
+from rs4.attrdict import AttrDict
+from aquests.protocols.http import respcodes
+from skitai.exceptions import HTTPError
+from skitai.wastuff.api import API
+import warnings
+import re
+from skitai.corequest.tasks import Revoke
+from skitai.corequest import Coroutine
+from types import GeneratorType
+from .. import cookie
+try:
+    from css_html_js_minify import html_minify
+except ImportError:
+    html_minify = None
+
+RX_STRIP = re.compile ('^\s+', re.M)
+def html_strip (html):
+    return RX_STRIP.sub ('', html)
+
+def traceback ():
+    t, v, tb = sys.exc_info ()
+    tbinfo = []
+    assert tb # Must have a traceback
+    while tb:
+        tbinfo.append((
+            tb.tb_frame.f_code.co_filename,
+            tb.tb_frame.f_code.co_name,
+            str(tb.tb_lineno)
+            ))
+        tb = tb.tb_next
+
+    del tb
+    file, function, line = tbinfo [-1]
+    return (
+        "%s %s, file %s at line %s, %s" % (
+            t, v, file, line,
+            function == "?" and "__main__" or "function " + function
+        )
+    )
+
+
+class Executor:
+    def __init__ (self, env, get_method):
+        self.env = env
+        self.get_method = get_method
+        self.was = None
+
+    def chained_exec (self, method, args, karg, make_list = True):
+        # recursive before, after, teardown
+        # [b, [b, [b, func, s, f, t], s, f, t], s, f, t]
+
+        response = None
+        [before, func, success, failed, teardown] = method
+        try:
+            if before:
+                response = before (self.was)
+            if not response:
+                if type (func) is list:
+                    response = self.chained_exec (func, args, karg, make_list)
+                else:
+                    response = func (self.was, *args, **karg)
+        except MemoryError:
+            raise
+
+        except Exception as expt:
+            exc_info = sys.exc_info ()
+            self.was.subapp.emit ("request:failed", exc_info)
+            if failed:
+                response = failed (self.was, exc_info)
+            if response is None:
+                raise
+            else:
+                # filed handle exception and contents, just log
+                self.was.traceback ()
+
+        else:
+            self.was.subapp.emit ("request:success")
+            success and success (self.was)
+
+        self.was.subapp.emit ("request:teardown")
+        teardown and teardown (self.was)
+        return [response] if (make_list and type (response) is not list) else response
+
+    def verify_args_lazy (self, karg):
+        if self.was.request.PARAMS:
+            uparams = self.was.request.routable.get ("args", [])[:self.was.request.routable.get ("urlargs", 0)]
+            for arg in self.was.request.PARAMS:
+                if arg not in uparams:
+                    raise HTTPError ("530 Parameter Mismatch")
+
+        args = self.was.request.routable.get ("args")
+        if not args:
+            raise HTTPError ("400 Bad Request", "no parameter need")
+        defaults = self.was.request.routable.get ("defaults")
+        urlargs = self.was.request.routable.get ("urlargs", 0)
+        if urlargs:
+            required = set (args [:urlargs])
+            if defaults:
+                required = required.difference (set (defaults.keys ()))
+            for arg in required:
+                if arg not in karg:
+                    raise HTTPError ("400 Bad Request", "conflict url parameters")
+
+        required = set (args)
+        if defaults:
+            required = required.difference (set (defaults.keys ()))
+
+        for r in required:
+            if r not in karg:
+                raise HTTPError ("400 Bad Request", "parameter `{}` is missing".format (r))
+        if self.was.request.routable.get ("keywords"):
+            return
+
+        for r in karg:
+            if r not in args:
+                raise HTTPError ("400 Bad Request", "parameter `{}` needn't".format (r))
+
+    def generate_content (self, method, _args, karg):
+        karg = self.parse_kargs (karg)
+        try:
+            response = self.chained_exec (method, _args, karg)
+        except TypeError:
+            self.was.traceback ()
+            self.verify_args_lazy (karg) #lazy validating request parameters for respond 400
+            raise
+        return response
+
+    def is_calling_args_group (self, data, forward = True):
+        if self.was.request.routable.get ('keywords'):
+            return True
+        wanted_args = self.was.request.routable.get ('args') [self.was.request.routable.get ('urlargs', 0):]
+        if not wanted_args:
+            return False
+        if forward:
+            if wanted_args:
+                return True
+            for k in wanted_args:
+                if k in data:
+                    return True
+        else:
+            for i in range (-1, -(len (wanted_args) + 1), -1):
+                if wanted_args [i] in data:
+                    return True
+        return False
+
+    def parse_kargs (self, kargs):
+        self.was.request.PARAMS = kargs.copy ()
+        query = self.env.get ("QUERY_STRING")
+        data = self.was.request.dict ()
+
+        allkarg = AttrDict ()
+        self.merge_args (allkarg, kargs)
+
+        if not query and not data:
+            self.was.request.set_args (allkarg)
+            return kargs
+
+        query_included = True
+        if query:
+            try:
+                querydict = http_util.crack_query (query)
+            except IndexError:
+                raise HTTPError ("400 Error", 'invalid query string')
+            self.was.request.URL = querydict
+            self.merge_args (allkarg, querydict)
+            if self.is_calling_args_group (querydict):
+                if not data:
+                    self.was.request.set_args (allkarg)
+                    return allkarg
+                self.merge_args (kargs, querydict)
+            else:
+                query_included = False
+
+        if data:
+            self.merge_args (allkarg, data, overwrite = True)
+            if query_included and self.is_calling_args_group (data, False):
+                self.was.request.set_args (allkarg)
+                return allkarg
+
+        self.was.request.set_args (allkarg)
+        return kargs
+
+    def merge_args (self, s, n, overwrite = False):
+        for k, v in list(n.items ()):
+            if k in s:
+                if overwrite:
+                    s [k] = v
+                    continue
+                if type (s [k]) is not list:
+                    s [k] = [s [k]]
+                s [k].append (v)
+            else:
+                s [k] = v
+
+    def commit (self):
+        if self.was.app is None: # this is failed request
+            return
+        # keep commit order, session -> mbox -> cookie
+        if not self.was.in__dict__ ("cookie"):
+            return
+        if self.was.in__dict__ ("session"):
+            self.was.session and self.was.session.commit ()
+        if self.was.in__dict__ ("mbox"):
+            self.was.mbox and self.was.mbox.commit ()
+        self.was.cookie.commit ()
+
+    def rollback (self):
+        if self.was.app is None: # this is failed request
+            return
+        if not self.was.in__dict__ ("cookie"):
+            return
+        # keep commit order, session -> mbox -> cookie
+        if self.was.in__dict__ ("session"):
+            self.was.session and self.was.session.rollback ()
+        if self.was.in__dict__ ("mbox"):
+            self.was.mbox and self.was.mbox.rollback ()
+        self.was.cookie.rollback ()
+
+    def find_method (self, request, path, handle_response = True):
+        try:
+            cached = request._method_cache
+        except AttributeError:
+            cached = self.get_method (path, request)
+        current_app, thing, param, options, respcode = cached
+        if respcode and handle_response:
+            if respcode == 301:
+                request.response ["Location"] = thing
+                request.response.error (301, "Object Moved", why = 'Object Moved To <a href="%s">Here</a>' % thing)
+            elif respcode != 200:
+                request.response.error (respcode, respcodes.get (respcode, "Undefined Error"))
+
+        if thing:
+            self.env ["wsgi.app"] = current_app
+            self.env ["wsgi.routed"] = current_app.get_routed (thing)
+            self.env ["wsgi.route_options"] = options
+            request.env = self.env
+
+        current_app.maintern ()
+        return current_app, thing, param, respcode
+
+    def __call__ (self):
+        request = self.env ["skitai.was"].request
+        current_app, thing, param, respcode = self.find_method (request, self.env ["PATH_INFO"])
+
+        if respcode:
+            # unacceptable
+            return b""
+
+        current_app.emit ("request:before_start")
+        self.was = self.env ["skitai.was"]
+        self.was.subapp = current_app
+
+        if current_app.expose_spec and current_app.debug and request.channel and request.channel.addr [0].startswith ("127.0.0."):
+            self.env ['ATILA_SET_SEPC'] = 'yes'
+
+        try:
+            try:
+                content = self.generate_content (thing, (), param)
+                if len (content) == 1 and isinstance (content [0], str):
+                    try:
+                        is_html = self.was.response.get_header ('content-type') in ('text/html', None)
+                    except AttributeError:
+                        is_html = False
+
+                    if is_html:
+                        try:
+                            minify_level = current_app.config.get ('MINIFY_HTML')
+                            if minify_level == 'minify' and html_minify:
+                                content = [html_minify (content [0])]
+                            elif minify_level == 'strip':
+                                content = [html_strip (content [0])]
+                        except:
+                            self.was.traceback ()
+
+                if self.env ['wsgi.route_options'].get ('coroutine'):
+                    assert isinstance (content [0], GeneratorType), "coroutine expected"
+                    content = Coroutine (content [0], self.was.ID)
+
+            except AssertionError as e:
+                # transit AssertionError into HTTPError
+                if e.args:
+                    if isinstance (e.args [0], HTTPError):
+                        raise e.args [0]
+                    elif e.args [0].startswith ('HTTPError'):
+                        raise eval (e.args [0].split ('\n')[0])
+                raise e
+
+        except MemoryError:
+            raise
+
+        except HTTPError as e:
+            self.rollback ()
+            content = [request.response.with_explain (e.status, e.explain or (self.was.app.debug and e.exc_info), e.errno)]
+
+        except:
+            self.was.traceback ()
+            self.rollback ()
+            content = [request.response ("502 Bad Gateway", exc_info = self.was.app.debug and sys.exc_info () or None)]
+
+        else:
+            self.commit ()
+
+        if self.env.get ('ATILA_SET_SEPC') and len (content) == 1 and isinstance (content [0], API):
+            content [0].set_spec (current_app)
+
+        # clean was
+        del self.was.subapp
+        current_app.emit ("request:finished")
+        return content

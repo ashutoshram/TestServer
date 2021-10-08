@@ -1,0 +1,14 @@
+Metadata-Version: 1.1
+Name: infi
+Version: 0.0.1
+Summary: virtual package for all infi.* packages
+Home-page: UNKNOWN
+Author: Rotem Yaari
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 2.6

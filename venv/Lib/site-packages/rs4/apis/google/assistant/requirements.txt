@@ -1,0 +1,8 @@
+google-assistant-grpc
+tenacity
+pip3 install -U pysndfx
+google-assistant-sdk[samples]
+google-auth-oauthlib[tool]
+librosa
+pysndfx
+sounddevice

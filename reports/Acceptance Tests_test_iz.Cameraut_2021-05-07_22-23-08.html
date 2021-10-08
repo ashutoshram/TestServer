@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Report</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <h2 class="text-capitalize">Test Report</h2>
+                <p class='attribute'><strong>Start Time: </strong>2021-05-07 22:23:08</p>
+                <p class='attribute'><strong>Duration: </strong>42.94 s</p>
+                <p class='attribute'><strong>Summary: </strong>Total: 5, Pass: 2, Fail: 2, Error: 1</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-10 col-md-10">
+                <table class='table table-hover table-responsive'>
+                    <thead>
+                        <tr>
+                            <th>test_iz.Cameraut</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_Camera_supported_resolution</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>{'640.0x360.0': 'Supported', '960.0x540.0': 'Supported', '1280.0x720.0': 'Supported', '1920.0x1080.0': 'Supported'}
+</p>
+                            </td>
+                        </tr>
+                        <tr class='warning'>
+                            <td class="col-xs-10">test_Video_Qual_Test</td>
+                            <td class="col-xs-1">
+                                <span class="label label-warning" style="display:block;width:40px;">Error</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>Frames per second using video.get(cv2.CV_CAP_PROP_FPS): 15.0
+Capturing 360 frames
+Time taken : 24.5104022026062 seconds
+Estimated frames per second : 14.69
+Estimated latency : 0.02
+[INFO] accessing video stream...
+(640.0, 360.0)
+{'resolution': '1280X720', 'Sharpness': ('Sharp', '508.58'), 'Noise': ('Noise', '0.89'), 'PixelBrightness': ('High', '0.65'), 'NaturalBrightness': ('HIGH', '159.51'), 'Contrast': 'High', 'Contrast_Val': '100.00', 'Saturation': ('High', '45.41')}
+</p><p style="color:maroon;">NameError: name 'fps2' is not defined</p><p style="color:maroon;">Traceback (most recent call last):
+  File "C:\Users\Rahul\PycharmProjects\pythonProject\TestSuite\test_iz.py", line 43, in test_Video_Qual_Test
+    rfps = Video_Qual_Test.runningfps.run_fps(fps1)
+  File "C:\Users\Rahul\PycharmProjects\pythonProject\Camera_Test_Logic\runningfps.py", line 71, in run_fps
+    return fps2
+NameError: name 'fps2' is not defined
+</p>
+                            </td>
+                        </tr>
+                        <tr class='danger'>
+                            <td class="col-xs-10">test_camera_piz</td>
+                            <td class="col-xs-1">
+                                <span class="label label-danger" style="display:block;width:40px;">Fail</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p style="color:maroon;">AssertionError: 0 not greater than 1</p><p style="color:maroon;">Traceback (most recent call last):
+  File "C:\Users\Rahul\PycharmProjects\pythonProject\TestSuite\test_iz.py", line 19, in test_camera_piz
+    self.assertGreater(total1, 1)
+AssertionError: 0 not greater than 1
+</p>
+                            </td>
+                        </tr>
+                        <tr class='danger'>
+                            <td class="col-xs-10">test_cameraiz_vd</td>
+                            <td class="col-xs-1">
+                                <span class="label label-danger" style="display:block;width:40px;">Fail</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p style="color:maroon;">AssertionError: 0 not greater than 1</p><p style="color:maroon;">Traceback (most recent call last):
+  File "C:\Users\Rahul\PycharmProjects\pythonProject\TestSuite\test_iz.py", line 15, in test_cameraiz_vd
+    self.assertGreater(total, 1)
+AssertionError: 0 not greater than 1
+</p>
+                            </td>
+                        </tr>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_ppl_count</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>No Of person Detected 2
+</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                Total: 5, Pass: 2, Fail: 2, Error: 1 -- Duration: 42.94 s
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('td').on('click', '.btn', function(e){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                var $this = $(this);
+                var $nextRow = $this.closest('tr').next('tr');
+                $nextRow.slideToggle("fast");
+                $this.text(function(i, text){
+                    if (text === 'View') {
+                        return 'Hide';
+                    } else {
+                        return 'View';
+                    };
+                });
+            });
+        });
+    </script>
+</body>
+</html

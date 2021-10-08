@@ -1,0 +1,5 @@
+# sudo apt-get install portaudio19-dev libffi-dev libssl-dev llvm-dev sox
+
+google-cloud-speech
+google-cloud-translate
+google.cloud-texttospeech<2.0.0

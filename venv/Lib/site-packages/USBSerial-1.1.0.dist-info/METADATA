@@ -1,0 +1,71 @@
+Metadata-Version: 2.1
+Name: USBSerial
+Version: 1.1.0
+Summary: HC-USBSerial Python library via Serial protocol, using pySerial library as API
+Home-page: https://github.com/KKimj/USBSerial_Python-library
+Author: KKimj
+Author-email: kkimj@hanyang.ac.kr
+License: GPL-3.0 License
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Terminals :: Serial
+Classifier: Natural Language :: Korean
+Requires-Python: >=3
+Description-Content-Type: text/markdown
+Requires-Dist: pyserial (==3.5)
+
+# USBSerial_Python-library
+USBSerial_Python-library
+
+
+https://pypi.org/project/USBSerial
+
+## Getting Started
+
+### Installation
+```
+$ pip install USBSerial
+```
+
+## Usage
+
+### Import
+```python
+from usbserial import USBSerial
+```
+
+### Examples
+```python
+from usbserial import USBSerial
+device = USBSerial(port = 'ttyUSB0', baudrate = 115200, timeout = 3, open = True)
+print(device.readline())
+print(device.read(size = 1))
+```
+
+
+## Dev
+
+### Build
+```
+$ python3 -m build
+```
+
+### Local test
+```
+$ pip install -e .
+```
+
+#### Build and Local test
+```
+$ python3 -m build && pip install -e . && python
+```
+
+### Release
+```
+$ python -m twine upload dist/*
+```
+
+
+
