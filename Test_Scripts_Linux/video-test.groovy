@@ -260,7 +260,7 @@ pipeline {
                                                 robot -A config/resFPSZoom_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
                                             sh """
                                                 find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
                                                 """
@@ -366,7 +366,7 @@ pipeline {
                                                 robot -A config/resSwitch_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
                                             sh """
                                                 find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
                                                 """
@@ -387,7 +387,7 @@ pipeline {
                                                 robot -A config/resFPSZoom_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
-                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
                                             sh """
                                                 find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
                                                 """
@@ -473,6 +473,11 @@ pipeline {
                                                 robot -A config/resSwitch_p50-mjpg_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
                                         }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
+                                        }
                                     }
                                 }
                                 stage('resolution fps') {
@@ -488,6 +493,11 @@ pipeline {
                                                 cd Test_Scripts_Linux/robot_scripts
                                                 robot -A config/resFPSZoom_p50-mjpg_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
+                                        }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionfps') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
                                         }
                                     }
                                 }
