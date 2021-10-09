@@ -319,7 +319,7 @@ def end_test():
     fail = "{}_failed_resolutionfps_{}.log".format(current, log_name)
     fail_path = os.path.join(path+"/resolutionfps", fail)
     fail_file = open(fail_path, "w")
-    fail_file.write("Resolution FPS failed test cases:")
+    fail_file.write("Resolution FPS failed test cases:\n")
     if failures:
         fail_file.write("""Number of soft video freezes: {}
         Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))

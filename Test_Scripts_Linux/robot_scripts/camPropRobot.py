@@ -334,7 +334,7 @@ def end_test():
     fail = "{}_failed_campropcontrols_{}.log".format(current, log_name)
     fail_path = os.path.join(path+"/campropcontrols", fail)
     fail_file = open(fail_path, "w")
-    fail_file.write("Cam Prop failed test cases:")
+    fail_file.write("Cam Prop failed test cases:\n")
     if failures:
         fail_file.write("""Number of soft video freezes: {}
         Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))

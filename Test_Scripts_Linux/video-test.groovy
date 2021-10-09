@@ -218,6 +218,11 @@ pipeline {
                                                 robot -A config/camProp_p20_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot camProp.robot
                                             """
                                         }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
+                                        }
                                     }
                                 }
                                 stage('resolution switch') {
@@ -233,6 +238,11 @@ pipeline {
                                                 cd Test_Scripts_Linux/robot_scripts
                                                 robot -A config/resSwitch_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
+                                        }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/resolutionswitch') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
                                         }
                                     }
                                 }
@@ -250,12 +260,17 @@ pipeline {
                                                 robot -A config/resFPSZoom_p20-raw_args.txt -t 1080p --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
+                                        }
                                     }
                                 }
                                 stage('collect results') {
                                     steps {
                                         dir('result') {
-                                            stash includes: '*.html, robot/*', name: 'raw-test'
+                                            stash includes: '*.html, *.log, robot/*', name: 'raw-test'
                                         }
                                         deleteDir() /* clean up our workspace */
                                     }
@@ -330,6 +345,11 @@ pipeline {
                                                 robot -A config/camProp_p50_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot camProp.robot
                                             """
                                         }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
+                                        }
                                     }
                                 }
                                 stage('resolution switch') {
@@ -345,6 +365,11 @@ pipeline {
                                                 cd Test_Scripts_Linux/robot_scripts
                                                 robot -A config/resSwitch_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resSwitch.robot
                                             """
+                                        }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
                                         }
                                     }
                                 }
@@ -362,12 +387,17 @@ pipeline {
                                                 robot -A config/resFPSZoom_p50-raw_args.txt --nostatusrc --outputdir \${WORKSPACE}/result/robot resFPSZoom.robot
                                             """
                                         }
+                                        dir('testscripts/Test_Scripts_Linux/robot_scripts/campropcontrols') {
+                                            sh """
+                                                find . -name "*.log" -print | xargs -I file basename file | xargs -I f mv f ${WORKSPACE}/result/robot
+                                                """
+                                        }
                                     }
                                 }
                                 stage('collect results') {
                                     steps {
                                         dir('result') {
-                                            stash includes: '*.html, robot/*', name: 'raw-test'
+                                            stash includes: '*.html, *.log, robot/*', name: 'raw-test'
                                         }
                                         deleteDir() /* clean up our workspace */
                                     }
@@ -464,7 +494,7 @@ pipeline {
                                 stage('collect results') {
                                     steps {
                                         dir('result') {
-                                            stash includes: '*.html, robot/*', name: 'mjpg-test'
+                                            stash includes: '*.html, *.log, robot/*', name: 'mjpg-test'
                                         }
                                         deleteDir() /* clean up our workspace */
                                     }
@@ -505,14 +535,12 @@ pipeline {
                     }
                     TEST_REPORT = """${sh (
                         returnStdout: true,
-                        script: 'find . -name "*failed_resolutionfps_p50.log" -o -name "*failed_resolutionfps_p20.log" -o -name "*failed_resolutionswitch_p50.log" -o -name "*failed_resolutionswitch_p20.log" -o -name "*failed_campropcontrols_p50.log" -o -name "*failed_campropcontrols_p20.log | xargs cat').trim()}"""
+                        script: 'find . -name "*failed_resolutionfps_p50.log" -o -name "*failed_resolutionfps_p20.log" -o -name "*failed_resolutionswitch_p50.log" -o -name "*failed_resolutionswitch_p20.log" -o -name "*failed_campropcontrols_p50.log" -o -name "*failed_campropcontrols_p20.log" | xargs cat').trim()}"""
                     if ( TEST_REPORT != "" ) {
-                        TEST_REPORT = "Failed tests:\n ${TEST_REPORT}"
-                    }
+                        TEST_REPORT = "<br/>${TEST_REPORT}"
+                    } 
                 }
                 echo "${TEST_REPORT}"
-            }
-                }
             }
 
             dir('logfiles/robot') {
@@ -540,7 +568,7 @@ Check console output: ${env.BUILD_URL}<br/>
 
 Robot Framework Test Results: ${env.BUILD_URL}/robot<br/>
 
-${TEST_REPORT}<br/>
+<br/>${TEST_REPORT}<br/>
 
 Changes:<br/>
 ${NEW_GERRIT_COMMIT_MSG}<br/>
