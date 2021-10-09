@@ -10,6 +10,12 @@ import re
 import pprint as p
 from datetime import date, datetime
 
+# temporary solution to end test with report until i find a better way lol
+# ===========
+num_tests = 0
+total = 48 # number of tests defined in robot file
+# ===========
+
 current = date.today()
 path = os.getcwd()
 cap = None
@@ -17,10 +23,12 @@ debug = True
 device_name = "Jabra PanaCast 50"
 device_num = 0
 log_file = None
+log_name = None
 power_cycle = False
 reboots_hard = 0
 reboots_soft = 0
 result = -1
+failures = {}
 
 def log_print(args):
     msg = args + "\n"
@@ -140,7 +148,6 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
     all_fps = []
     global cap
     global err_code
-    global failures
 
     # convert video codec number to format and check if set correctly
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fmt))
@@ -238,7 +245,10 @@ def test_fps(fmt, s_w, s_h, t_w, t_h, s_fps, t_fps):
 def eval_switch(prop):
     global device_name
     global log_file
+    global log_name
     global result
+    global failures
+    global num_tests
     err_code = {}
     vals = prop.split()
     log_name = vals[0]
@@ -284,10 +294,34 @@ def eval_switch(prop):
     log_print(55*"=")
     log_print("{}\n".format(test_type))
     err_code[test_type] = test_fps(fmt, start_w, start_h, target_w, target_h, start_fps, target_fps)
+    if err_code.get(test_type) == -1:
+        failures[test_type] = -1
     
     result = report_results(err_code)
 
+    # ===========
+    num_tests += 1
+    # ===========
+
 def result_should_be(expected):
-    cap.release()
     if result != int(expected):
         raise AssertionError("{} != {}".format(result, expected))
+    
+    if num_tests == total:
+        end_test()
+
+def end_test():
+    cap.release()
+
+    fail = "{}_failed_resolutionswitch_{}.log".format(current, log_name)
+    fail_path = os.path.join(path+"/resolutionswitch", fail)
+    fail_file = open(fail_path, "w")
+    fail_file.write("Resolution Switch failed test cases:")
+    if failures:
+        fail_file.write("""Number of soft video freezes: {}
+        Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))
+        fail_report = p.pformat(failures, width=20)
+        fail_file.write("{}\n\n".format(fail_report))
+    else:
+        fail_file.write("Congratulations! No failures detected :)")
+    fail_file.close()

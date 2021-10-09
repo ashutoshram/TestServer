@@ -12,6 +12,12 @@ import subprocess
 import argparse
 import re
 
+# temporary solution to end test with report until i find a better way lol
+# ===========
+num_tests = 0
+total = 4 # number of tests defined in robot file
+# ===========
+
 current = date.today()
 path = os.getcwd()
 cap = None
@@ -20,11 +26,13 @@ device = None
 device_name = None
 device_num = 0
 log_file = None
+log_name = None
 power_cycle = False
 reboots_hard = 0
 reboots_soft = 0
 result = -1
 zoom_file = "config/zoom.json"
+failures = {}
 
 input_zooms = open(zoom_file)
 json_str = input_zooms.read()
@@ -65,9 +73,9 @@ def get_device():
     device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
     cap = cv2.VideoCapture(device_num)
 
+    cap.open(device_num)
     if cap.isOpened():
         log_print("Device number:  {}\n".format(device_num))
-        cap.open(device_num)
         return True
     else:
         return False
@@ -236,7 +244,10 @@ def test_fps(fmt, x, y, framerate, zoom):
 def eval_res(prop):
     global device_name
     global log_file
+    global log_name
     global result
+    global failures
+    global num_tests
     err_code = {}
     vals = prop.split()
     log_name = vals[0]
@@ -276,7 +287,8 @@ def eval_res(prop):
     log_print(55*"=")
     log_print("\n{}\n".format(timestamp))
 
-    cap.open(device_num)
+    if not cap.isOpened():
+        cap.open(device_num)
     log_print(55*"=")
     log_print("Parameters: {} {}p {}fps".format(fmt, y, fps))
     
@@ -285,10 +297,34 @@ def eval_res(prop):
         log_print("Testing: {} {}p {}fps zoom {}\n".format(fmt, y, fps, z))
         test_type = "{} {}p {}fps zoom {}".format(fmt, y, fps, z)
         err_code[test_type] = test_fps(fmt, x, y, fps, z)
+        if err_code.get(test_type) == -1:
+            failures[test_type] = -1
 
     result = report_results(err_code)
-    cap.release()
+    
+    # ===========
+    num_tests += 1
+    # ===========
 
 def result_should_be(expected):
     if result != int(expected):
         raise AssertionError("{} != {}".format(result, expected))
+    
+    if num_tests == total:
+        end_test()
+
+def end_test():
+    cap.release()
+
+    fail = "{}_failed_resolutionfps_{}.log".format(current, log_name)
+    fail_path = os.path.join(path+"/resolutionfps", fail)
+    fail_file = open(fail_path, "w")
+    fail_file.write("Resolution FPS failed test cases:")
+    if failures:
+        fail_file.write("""Number of soft video freezes: {}
+        Number of hard video freezes: {}\n\n""".format(reboots_soft, reboots_hard))
+        fail_report = p.pformat(failures, width=20)
+        fail_file.write("{}\n\n".format(fail_report))
+    else:
+        fail_file.write("Congratulations! No failures detected :)")
+    fail_file.close()

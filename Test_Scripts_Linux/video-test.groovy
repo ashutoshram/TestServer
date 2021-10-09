@@ -503,6 +503,15 @@ pipeline {
                     } catch (Exception e) {
                         echo 'No results from mjpg-test'
                     }
+                    TEST_REPORT = """${sh (
+                        returnStdout: true,
+                        script: 'find . -name "*failed_resolutionfps_p50.log" -o -name "*failed_resolutionfps_p20.log" -o -name "*failed_resolutionswitch_p50.log" -o -name "*failed_resolutionswitch_p20.log" -o -name "*failed_campropcontrols_p50.log" -o -name "*failed_campropcontrols_p20.log | xargs cat').trim()}"""
+                    if ( TEST_REPORT != "" ) {
+                        TEST_REPORT = "Failed tests:\n ${TEST_REPORT}"
+                    }
+                }
+                echo "${TEST_REPORT}"
+            }
                 }
             }
 
@@ -530,6 +539,8 @@ pipeline {
 Check console output: ${env.BUILD_URL}<br/>
 
 Robot Framework Test Results: ${env.BUILD_URL}/robot<br/>
+
+${TEST_REPORT}<br/>
 
 Changes:<br/>
 ${NEW_GERRIT_COMMIT_MSG}<br/>
