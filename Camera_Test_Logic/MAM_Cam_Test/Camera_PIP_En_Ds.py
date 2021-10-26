@@ -1,7 +1,8 @@
+# Author-Rahul Kumar Panda
+# @mailid-rkpanda@jbara.com
 import cv2
 import numpy as np
 import queue
-# from matplotlib import pyplot as plt
 import threading
 import time
 import os
@@ -26,8 +27,6 @@ def clean():
 
 ##################################logic to compare Peopleface###############################
 def mse(imageA, imageB):
-    # cv2.imshow('image1', imageA)
-    # cv2.imshow('image2', imageB)
     image1 = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)
     image2 = cv2.cvtColor(imageB, cv2.COLOR_BGR2GRAY)
     sift = cv2.SIFT_create()
@@ -42,27 +41,23 @@ def mse(imageA, imageB):
     for m, n in matches:
         if m.distance < 0.75 * n.distance:
             good.append([m])
-    # cv.drawMatchesKnn expects list of lists as matches.
     img3 = cv2.drawMatchesKnn(image1, kp1, image2, kp2, good, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    # cv2.imshow('compare', img3)
-
-    # cv2.waitKey(0)
+    cv2.imshow('compare', img3)
+    cv2.waitKey(1)
+    time.sleep(5)
     g = len(good)
     print(g)
+    cv2.destroyWindow('compare')
     if g >= 15:
         return "MATCHED"
     else:
         return "NOT-MATCHED"
 
 
-# cv2.destroyAllWindows()
-
-
 def compimages(hsc, face_count):
-    # test image
     print('hsc:-', hsc)
     print('face-count:-', face_count)
-    # global image1, image2
+
     if hsc == 0 and face_count == 1:
         imageA = cv2.imread('humanviewt0.png')
         imageB = cv2.imread('Faceview0.png')
@@ -92,9 +87,9 @@ def pipnoface(person, quen):
     print('program-2 starting')
     capture_pip = False
     img = cv2.imread('Camview-noppl0.png')
-    # img_rgb = cv2.imread('Camview-noppl0.png')
+
     img_rgb = img.copy()
-    # ret, img = cap.read()
+
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
 
     template = cv2.imread('pipview0.png', 0)
@@ -107,46 +102,36 @@ def pipnoface(person, quen):
     count = 0
     for pt in zip(*loc[::-1]):
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
-        # global pt, loc_roi_col
-        """loc_roi_gray=img_gray[pt[1]:pt[1] + h, pt[0]:pt[0] + w]"""
+
         capture_pip = True
         count += 1
-        """cv2.putText(img_rgb, 'person-' + str(count), (pt[0] - 10, pt[1] - 10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)"""
 
-    print(count)
-    if capture_pip is True and count <= 160:
+    print('the thresold count vthout person:-', count)
+    if capture_pip is True and (50 > count <= 160):
         pip = 'ON'
         loc_roi_col = img_rgb[pt[1]:pt[1] + h, pt[0]:pt[0] + w]
         cv2.rectangle(img_rgb, (xp, yp), (xp + wp, yp + hp), (0, 255, 255), 2)
         cv2.putText(img_rgb, 'PIP:-' + pip + '-' + str(person), (xp + 20, yp + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        # cv2.imshow("Captured", img_rgb)
 
-        # cv2.imshow("Captured-PIP", loc_roi_col)
-        # cv2.waitKey(0)
-    elif capture_pip is True and count > 160:
+    elif capture_pip is True and (50 <= count > 160):
         pip = "OFF"
         loc_roi_col = img_rgb[pt[1]:pt[1] + h, pt[0]:pt[0] + w]
         cv2.rectangle(img_rgb, (xp, yp), (xp + wp, yp + hp), (0, 0, 255), 2)
         cv2.putText(img_rgb, 'PIP-View:-' + pip, (pt[0] + 20, pt[1] + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-        # cv2.imshow("Captured-", img_rgb)
 
-        # cv2.imshow('Not a PIP', loc_roi_col)
     cv2.imshow("Result:", img_rgb)
-
     cv2.imshow('PIP=' + pip, loc_roi_col)
-    key = cv2.waitKey(30) & 0xFF
+    key = cv2.waitKey(1)
     time.sleep(10)
     current_time = time.time()
     elapsed_time = current_time - start_time
 
     # if elapse time reached duration set or the `q` key was pressed, break from the loop
     if elapsed_time >= duration or key == ord('q'):
-        cap.release()
         cv2.destroyAllWindows()
-    quen.put(pip)
+        quen.put(pip)
 
 
 def pipvthface(quey):
@@ -256,36 +241,35 @@ def pipvthface(quey):
     else:
         PIP = "OFF"
         cv2.rectangle(nm_img1, (xp, yp), (xp + wp, yp + hp), (0, 0, 255,), 2)
-        cv2.putText(nm_img1, 'PIP-View:-' + 'no-pip', (xp + 20, yp + 20),
+        cv2.putText(nm_img1, 'PIP-View:-' + PIP, (xp + 20, yp + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
     cv2.imshow('Capture-result', nm_img1)
-    key = cv2.waitKey(20) & 0xff
+    key = cv2.waitKey(1)
     time.sleep(10)
     current_time = time.time()
     elapsed_time = current_time - start_time
-    #key = cv2.waitKey(10) & 0xFF
-
+    # key = cv2.waitKey(10) & 0xFF
 
     # if elapse time reached duration set or the `q` key was pressed, break from the loop
     if elapsed_time >= duration or key == ord('q'):
-        cap.release()
+        # cap.release()
         cv2.destroyAllWindows()
-    quey.put(PIP)
+        quey.put(PIP)
 
 
 # cv2.destroyAllWindows()
 
 
 # cap = cv2.imread('man.jpg')
-def pip_main(cap, human_LBP):
+def pip_main(cap, human_LBP, eye_cascade):
     duration = 15
     start_time = time.time()
     frame_count = 0
     false_frame = 0
     while True:
-        # img=cv2.VideoCapture(0)
+
         ret, img = cap.read()
-        # img= imutils.resize(img, height=1280,width=720)
+
         img = cv2.resize(img, (1280, 720))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         human = human_LBP.detectMultiScale(gray, 1.3, 3)
@@ -298,14 +282,14 @@ def pip_main(cap, human_LBP):
         hp = 180
 
         for (hx, hy, hw, hh) in human:
-            #cv2.rectangle(img, (hx, hy), (hx + hw, hy + hh), (255, 255, 255), 2)
-            roih_gray=gray[hy:hy + hh, hx:hx + hw]
+            # cv2.rectangle(img, (hx, hy), (hx + hw, hy + hh), (255, 255, 255), 2)
+            roih_gray = gray[hy:hy + hh, hx:hx + hw]
             roih_col = img[hy:hy + hh, hx:hx + hw]
             eyes = eye_cascade.detectMultiScale(roih_gray)
             eye_count = 0
             for (ex, ey, ew, eh) in eyes:
                 eye_count += 1
-                if eye_count>=1:
+                if eye_count >= 1:
                     cv2.rectangle(img, (hx, hy), (hx + hw, hy + hh), (255, 255, 255), 2)
                     human_count += 1
                     cv2.imwrite('humanviewt' + str(hsc) + ".png", roih_col)
@@ -319,10 +303,7 @@ def pip_main(cap, human_LBP):
             cv2.imwrite('pipview' + str(hsc) + ".png", roip_color)
             print('person detected no of time:' + str(human_count))
 
-            """text = "Switch View-IZ-VD"
-            col = (100, 255, 0)
-            cv2.putText(roip_color, text + "-" + str(hsc), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, col, 2)
-            cv2.imshow("Captured-IZ-VD", roip_color)"""
+
         else:
             false_frame += 1
             if false_frame > 10:
@@ -349,8 +330,46 @@ def pip_main(cap, human_LBP):
     return human_count, img
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def main():
     PIP_X = [470, 945]
+    PIP_Y = [260, 525]
+    PIP_w = [160, 318]
+    PIP_h = [90, 178]
+    warmup_frame = 200
+    capture_frame = 0
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_alt.xml")
+    # eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye_tree_eyeglasses.xml")
+    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
+    human_LBP = cv2.CascadeClassifier(cv2.data.lbpcascades + "lbpcascade_frontalface.xml")
+    body_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "HS.xml")
+    cap = cv2.VideoCapture(1)
+    detect, img = pip_main(cap, human_LBP, eye_cascade)
+    print(detect)
+    # vs = cv2.VideoCapture(1)
+    que = queue.Queue()
+    Thread_list = [2]
+    # time.sleep(15)
+    t1 = threading.Thread(target=pipvthface, args=(que,))
+    t2 = threading.Thread(target=pipnoface, args=(detect, que))
+    if detect >= 1:
+        t1.start()
+        t1.join()
+
+    else:
+        t2.start()
+        t2.join()
+    result = que.get()
+    print(result)
+    # que.empty()
+    clean()
+    return result
+
+
+if __name__ == '__main__':
+    main()
+
+"""PIP_X = [470, 945]
     PIP_Y = [260, 525]
     PIP_w = [160, 318]
     PIP_h = [90, 178]
@@ -380,5 +399,5 @@ if __name__ == '__main__':
     result = que.get()
     print(result)
     # que.empty()
-clean()
+    clean()"""
 # cv2.destroyAllWindows()
