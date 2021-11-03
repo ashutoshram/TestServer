@@ -1,8 +1,9 @@
+# Author-Rahul Kumar Panda
+# @mailid-rkpanda@jbara.com
 import pyautogui as jdo, time
 import cv2
 import os
 import sys
-
 
 def jdo_run():
     global iz
@@ -16,41 +17,32 @@ def jdo_run():
     dir = os.getcwd()
     print(dir)
     device = jdo.locateCenterOnScreen(
-        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Python_Settings_1.PNG")
-    jdo.moveTo(device)
-    jdo.click()
-    time.sleep(5)
+        dir+"/JDO_PAUI/Python_Settings_1.PNG")
+    if device:
+        jdo.moveTo(device)
+        jdo.click()
+        time.sleep(5)
+    else:
+        device = jdo.locateCenterOnScreen(
+            dir + "/JDO_PAUI/Python_Settings_12.png")
+        jdo.moveTo(device)
+        jdo.click()
+        time.sleep(5)
     Cam_control = jdo.locateCenterOnScreen(
-        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Camera_Settings_2.PNG")
+        dir+"/JDO_PAUI/Camera_Settings_2.PNG")
     jdo.moveTo(Cam_control)
     jdo.click()
     time.sleep(2)
     jdo.getWindowsWithTitle("Jabra Direct")[0].hide()
     time.sleep(5)
     jdo.moveTo(x=1350, y=65)
-    cls_video = jdo.locateCenterOnScreen('C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Close_Video_pyt2.png')
+    cls_video = jdo.locateCenterOnScreen(dir+'/JDO_PAUI/Close_Video_pyt2.png')
     jdo.moveTo(cls_video)
     jdo.click()
     jdo.sleep(2)
-    """for zi in range(5):
-        Zoom_in = jdo.locateCenterOnScreen(
-            "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Zoom_in.PNG")
-        jdo.moveTo(Zoom_in)
-        jdo.click()
-        time.sleep(5)
-        # gui.click(1005, 567)
-        zi += 1
-    for zo in range(5):
-        Zoom_out = jdo.locateCenterOnScreen(
-            "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Zoom_out.PNG")
-        jdo.moveTo(Zoom_out)
-        jdo.click()
-        time.sleep(5)
-        # gui.click(1005, 680)
-        zo += 1"""
 
     jdo_iz = jdo.locateCenterOnScreen(
-        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Cam_iz_off.PNG")
+        dir+"/JDO_PAUI/Cam_iz_off.PNG")
     if jdo_iz:
         print('IZ_VD_Off')
         jdo.moveTo(jdo_iz)
@@ -62,12 +54,12 @@ def jdo_run():
         print(iz)
     else:
         jdo_iz2 = jdo.locateCenterOnScreen(
-            "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Cam_iz_on.PNG")
+            dir+"/JDO_PAUI/Cam_iz_on.PNG")
         if jdo_iz2:
             iz='iz-ON'
             print(iz)
     video_stng_close = jdo.locateCenterOnScreen(
-        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/PYTH_Cam_Test/JDO_PAUI/Close_Cam_Control.png")
+        dir+"/JDO_PAUI/Close_Cam_Control.png")
     jdo.moveTo(video_stng_close)
     jdo.click()
     time.sleep(2)

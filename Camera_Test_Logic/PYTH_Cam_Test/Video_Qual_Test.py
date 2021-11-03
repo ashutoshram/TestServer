@@ -37,10 +37,15 @@ def image_colorfulness(image):
 
 
 def detect_sharpness(grayscale_image, frame):
+    global text, color
     fm = cv2.Laplacian(grayscale_image, cv2.CV_64F).var()
-    text = "Sharp"
-    color = (0, 255, 255)
-    if fm < 100:
+    if fm >= 600:
+        text = "Sharp"
+        color = (0, 255, 255)
+    elif 600 > fm >= 300:
+        text = "Not So Sharp"
+        color = (0, 255, 0)
+    else:
         text = "Not Sharp"
         color = (0, 0, 255)
     cv2.putText(frame, "{}: {:.2f}".format(text, fm), (10, 20),
@@ -253,10 +258,11 @@ def main(fps, latency):
 
 
 if __name__ == "__main__":
-    # fps = rfps.get_fps()
-    fps, latency = Camera_FPS_Latensy.fps_latency()
+    #fps =
+    fps, latency = Camera_FPS_Latensy.fps_latency(15)
     video = main(fps, latency)
-    rfps = runningfps
+    #rfps = runningfps
+    rfps=runningfps.run_fps(round(fps))
 
     print("Value for running FPS:{:.2f}".format(rfps))
     print(video)
