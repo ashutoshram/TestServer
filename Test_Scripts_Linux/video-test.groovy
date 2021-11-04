@@ -578,7 +578,7 @@ Check console output: ${env.BUILD_URL}<br/>
 
 Robot Framework Test Results: ${env.BUILD_URL}/robot<br/>
 
-<br/>${TEST_REPORT}<br/>
+${TEST_REPORT}<br/>
 
 Changes:<br/>
 ${NEW_GERRIT_COMMIT_MSG}<br/>

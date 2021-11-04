@@ -27,6 +27,7 @@ log_name = None
 power_cycle = False
 reboots_hard = 0
 reboots_soft = 0
+reboots_temp = 0
 result = -1
 failures = {}
 
@@ -74,9 +75,10 @@ def reboot_device(fmt, codec):
     global device_num
     global reboots_hard
     global reboots_soft
+    global reboots_temp
     switch = 0
 
-    log_print("Rebooting...")
+    # log_print("Rebooting...")
     if fmt == "MJPG":
         switch = 1
     # reboot by resetting USB if testing P20
@@ -89,22 +91,27 @@ def reboot_device(fmt, codec):
             sys.exit(0)
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
-        if fmt == codec:
+        if fmt == codec and reboots_temp < 2:
+            log_print("Soft rebooting...")
             os.system("adb shell /usr/bin/resethub")
             time.sleep(15)
             reboots_soft += 1
-        if not get_device():
+            reboots_temp += 1
+        if not get_device() or reboots_temp >= 2:
+            log_print("Hard rebooting...")
             if power_cycle is True:
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '0'])
                 time.sleep(3)
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
             else:
+                os.system("adb devices")
                 os.system("sudo adb kill-server")
                 os.system("sudo adb devices")
                 os.system("adb reboot")
             
             time.sleep(50)
             reboots_hard += 1
+            reboots_temp = 0
             if not get_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
                 report_results()
