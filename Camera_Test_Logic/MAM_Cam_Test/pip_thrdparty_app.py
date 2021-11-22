@@ -25,6 +25,31 @@ def clean():
     print("Done!")
 
 
+##################################video path determination ###############################
+def record_path(appitm):
+    # appitm = "zoom"
+    global zoomrecp, trcp
+    if appitm == 'zoom':
+        zoomdir = "C:\\Users\\Rahul\\Documents\\zoom"
+        zoomvid = os.listdir(zoomdir)
+        for item in zoomvid:
+            if item.endswith("Test-Meeting "):
+                print(item)
+            zoomrecp = zoomdir + "\\" + item
+        videofile=os.listdir(zoomrecp)
+        for itemv in videofile:
+            if itemv.startswith("video"):
+                print(itemv)
+                return zoomrecp,itemv
+    elif appitm == "teams":
+        tmdir = 'C:\\Users\\Rahul\\OneDrive - Motivity Labs\\Recordings'
+        tmvid = os.listdir(tmdir)
+        for itm in tmvid:
+            if itm.startswith('Test Meeting'):
+                trcp = tmdir + "\\" + itm
+        return trcp
+
+
 ##################################logic to compare Peopleface###############################
 def mse(imageA, imageB):
     image1 = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)
@@ -257,10 +282,6 @@ def pipvthface(quey):
         quey.put(PIP)
 
 
-# cv2.destroyAllWindows()
-
-
-# cap = cv2.imread('man.jpg')
 def pip_main(cap, human_LBP, eye_cascade):
     duration = 15
     start_time = time.time()
@@ -330,26 +351,30 @@ def pip_main(cap, human_LBP, eye_cascade):
     return human_count, img
 
 
-# if __name__ == '__main__':
-def main():
+def main(apptyp,mid):
+    global vidfile
     PIP_X = [470, 945]
     PIP_Y = [260, 525]
     PIP_w = [160, 318]
     PIP_h = [90, 178]
     warmup_frame = 200
     capture_frame = 0
+    vidsrc,vidfile = record_path(apptyp)
+    print(vidsrc)
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_alt.xml")
     # eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye_tree_eyeglasses.xml")
     eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
     human_LBP = cv2.CascadeClassifier(cv2.data.lbpcascades + "lbpcascade_frontalface.xml")
     body_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "HS.xml")
-    cap = cv2.VideoCapture(1)
+    if apptyp.lower() == 'zoom':
+        cap = cv2.VideoCapture(vidsrc + '\\'+vidfile)
+    else:
+        cap = cv2.VideoCapture(vidsrc)
+    cap.set(5,30)
     detect, img = pip_main(cap, human_LBP, eye_cascade)
     print(detect)
-    # vs = cv2.VideoCapture(1)
     que = queue.Queue()
     Thread_list = [2]
-    # time.sleep(15)
     t1 = threading.Thread(target=pipvthface, args=(que,))
     t2 = threading.Thread(target=pipnoface, args=(detect, que))
     if detect >= 1:
@@ -361,11 +386,9 @@ def main():
         t2.join()
     result = que.get()
     print(result)
-    # que.empty()
     clean()
     return result
 
 
-if __name__ == '__main__':
-    main()
-
+#if __name__ == '__main__':
+    #main(apptyp,mid)

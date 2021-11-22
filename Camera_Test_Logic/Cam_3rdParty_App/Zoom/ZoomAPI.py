@@ -3,8 +3,8 @@ import time
 import json
 from datetime import datetime, timedelta, timezone
 
-ZOOM_API_KEY = 'pRNWJaTbScaP-8C7Lbx23A'
-ZOOM_API_SECRET = 'ebVJdL22U4viAJ6OtERaqUgcNVdtG1dAaZnK'
+ZOOM_API_KEY = '[Zoom app key ]'
+ZOOM_API_SECRET = '[Zoom app secret access token]'
 client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET)
 
 
@@ -30,11 +30,11 @@ def meetin():
     print(prt['id'])
     print(prt['password'])
     return prt['id'], prt['password']
-
+def recrd():
+    strrecd=client
 
 def deltm():
     delmeet = client.meetings.delete_meeting(int(prt['id']))
     return delmeet
-
 
 time.sleep(30)
