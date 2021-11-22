@@ -9,10 +9,9 @@ if sys.platform == "win32":
     time.sleep(5)  # give 2 seconds for firefox to launch
 elif sys.platform == "darwin":
     os.system('open /Application/"zoom.us".app')
-id='725 5072 6513'
-pas='46vcsC'
+#id='725 5072 6513'
+#pas='46vcsC'
 durtn=30
-
 def join_meet(id,pas):
     joinmeet=zoom_meet.locateCenterOnScreen('Z_join_meet.png')
     zoom_meet.moveTo(joinmeet)
@@ -64,7 +63,7 @@ def join_meet(id,pas):
         time.sleep(1)
     return 'call complete'
 now = time.time()
-testmeet=join_meet(id,pas)
+testmeet=join_meet()
 print(testmeet)
 closeapp = zoom_meet.locateCenterOnScreen("Zcloseapp.PNG")
 zoom_meet.moveTo(closeapp)

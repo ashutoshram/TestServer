@@ -16,12 +16,12 @@ def jdo_run():
     dir = os.getcwd()
     print(dir)
     device = jdo.locateCenterOnScreen(
-        "jpc_20.PNG")
+        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/MAM_Cam_Test/JDO_PAUI/jpc_20.PNG")
     jdo.moveTo(device)
     jdo.click()
     time.sleep(5)
     Cam_control = jdo.locateCenterOnScreen(
-        "Camera_Settings_2.PNG")
+        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/MAM_Cam_Test/JDO_PAUI/Camera_Settings_2.PNG")
     jdo.moveTo(Cam_control)
     jdo.click()
     time.sleep(2)
@@ -50,7 +50,7 @@ def jdo_run():
         zo += 1"""
 
     jdo_iz = jdo.locateCenterOnScreen(
-        "Cam_iz_off.PNG")
+        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/MAM_Cam_Test/JDO_PAUI/Cam_iz_off.PNG")
     if jdo_iz:
         print('IZ_VD_Off')
         jdo.moveTo(jdo_iz)
@@ -62,15 +62,16 @@ def jdo_run():
         print(iz)
     else:
         jdo_iz2 = jdo.locateCenterOnScreen(
-            "Cam_iz_on.PNG")
+            "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/MAM_Cam_Test/JDO_PAUI/Cam_iz_on.PNG")
         if jdo_iz2:
             iz = 'iz-ON'
             print(iz)
     video_stng_close = jdo.locateCenterOnScreen(
-        "Close_Cam_Control.png")
+        "C:/Users/Rahul/PycharmProjects/pythonProject/Camera_Test_logic/MAM_Cam_Test/JDO_PAUI/Close_Cam_Control.png")
     jdo.moveTo(video_stng_close)
     jdo.click()
     time.sleep(2)
     print('closing the process jdo')
     os.system("taskkill /f /im jabra-direct.exe")
     return iz
+jdo_run()

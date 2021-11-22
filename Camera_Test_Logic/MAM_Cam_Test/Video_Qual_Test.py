@@ -1,5 +1,5 @@
 from skimage.exposure import is_low_contrast
-from Camera_Test_Logic.MAM_Cam_Test import runningfps, Camera_FPS_Latensy
+from Misc.BackupCode import runningfps, Camera_FPS_Latensy
 import numpy as np
 from numpy.linalg import norm
 import imutils
@@ -259,11 +259,11 @@ def main(fps, latency):
 
 if __name__ == "__main__":
     # fps = rfps.get_fps()
-    fps, latency = Camera_FPS_Latensy.fps_latency(15)
+    fps, latency = Camera_FPS_Latensy.fps_latency()
     video = main(fps, latency)
-    #rfps = runningfps.run_fps(round(fps))
+    rfps = runningfps.run_fps(round(fps))
 
-    #print("Value for running FPS:{:.2f}".format(rfps))
+    print("Value for running FPS:{:.2f}".format(rfps))
     print(video)
 
 cv2.destroyAllWindows()

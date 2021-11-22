@@ -8,9 +8,8 @@ itr = 3
 i = 0
 try:
     # open Zoom application
-    # Please Include your file/executable location for zoom application
     os.startfile("C:/Users/Rahul/AppData/Roaming/Zoom/bin/Zoom.exe")
-    sleep(4)
+    sleep(2)
     # login Optional
     signin = zoom_meet.locateCenterOnScreen("Zsignin.PNG")
     zoom_meet.moveTo(signin)

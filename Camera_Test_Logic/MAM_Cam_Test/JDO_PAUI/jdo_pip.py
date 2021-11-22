@@ -3,6 +3,7 @@ import cv2
 import os
 import sys
 
+
 def pip_on_off(pip_stats, dict):
     print(pip_stats)
     jdo.scroll(-120)

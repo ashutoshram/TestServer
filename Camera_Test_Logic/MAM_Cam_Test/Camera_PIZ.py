@@ -1,6 +1,3 @@
-# Author-Rahul Kumar Panda
-# @mailid-rkpanda@jbara.com
-
 import imutils
 import cv2
 import time

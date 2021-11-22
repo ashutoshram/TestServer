@@ -83,7 +83,7 @@ def compimages(hsc, face_count):
 def pipnoface(person, quen):
     duration = 10
     start_time = time.time()
-    global pt, loc_roi_col, key, pip
+    global pt, pip, loc_roi_col
     print('program-2 starting')
     capture_pip = False
     img = cv2.imread('Camview-noppl0.png')
@@ -107,14 +107,14 @@ def pipnoface(person, quen):
         count += 1
 
     print('the thresold count vthout person:-', count)
-    if 50 < count < 160:
+    if capture_pip is True and (50 > count <= 160):
         pip = 'ON'
         loc_roi_col = img_rgb[pt[1]:pt[1] + h, pt[0]:pt[0] + w]
         cv2.rectangle(img_rgb, (xp, yp), (xp + wp, yp + hp), (0, 255, 255), 2)
         cv2.putText(img_rgb, 'PIP:-' + pip + '-' + str(person), (xp + 20, yp + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-    else:
+    elif capture_pip is True and (50 <= count > 160):
         pip = "OFF"
         loc_roi_col = img_rgb[pt[1]:pt[1] + h, pt[0]:pt[0] + w]
         cv2.rectangle(img_rgb, (xp, yp), (xp + wp, yp + hp), (0, 0, 255), 2)
@@ -131,7 +131,7 @@ def pipnoface(person, quen):
     # if elapse time reached duration set or the `q` key was pressed, break from the loop
     if elapsed_time >= duration or key == ord('q'):
         cv2.destroyAllWindows()
-    quen.put(pip)
+        quen.put(pip)
 
 
 def pipvthface(quey):
@@ -369,3 +369,35 @@ def main():
 if __name__ == '__main__':
     main()
 
+"""PIP_X = [470, 945]
+    PIP_Y = [260, 525]
+    PIP_w = [160, 318]
+    PIP_h = [90, 178]
+    warmup_frame = 200
+    capture_frame = 0
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_alt.xml")
+    # eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye_tree_eyeglasses.xml")
+    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
+    human_LBP = cv2.CascadeClassifier(cv2.data.lbpcascades + "lbpcascade_frontalface.xml")
+    body_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "HS.xml")
+    cap = cv2.VideoCapture(1)
+    detect, img = pip_main(cap, human_LBP)
+    print(detect)
+    # vs = cv2.VideoCapture(1)
+    que = queue.Queue()
+    Thread_list = [2]
+    # time.sleep(15)
+    t1 = threading.Thread(target=pipvthface, args=(que,))
+    t2 = threading.Thread(target=pipnoface, args=(detect, que))
+    if detect >= 1:
+        t1.start()
+        t1.join()
+
+    else:
+        t2.start()
+        t2.join()
+    result = que.get()
+    print(result)
+    # que.empty()
+    clean()"""
+# cv2.destroyAllWindows()

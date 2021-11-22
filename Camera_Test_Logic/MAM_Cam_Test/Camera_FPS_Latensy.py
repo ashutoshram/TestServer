@@ -14,7 +14,7 @@ def fps_latency(t_fps):
     print("Frames per second using video.get(cv2.CV_CAP_PROP_FPS): {0}".format(fps))
 
     # Number of frames to capture
-    num_frames = 1080
+    num_frames = 360
 
     print("Capturing {0} frames".format(num_frames))
 
@@ -48,10 +48,9 @@ def fps_latency(t_fps):
     # Release Capture Video and Return the Trace Val
 
     video.release()
-    cv2.destroyAllWindows()
     return fps, latency
 
 
-# destroy all window
-#cv2.destroyAllWindows()
-#fps_latency(30)
+# destroy all windowq
+cv2.destroyAllWindows()
+#fps_latency()
