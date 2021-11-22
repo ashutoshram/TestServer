@@ -1,18 +1,18 @@
-import unittest
+import unittest2
 from Camera_Test_Logic.MAM_Cam_Test.Camera_IZ_VD import cameraiz_vd
 from Camera_Test_Logic.MAM_Cam_Test.Camera_PIZ import camerapiz_vd
 from Camera_Test_Logic.MAM_Cam_Test import Get_Camera_Supported_Resln
 from Camera_Test_Logic.MAM_Cam_Test import Video_Qual_Test
+from Camera_Test_Logic.MAM_Cam_Test.Camera_PIP_En_Ds import main
 # from Camera_Test_Logic.MAM_Cam_Test import CameraPTZ
 from Camera_Test_Logic.MAM_Cam_Test.JDO_PAUI import jdo_vivid
 from Camera_Test_Logic.MAM_Cam_Test import runningfps
 from Camera_Test_Logic.MAM_Cam_Test import Camera_FPS_Latensy
 import json
-
 Resolution_mam = ['640.0x360.0', '960.0x540.0', '1280.0x720.0', '1920.0x1080.0']
 
 
-class Test_Mam_cam(unittest.TestCase):
+class Test_Mam_cam(unittest2.TestCase):
 
     def test_vq_vivd_off(self):
         vivid = "OFF"
@@ -69,5 +69,7 @@ class Test_Mam_cam(unittest.TestCase):
             self.assertEqual('Sharp',list(vq['Sharpness'])[0])
             self.assertEqual('No Noise',list(vq['Noise'])[0])
 
+
+
 if __name__ == '__main__':
-    unittest.main()
+    unittest2.main()

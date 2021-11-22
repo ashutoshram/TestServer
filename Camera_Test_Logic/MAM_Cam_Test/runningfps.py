@@ -3,6 +3,7 @@ import time
 
 
 def run_fps(fps1):
+    global fps2
     cap = cv2.VideoCapture(1)
     start_time = time.time()
     duration = 30
@@ -46,21 +47,16 @@ def run_fps(fps1):
         i = 0
         # converting the fps to string so that we can display it on frame
         for ret in frame:
-            global fps2
             if int(fps1) == fps:
-                fps2 = fps
                 i += 1
-                cv2.putText(gray, str(fps2), (7, 70), font, 3, color, 3, cv2.LINE_AA)
-
-            else:
-                pass
-
+                cv2.putText(gray, str(fps), (7, 70), font, 3, color, 3, cv2.LINE_AA)
+                fps2 = fps
         # puting the FPS count on the frame
         cv2.putText(gray, ('Calculating Running FPS ...' + str(i)), (500, 50),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
         # Display the resulting frame
-        cv2.imshow('frame', gray)
+        cv2.imshow('JPC20-FPS', gray)
         current_time = time.time()
         elapsed_time = current_time - start_time
         key = cv2.waitKey(20) & 0xFF
@@ -72,4 +68,6 @@ def run_fps(fps1):
     return fps2
     # When everything done, release the capture
 
-#fp=run_fps('30')
+
+#fp = run_fps('15')
+#print(fp)
