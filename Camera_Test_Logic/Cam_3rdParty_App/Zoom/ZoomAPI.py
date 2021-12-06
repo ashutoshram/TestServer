@@ -30,11 +30,15 @@ def meetin():
     print(prt['id'])
     print(prt['password'])
     return prt['id'], prt['password']
+
+
 def recrd():
-    strrecd=client
+    strrecd = client
+
 
 def deltm():
     delmeet = client.meetings.delete_meeting(int(prt['id']))
     return delmeet
+
 
 time.sleep(30)

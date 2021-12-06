@@ -1,20 +1,21 @@
 import os
 import pyautogui as zoom_meet
 import time
-from time import sleep
 import sys
+
 if sys.platform == "win32":
     print('host machine is:-', sys.platform)
     os.startfile("C:/Users/Rahul/AppData/Roaming/Zoom/bin/Zoom.exe")
     time.sleep(5)  # give 2 seconds for firefox to launch
 elif sys.platform == "darwin":
     os.system('open /Application/"zoom.us".app')
-id='725 5072 6513'
-pas='46vcsC'
-durtn=30
+id = '725 5072 6513'
+pas = '46vcsC'
+durtn = 30
 
-def join_meet(id,pas):
-    joinmeet=zoom_meet.locateCenterOnScreen('Z_join_meet.png')
+
+def join_meet(id, pas):
+    joinmeet = zoom_meet.locateCenterOnScreen('Z_join_meet.png')
     zoom_meet.moveTo(joinmeet)
     zoom_meet.click()
     zoom_meet.sleep(2)
@@ -63,11 +64,13 @@ def join_meet(id,pas):
         zoom_meet.click()
         time.sleep(1)
     return 'call complete'
+
+
 now = time.time()
-testmeet=join_meet(id,pas)
+testmeet = join_meet(id, pas)
 print(testmeet)
 closeapp = zoom_meet.locateCenterOnScreen("Zcloseapp.PNG")
 zoom_meet.moveTo(closeapp)
 zoom_meet.click()
 time.sleep(2)
-#os.system("taskkill /f /im Zoom.exe")
+# os.system("taskkill /f /im Zoom.exe")

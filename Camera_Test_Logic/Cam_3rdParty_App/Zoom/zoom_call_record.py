@@ -8,22 +8,30 @@ durtn = 30
 itr = 3
 i = 0
 
+global diff
+
 
 # from Camera_Test_Logic.Cam_3rdParty_App.Zoom import ZoomAPI
 
 def zoom_record():
-    zoomdct = "C:\\Users\\Rahul\\PycharmProjects\\pythonProject\\Camera_Test_Logic\\Cam_3rdParty_App\\Zoom"
+    u_name = os.environ.get('USERPROFILE')
+    # os.environ.get('USERNAME')
+    print(u_name)
+    # Please add your Local Repo project or code sorce path for Replace with similar to "JabraVideoFW\\TestServer"
+    # intead of \\PycharmProjects\\pythonProject
+    zoomdct = u_name+"\\PycharmProjects\\pythonProject\\Camera_Test_Logic\\Cam_3rdParty_App\\Zoom"
     try:
         # open Zoom application
         # Please Include your file/executable location for zoom application
-        os.startfile("C:/Users/Rahul/AppData/Roaming/Zoom/bin/Zoom.exe")
-        sleep(2)
+        os.startfile(u_name+"/AppData/Roaming/Zoom/bin/Zoom.exe")
+        sleep(3)
 
         # login Optional
         signin = zoom_meet.locateCenterOnScreen(zoomdct + "\\Zsignin.PNG")
         zoom_meet.moveTo(signin)
         zoom_meet.click()
         # time.sleep(3)
+
         usrnm = zoom_meet.locateCenterOnScreen(zoomdct + "\\ZMailAddress.PNG")
         zoom_meet.moveTo(usrnm)
         zoom_meet.click()
@@ -34,10 +42,17 @@ def zoom_record():
         zoom_meet.click()
         zoom_meet.write('Test123$')
         time.sleep(2)
+        keep_sign_in = zoom_meet.locateCenterOnScreen(zoomdct + "\\keep_signin.PNG")
+        if keep_sign_in:
+            zoom_meet.moveTo(keep_sign_in)
+            zoom_meet.click()
+            time.sleep(3)
         sign = zoom_meet.locateCenterOnScreen(zoomdct + "\\Z_sign.PNG")
         zoom_meet.moveTo(sign)
+        time.sleep(2)
         zoom_meet.click()
         time.sleep(10)
+
         # settings
         usr = zoom_meet.locateCenterOnScreen(zoomdct + "\\Z_TestUserP.PNG")
         zoom_meet.moveTo(usr)
@@ -69,7 +84,7 @@ def zoom_record():
         zoom_meet.moveTo(save)
         zoom_meet.click()
         time.sleep(2)
-        os.startfile("C:/Users/Rahul/AppData/Roaming/Zoom/bin/Zoom.exe")
+        os.startfile(u_name+"/AppData/Roaming/Zoom/bin/Zoom.exe")
         time.sleep(3)
         DemoMeetin = zoom_meet.locateCenterOnScreen(zoomdct + "\\Z_Meet.PNG")
         zoom_meet.moveTo(DemoMeetin)
@@ -88,6 +103,7 @@ def zoom_record():
     # Call based on iteration
 
     def zoommeet():
+
         global diff
         while True:
             # Start zoom meetings
@@ -134,7 +150,7 @@ def zoom_record():
     call = zoommeet()
     if call == 'Call End':
         mtdel = ZoomAPI.deltm()
-        homepg=zoom_meet.locateCenterOnScreen(zoomdct + "\\home_button.PNG")
+        homepg = zoom_meet.locateCenterOnScreen(zoomdct + "\\home_button.PNG")
         print(mtdel)
         zoom_meet.moveTo(homepg)
         zoom_meet.click()
@@ -147,4 +163,4 @@ def zoom_record():
     zoom_meet.click()
     time.sleep(2)
     os.system("taskkill /f /im Zoom.exe")
-    return mid
+    return "Record Done"

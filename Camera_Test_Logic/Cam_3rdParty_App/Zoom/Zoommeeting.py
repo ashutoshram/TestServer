@@ -2,7 +2,8 @@ import os
 import pyautogui as zoom_meet
 import time
 from time import sleep
-#import ZoomAPI
+
+# import ZoomAPI
 durtn = 30
 itr = 3
 i = 0
@@ -15,7 +16,7 @@ try:
     signin = zoom_meet.locateCenterOnScreen("Zsignin.PNG")
     zoom_meet.moveTo(signin)
     zoom_meet.click()
-    #time.sleep(3)
+    # time.sleep(3)
     usrnm = zoom_meet.locateCenterOnScreen("ZMailAddress.PNG")
     zoom_meet.moveTo(usrnm)
     zoom_meet.click()
@@ -76,7 +77,7 @@ now = time.time()
 def zoommeet():
     while True:
         # Start zoom meetings
-        #os.startfile("C:/Users/Rahul/AppData/Roaming/Zoom/bin/Zoom.exe")
+        # os.startfile("C:/Users/Rahul/AppData/Roaming/Zoom/bin/Zoom.exe")
         DemoMeetOne = zoom_meet.locateCenterOnScreen("Zmeetings.PNG")
         zoom_meet.moveTo(DemoMeetOne)
         zoom_meet.click()
@@ -106,24 +107,27 @@ def zoommeet():
             zoom_meet.click()
             time.sleep(1)
             break
+
+
 import ZoomAPI
-mid,mpass= ZoomAPI.meetin()
+
+mid, mpass = ZoomAPI.meetin()
 print(mid)
 print(mpass)
 # iteration for number of Calls
 for i in range(0, itr):
     zoommeet()
     i += 1
-mtdel=ZoomAPI.deltm()
+mtdel = ZoomAPI.deltm()
 print(mtdel)
 # Close the App after iteration
 time.sleep(2)
-#zoom_meet.click()
+# zoom_meet.click()
 closeapp = zoom_meet.locateCenterOnScreen("Zcloseapp.PNG")
 zoom_meet.moveTo(closeapp)
 zoom_meet.click()
 time.sleep(2)
 os.system("taskkill /f /im Zoom.exe")
-#for process in (process for process in psutil.process_iter() if process.name() == "Zoom.exe"):
-    #process.kill()
-#import zjoin_meet
+# for process in (process for process in psutil.process_iter() if process.name() == "Zoom.exe"):
+# process.kill()
+# import zjoin_meet
