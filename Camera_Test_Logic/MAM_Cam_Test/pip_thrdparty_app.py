@@ -14,43 +14,76 @@ yp = 525
 wp = 320
 hp = 180
 
+'##########################################Clean Post Execution###########################'
+u_name = os.environ.get('USERPROFILE')
+u_drive = os.environ.get('ONEDRIVE')
 
-###########################################Clean Post Execution###########################
-def clean():
-    dir = os.getcwd()
-    fln = os.listdir(dir)
+
+def clean(app_itm):
+    work_dir = os.getcwd()
+    fln = os.listdir(work_dir)
     for itm in fln:
         if itm.endswith('.png'):
             os.remove(itm)
-    print("Done!")
+    print("JPGs cleaned!")
+    if app_itm == 'zoom':
+        zoomdir = u_name + "\\Documents\\zoom"
+        zoomvid = os.listdir(zoomdir)
+        print(zoomvid)
+        for item in zoomvid:
+            if item.endswith("Test-Meeting"):
+                file_vid = os.listdir(zoomdir + '\\' + item)
+                for itm2 in file_vid:
+                    os.remove(zoomdir + '\\' + item + '\\' + itm2)
+                os.removedirs(zoomdir + '\\' + item)
+                print("Record Cleaned!")
+            else:
+                pass
+
+    elif app_itm == 'teams':
+        tmdir = u_drive+'\\Recordings'
+        lstrecord = os.listdir(tmdir)
+        for itm in lstrecord:
+            if itm.startswith('Test Meeting'):
+                print(itm)
+                os.remove(tmdir + '\\' + itm)
+                print('record cleaned!')
+            else:
+                pass
 
 
-##################################video path determination ###############################
+'##################################video path determination ###############################'
+
+
 def record_path(appitm):
     # appitm = "zoom"
     global zoomrecp, trcp
     if appitm == 'zoom':
-        zoomdir = "C:\\Users\\Rahul\\Documents\\zoom"
+        zoomdir = u_name+"\\Documents\\zoom"
         zoomvid = os.listdir(zoomdir)
         for item in zoomvid:
             if item.endswith("Test-Meeting "):
                 print(item)
             zoomrecp = zoomdir + "\\" + item
-        videofile=os.listdir(zoomrecp)
+        videofile = os.listdir(zoomrecp)
         for itemv in videofile:
             if itemv.startswith("video"):
                 print(itemv)
-                return zoomrecp,itemv
+                return zoomrecp, itemv
+
     elif appitm == "teams":
-        tmdir = 'C:\\Users\\Rahul\\OneDrive - Motivity Labs\\Recordings'
-        tmvid = os.listdir(tmdir)
-        for itm in tmvid:
+        tm_dir = u_drive+'\\Recordings'
+        tmv_id = os.listdir(tm_dir)
+        for itm in tmv_id:
             if itm.startswith('Test Meeting'):
-                trcp = tmdir + "\\" + itm
-        return trcp
+                print(itm)
+                tr_cp = tm_dir + "\\" + itm
+                return tr_cp, itm
 
 
-##################################logic to compare Peopleface###############################
+'##################################logic to compare Peopleface###############################'
+
+
 def mse(imageA, imageB):
     image1 = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)
     image2 = cv2.cvtColor(imageB, cv2.COLOR_BGR2GRAY)
@@ -103,7 +136,8 @@ def compimages(hsc, face_count):
     return reslt
 
 
-#######################################End of logic to compare people face########################################
+'#######################################End of logic to compare people face########################################'
+
 
 def pipnoface(person, quen):
     duration = 10
@@ -287,6 +321,7 @@ def pip_main(cap, human_LBP, eye_cascade):
     start_time = time.time()
     frame_count = 0
     false_frame = 0
+    cap.set(5, 30)
     while True:
 
         ret, img = cap.read()
@@ -351,7 +386,7 @@ def pip_main(cap, human_LBP, eye_cascade):
     return human_count, img
 
 
-def main(apptyp,mid):
+def main(apptyp):
     global vidfile
     PIP_X = [470, 945]
     PIP_Y = [260, 525]
@@ -359,7 +394,7 @@ def main(apptyp,mid):
     PIP_h = [90, 178]
     warmup_frame = 200
     capture_frame = 0
-    vidsrc,vidfile = record_path(apptyp)
+    vidsrc, vidfile = record_path(apptyp)
     print(vidsrc)
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_alt.xml")
     # eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye_tree_eyeglasses.xml")
@@ -367,10 +402,10 @@ def main(apptyp,mid):
     human_LBP = cv2.CascadeClassifier(cv2.data.lbpcascades + "lbpcascade_frontalface.xml")
     body_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "HS.xml")
     if apptyp.lower() == 'zoom':
-        cap = cv2.VideoCapture(vidsrc + '\\'+vidfile)
+        cap = cv2.VideoCapture(vidsrc + '\\' + vidfile)
     else:
         cap = cv2.VideoCapture(vidsrc)
-    cap.set(5,30)
+
     detect, img = pip_main(cap, human_LBP, eye_cascade)
     print(detect)
     que = queue.Queue()
@@ -386,9 +421,9 @@ def main(apptyp,mid):
         t2.join()
     result = que.get()
     print(result)
-    clean()
+    clean(apptyp)
     return result
 
 
-#if __name__ == '__main__':
-    #main(apptyp,mid)
+if __name__ == '__main__':
+    main('zoom')
