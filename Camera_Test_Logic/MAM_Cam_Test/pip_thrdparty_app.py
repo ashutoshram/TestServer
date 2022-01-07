@@ -41,7 +41,7 @@ def clean(app_itm):
                 pass
 
     elif app_itm == 'teams':
-        tmdir = u_drive+'\\Recordings'
+        tmdir = u_drive + '\\Recordings'
         lstrecord = os.listdir(tmdir)
         for itm in lstrecord:
             if itm.startswith('Test Meeting'):
@@ -50,6 +50,11 @@ def clean(app_itm):
                 print('record cleaned!')
             else:
                 pass
+    elif app_itm == 'g2m':
+        g2mdir = u_name + "\\PycharmProjects\\pythonProject\\Camera_Test_Logic\\Cam_3rdParty_App\\GoToMeeting"
+        os.remove(g2mdir+'\\'+'output.avi')
+        os.remove(g2mdir+'\\'+'result.avi')
+        print('{} record cleaned!'.format(app_itm))
 
 
 '##################################video path determination ###############################'
@@ -57,9 +62,9 @@ def clean(app_itm):
 
 def record_path(appitm):
     # appitm = "zoom"
-    global zoomrecp, trcp
+    global zoomrecp, trcp, g2mrec
     if appitm == 'zoom':
-        zoomdir = u_name+"\\Documents\\zoom"
+        zoomdir = u_name + "\\Documents\\zoom"
         zoomvid = os.listdir(zoomdir)
         for item in zoomvid:
             if item.endswith("Test-Meeting "):
@@ -72,13 +77,18 @@ def record_path(appitm):
                 return zoomrecp, itemv
 
     elif appitm == "teams":
-        tm_dir = u_drive+'\\Recordings'
+        tm_dir = u_drive + '\\Recordings'
         tmv_id = os.listdir(tm_dir)
         for itm in tmv_id:
             if itm.startswith('Test Meeting'):
                 print(itm)
                 tr_cp = tm_dir + "\\" + itm
                 return tr_cp, itm
+    elif appitm == "g2m":
+        # please add g2m_dir according to your repo and replace '\\PycharmProjects\\pythonProject\\' with the repo path
+        g2m_dir = u_name + "\\PycharmProjects\\pythonProject\\Camera_Test_Logic\\Cam_3rdParty_App\\GoToMeeting"
+        g2m_vid = g2m_dir + '\\result.avi'
+        return g2m_vid, ''
 
 
 '##################################logic to compare Peopleface###############################'
@@ -166,7 +176,7 @@ def pipnoface(person, quen):
         count += 1
 
     print('the thresold count vthout person:-', count)
-    if 50 < count < 160:
+    if 50 < count < 260:
         pip = 'ON'
         loc_roi_col = img_rgb[pt[1]:pt[1] + h, pt[0]:pt[0] + w]
         cv2.rectangle(img_rgb, (xp, yp), (xp + wp, yp + hp), (0, 255, 255), 2)
@@ -403,9 +413,10 @@ def main(apptyp):
     body_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "HS.xml")
     if apptyp.lower() == 'zoom':
         cap = cv2.VideoCapture(vidsrc + '\\' + vidfile)
+    elif apptyp.lower() == 'teams':
+        cap = cv2.VideoCapture(vidsrc)
     else:
         cap = cv2.VideoCapture(vidsrc)
-
     detect, img = pip_main(cap, human_LBP, eye_cascade)
     print(detect)
     que = queue.Queue()
