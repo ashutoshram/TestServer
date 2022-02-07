@@ -69,7 +69,7 @@ def get_device():
     except:
         return False
     cam = cam.decode("utf-8")
-    device_num = int(re.search(r'\d+', cam).group())
+    device_num = int(re.search(r'\d+', cam).group()) + 4
     device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
     cap = cv2.VideoCapture(device_num)
 
@@ -111,10 +111,10 @@ def reboot_device(fmt, codec):
                 time.sleep(3)
                 subprocess.check_call(['./power_switch.sh', '{}'.format(switch), '1'])
             else:
-                os.system("adb devices")
-                os.system("sudo adb kill-server")
-                os.system("sudo adb devices")
-                os.system("adb reboot")
+                # os.system("sudo adb kill-server")
+                # os.system("sudo adb start-server")
+                # os.system("sudo adb devices")
+                os.system("adb shell killall -9 newport")
             
             time.sleep(50)
             reboots_hard += 1
