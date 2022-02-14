@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import cv2
 from queue import Queue
+import datetime
 from datetime import date
 import AbstractTestClass as ATC
 import pprint as p
@@ -118,16 +119,15 @@ class FPSTester():
         
         # check fps for 1, 5, and 10 second streams
         start = time.time()
-        one = start + 1
-        five = start + 5
-        ten = start + 10
         count, skipped = (0 for i in range(2))
         five_yes, ten_yes = (False for i in range(2))
 
         # calculate fps
-        for f in frames:
+        frames = framerate*30
+        fps_list = []
+        for f in range(0, frames):
             start = time.time()
-            for i in range(0, f):
+            for i in range(0, framerate*30):
                 try:
                     retval, frame = self.cam.read()
                     if retval is False:
@@ -153,7 +153,7 @@ class FPSTester():
                     return -1
         
             end = time.time()
-            elapsed = end - start
+            elapsed = 30
 
             log_print("Test duration:          {:<5} s".format(elapsed))
             log_print("Total frames counted:   {:<5}".format(f))
@@ -220,7 +220,7 @@ class FPSTester():
                     for z in zoom_levels:
                         log_print("Testing:                {} {} {} {}\n".format(format_, resolution, fps, z))
                         test_type = "{} {} {} {}".format(format_, resolution, fps, z)
-                        self.err_code[test_type] = self.test_fps(format_, resolution, fps, z)
+                        self.err_code[test_type] = self.test_fps(format_, resolution, fps)
                         self.cam.release()
 
                 # self.progress_percent += 33
