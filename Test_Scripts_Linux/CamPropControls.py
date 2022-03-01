@@ -222,7 +222,7 @@ if __name__ == "__main__":
     # create directory for log and .png files if it doesn't already exist
     if device_name == "Jabra PanaCast 20":
         log_name = "p20"
-    elif device_name == "Jabra PanaCast 50":
+    elif device_name == "Jabra PanaCast 50" or device_name == "Video Capture 2":
         log_name = "p50"
 
     # create log file for the current cam prop
