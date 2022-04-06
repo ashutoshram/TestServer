@@ -72,7 +72,7 @@ def reboot_device():
         time.sleep(10)
         if not get_device():
             log_print("Failed to get device after reboot, exiting test :(")
-            sys.exit(0)
+            sys.exit(-1)
     # reboot P50 by resetting USB, adb reboot, or network power
     else:
         os.system("adb shell /usr/bin/resethub")
@@ -96,9 +96,9 @@ def reboot_device():
                 log_print("Unable to recover device, exiting test. Please check physical device\n")
                 sys.exit(0)
 
-    if reboots_hard > 5:
-        log_print("More than 5 reboots_hard, exiting test. Please check physical device\n")
-        sys.exit(0)
+    if reboots_hard > 1 or reboots_soft > 1:
+        log_print("Too many reboots, exiting test. Please check physical device\n")
+        sys.exit(-1)
 
 # basic get/set test using v4l2
 def get_set(device, prop, val):
@@ -124,8 +124,8 @@ def eval_results(ctrl, values):
             results[ctrl[c]] = 1
             results[ctrl[c + 1]] = 1
         else:
-            results[ctrl[c]] = -1
-            results[ctrl[c + 1]] = -1
+            results[ctrl[c]] = 0
+            results[ctrl[c + 1]] = 0
 
     return results
 
@@ -218,6 +218,8 @@ def get_frames(device, cap, prop, ctrl):
     return frames
 
 if __name__ == "__main__":
+    # result boolean
+    all_passed = True
 
     # create directory for log and .png files if it doesn't already exist
     if device_name == "Jabra PanaCast 20":
@@ -240,6 +242,7 @@ if __name__ == "__main__":
 
     # iterate thru cam_props dict and test each value of each cam prop
     for prop in cam_props:
+        passed_count = 0
         timestamp = datetime.now()
         log_print(55*"=")
         log_print("\n{}\n".format(timestamp))
@@ -273,6 +276,12 @@ if __name__ == "__main__":
             values = white_balance(raw_frames)
             advanced = eval_results(ctrl, values)
         
+        # check results of current test for any failures, ignore if a test has already failed
+        for value in advanced.values():
+            passed_count += value
+        if (float(passed_count)/float(len(advanced)) < 0.5) and all_passed == True:
+            all_passed = False
+
         log_print("\nGenerating report...\n")
         report = json.dumps(advanced, indent=2)
         log_print("{}\n".format(report))
@@ -281,3 +290,10 @@ if __name__ == "__main__":
 
     cap.release()
     log_file.close()
+
+    if all_passed == True:
+        print("All tests passed!\n")
+        sys.exit(0)
+    else:
+        print("One or more tests failed. Please review results and apply necessary changes before creating a pull request.\n")
+        sys.exit(-1)

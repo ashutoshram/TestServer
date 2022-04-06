@@ -127,10 +127,10 @@ def reboot_device(fmt, codec):
     log_print("Soft reboot count: {}".format(reboots_soft))
     log_print("Hard reboot count: {}".format(reboots_hard))
 
-    if reboots_hard > 5:
-        log_print("More than 5 reboots_hard, exiting test. Please check physical device\n")
+    if reboots_hard > 1 or reboots_soft > 1:
+        log_print("Too many reboots, exiting test. Please check physical device\n")
         report_results()
-        sys.exit(0)
+        sys.exit(-1)
 
 def check_frame(check_width, check_height, fmt, codec):
     check_start = time.time()
@@ -215,9 +215,9 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 # log_print("Time to switch (ms):   {}\n".format(switch_time * 1000))
                 test_start, test_time = (time.time() for x in range(2))
                 
-                # grab frames for 30 seconds
+                # grab frames for 15 seconds
                 # frame_count = 3
-                frame_count = t_fps * 25
+                frame_count = t_fps * 15
                 for i in range(0, frame_count):
                     retval, frame = cap.read()
                     # reboot device in event of frame drop/error
@@ -244,7 +244,7 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                         # print("Frame grabbed")
             
                     # check framerate every five seconds
-                    if test_frame % (frame_count / 5) == 0:
+                    if test_frame % (frame_count / 3) == 0:
                         test_end = time.time()
                         current = test_end - test_time
                         time_elapsed = test_end - test_start
@@ -270,11 +270,9 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     err_code[test_type] = 0
                     log_print("SOFT FAIL\n")
                 else:
-                    err_code[test_type] = -1
+                    err_code[test_type] = 0
                     log_print("HARD FAIL\n")
-                # else:
-                #     err_code[test_type] = -1
-                #     log_print("HARD FAIL\n")
+
                 # save copy of failed test cases
                 if err_code[test_type] == 0 or err_code[test_type] == -1:
                     failures[test_type] = err_code[test_type]
@@ -283,6 +281,10 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                 # time.sleep(1)
 
 if __name__ == "__main__":
+    # result boolean
+    all_passed = True
+    passed_count = 0
+
     # create directory for log and .png files if it doesn't already exist
     if device_name == "Jabra PanaCast 20":
         log_name = "p20"
@@ -324,3 +326,15 @@ if __name__ == "__main__":
     report_results()
     cap.release()
     cv2.destroyAllWindows()
+
+    # check results of current test for any failures, ignore if a test has already failed
+    for value in err_code.values():
+        passed_count += value
+
+    if (float(passed_count)/float(len(err_code)) < 0.75):
+        all_passed = False
+        print("One or more tests failed. Please review results and apply necessary changes before creating a pull request.\n")
+        sys.exit(-1)
+    elif all_passed == True:
+        print("All tests passed!\n")
+        sys.exit(0)
