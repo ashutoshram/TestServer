@@ -49,6 +49,7 @@ def get_device():
         return False
     cam = cam.decode("utf-8")
     device_num = int(re.search(r'\d+', cam).group())
+    device_num += 2
     device = 'v4l2-ctl -d /dev/video{}'.format(device_num)
     cap = cv2.VideoCapture(device_num)
 
