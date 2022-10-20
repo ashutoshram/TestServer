@@ -265,10 +265,10 @@ def test_fps(width, height, target_res, start_fps, target_fps, fmt):
                     avg_fps = 0
                 # if switch_time * 1000 < 1500:
                 if avg_fps >= t_fps - 1:
-                    err_code[test_type] = 1
+                    err_code[test_type] = 2
                     log_print("PASS\n")
                 elif avg_fps < t_fps - 1 and avg_fps >= t_fps - 3:
-                    err_code[test_type] = 0
+                    err_code[test_type] = 1
                     log_print("SOFT FAIL\n")
                 else:
                     err_code[test_type] = 0
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     for value in err_code.values():
         passed_count += value
 
-    if (float(passed_count)/float(len(err_code)) < 0.75):
+    if (float(passed_count)/float(len(err_code) * 2) < 0.75):
         all_passed = False
         print("One or more tests failed. Please review results and apply necessary changes before creating a pull request.\n")
         sys.exit(-1)
